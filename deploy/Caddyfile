@@ -1,0 +1,31 @@
+# Caddy — обратный прокси и авто-TLS (Let's Encrypt) для Furnica.
+# Домен и email берутся из окружения (compose передаёт DOMAIN/ACME_EMAIL).
+#
+# Маршрутизация одного домена (всё same-origin, поэтому куки Kratos и запросы
+# к API идут без CORS):
+#   /.ory/kratos/public/*  -> kratos:4433  (префикс срезается)
+#   /api/*                 -> gateway:8080 (gateway обслуживает /api/v1)
+#   /*                     -> web:3000     (Next.js)
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+
+	# Публичный API Kratos под префиксом; handle_path срезает префикс,
+	# а Kratos знает полный публичный URL из SERVE_PUBLIC_BASE_URL.
+	handle_path /.ory/kratos/public/* {
+		reverse_proxy kratos:4433
+	}
+
+	# REST gateway (внутри — /api/v1/...). Префикс НЕ срезаем.
+	handle /api/* {
+		reverse_proxy gateway:8080
+	}
+
+	# Всё остальное — фронтенд.
+	handle {
+		reverse_proxy web:3000
+	}
+}

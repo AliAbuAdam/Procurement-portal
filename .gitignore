@@ -5,8 +5,11 @@
 *.out
 vendor/
 
-# Env
+# Env (секреты). Шаблоны *.example — трекаем.
 .env
+.env.*
+!.env.example
+!.env.prod.example
 *.env.local
 
 # Node / Next.js

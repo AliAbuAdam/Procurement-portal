@@ -1,0 +1,142 @@
+# Продакшен-стек: тянет готовые образы из Docker Hub, наружу открыт только Caddy
+# (80/443, авто-TLS). Postgres/Kratos/сервисы доступны лишь внутри сети compose.
+#
+# Запуск (на VDS, из корня репозитория):
+#   docker compose --env-file .env.prod -f deploy/docker-compose.prod.yml pull
+#   docker compose --env-file .env.prod -f deploy/docker-compose.prod.yml up -d
+#
+# Все https://${DOMAIN}/... подставляет docker compose из .env.prod — файлы
+# править не нужно, достаточно задать DOMAIN.
+name: furnica
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Разовая миграция схемы Kratos перед стартом самого Kratos.
+  kratos-migrate:
+    image: oryd/kratos:v1.3.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DSN: ${KRATOS_DSN}
+    command: migrate sql -e --yes
+    volumes:
+      - ./kratos:/etc/config/kratos:ro
+    restart: on-failure
+
+  kratos:
+    image: oryd/kratos:v1.3.1
+    depends_on:
+      kratos-migrate:
+        condition: service_completed_successfully
+    environment:
+      DSN: ${KRATOS_DSN}
+      # Прод-режим: без --dev. Доменные URL и секреты переопределяем через env
+      # (перекрывают значения из kratos.yml). CORS не нужен — всё same-origin.
+      SERVE_PUBLIC_BASE_URL: https://${DOMAIN}/.ory/kratos/public/
+      SERVE_PUBLIC_CORS_ENABLED: "false"
+      SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: https://${DOMAIN}/
+      SELFSERVICE_ALLOWED_RETURN_URLS: https://${DOMAIN}
+      SELFSERVICE_FLOWS_LOGIN_UI_URL: https://${DOMAIN}/auth/login
+      SELFSERVICE_FLOWS_ERROR_UI_URL: https://${DOMAIN}/auth/error
+      SELFSERVICE_FLOWS_SETTINGS_UI_URL: https://${DOMAIN}/settings
+      SELFSERVICE_FLOWS_LOGOUT_AFTER_DEFAULT_BROWSER_RETURN_URL: https://${DOMAIN}/auth/login
+      SECRETS_COOKIE: ${KRATOS_COOKIE_SECRET}
+      SECRETS_CIPHER: ${KRATOS_CIPHER_SECRET}
+    command: serve -c /etc/config/kratos/kratos.yml --watch-courier
+    volumes:
+      - ./kratos:/etc/config/kratos:ro
+    restart: unless-stopped
+
+  catalog:
+    image: ${DOCKER_NAMESPACE}/furnica-catalog:${IMAGE_TAG:-latest}
+    environment:
+      CATALOG_GRPC_PORT: "9091"
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pricing:
+    image: ${DOCKER_NAMESPACE}/furnica-pricing:${IMAGE_TAG:-latest}
+    environment:
+      PRICING_GRPC_PORT: "9092"
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  import:
+    image: ${DOCKER_NAMESPACE}/furnica-import:${IMAGE_TAG:-latest}
+    environment:
+      IMPORT_GRPC_PORT: "9093"
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    image: ${DOCKER_NAMESPACE}/furnica-gateway:${IMAGE_TAG:-latest}
+    environment:
+      GATEWAY_PORT: "8080"
+      CATALOG_GRPC_ADDR: catalog:9091
+      PRICING_GRPC_ADDR: pricing:9092
+      IMPORT_GRPC_ADDR: import:9093
+      KRATOS_PUBLIC_URL: http://kratos:4433
+      KRATOS_ADMIN_URL: http://kratos:4434
+      WEB_ORIGINS: https://${DOMAIN}
+    depends_on:
+      - catalog
+      - pricing
+      - import
+      - kratos
+    restart: unless-stopped
+
+  web:
+    # NEXT_PUBLIC_* «запечены» в образ на этапе сборки (относительные пути),
+    # поэтому образ доменно-независим — runtime-переменные не нужны.
+    image: ${DOCKER_NAMESPACE}/furnica-web:${IMAGE_TAG:-latest}
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - gateway
+      - kratos
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
