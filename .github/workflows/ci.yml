@@ -14,12 +14,10 @@ jobs:
         with:
           go-version: "1.25"
           cache: true
-      - name: Install buf
-        uses: bufbuild/buf-action@v1
-        with:
-          setup_only: true
-      - name: Generate proto
-        run: cd proto && buf generate
+      # Сгенерированный код (gen/) закоммичен и является входом сборки, поэтому
+      # buf generate в CI не гоняем: он требует локальных плагинов protoc-gen-go*
+      # (их нет в раннере) и давал бы ложные падения. Регенерация — локально
+      # через `make proto`. При желании позже можно добавить отдельный drift-джоб.
       - name: Vet
         run: go vet ./services/... ./internal/...
       - name: Build
