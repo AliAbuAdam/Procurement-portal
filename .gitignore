@@ -27,3 +27,6 @@ deploy/.data/
 
 # Reference copies (не для коммита)
 /_ref/
+
+# TS build cache
+web/*.tsbuildinfo
