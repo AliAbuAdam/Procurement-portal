@@ -4,9 +4,12 @@ name: Docker Publish
 # Требуются секреты репозитория: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN.
 # Переменная репозитория: DOCKER_NAMESPACE (напр. ваш логин на Docker Hub).
 
+# Публикацию образов НЕ гоняем на каждый push (на ранних фазах Docker Hub не
+# настроен — джобы матрицы отменялись бы каскадом). Запускается по тегам v* и
+# вручную. Перед первым запуском задать секреты DOCKERHUB_USERNAME/DOCKERHUB_TOKEN
+# и переменную DOCKER_NAMESPACE в настройках репозитория.
 on:
   push:
-    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -19,6 +22,7 @@ jobs:
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         service: [gateway, catalog, pricing, import, web]
     steps:
