@@ -46,13 +46,17 @@ func (r *ProductRepository) List(ctx context.Context, limit int) ([]*domain.Prod
 	return scanProducts(rows)
 }
 
-// Search — триграммный поиск: карточки, чьё имя похоже на query, от самых похожих.
+// Search — поиск карточек для поля ввода «по мере набора»: подстрока (ILIKE,
+// ускоряется тем же gin_trgm-индексом) плюс нечёткое совпадение слова
+// (word_similarity, `%>`) для опечаток. Оператор `%` (обычный similarity) здесь
+// не подходит: у короткого запроса мало триграмм и он не проходит порог против
+// длинных названий. Сортировка — по похожести слова, точные подстроки выше.
 func (r *ProductRepository) Search(ctx context.Context, query string, limit int) ([]*domain.Product, error) {
 	const q = `
 		SELECT id, name, article, created_at
 		FROM catalog.products
-		WHERE name % $1
-		ORDER BY similarity(name, $1) DESC, created_at DESC
+		WHERE name ILIKE '%' || $1 || '%' OR $1 %> name
+		ORDER BY word_similarity($1, name) DESC, name
 		LIMIT $2`
 	rows, err := r.db.Querier(ctx).Query(ctx, q, query, limit)
 	if err != nil {

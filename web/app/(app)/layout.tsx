@@ -13,6 +13,7 @@ const nav: { href: string; label: string; roles: Role[] }[] = [
   { href: "/imports", label: "Импорт прайсов", roles: ["admin", "manager"] },
   { href: "/products", label: "Номенклатура", roles: ["admin", "manager"] },
   { href: "/matching", label: "Сопоставление", roles: ["admin", "manager"] },
+  { href: "/compare", label: "Сравнение цен", roles: ["admin", "manager"] },
   { href: "/users", label: "Пользователи", roles: ["admin"] },
 ];
 
