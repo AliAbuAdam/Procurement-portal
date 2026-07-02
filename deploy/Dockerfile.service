@@ -1,0 +1,15 @@
+# Универсальный multi-stage Dockerfile для Go-микросервисов.
+# Собирает конкретный сервис по build-arg SERVICE (gateway|catalog|pricing|import).
+FROM golang:1.25-alpine AS build
+ARG SERVICE
+WORKDIR /src
+COPY go.mod go.sum* ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" \
+    -o /out/app ./services/${SERVICE}
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/app /app
+USER nonroot:nonroot
+ENTRYPOINT ["/app"]

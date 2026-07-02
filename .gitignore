@@ -1,0 +1,29 @@
+# Go
+/bin/
+*.exe
+*.test
+*.out
+vendor/
+
+# Env
+.env
+*.env.local
+
+# Node / Next.js
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/.turbo/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Docker / local data
+deploy/.data/
+
+# Reference copies (не для коммита)
+/_ref/

@@ -1,0 +1,130 @@
+name: furnica
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-furnica}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-furnica_dev_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-furnica}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-furnica}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Одноразовая миграция схемы Kratos перед стартом самого Kratos.
+  kratos-migrate:
+    image: oryd/kratos:v1.3.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DSN: ${KRATOS_DSN}
+    command: migrate sql -e --yes
+    volumes:
+      - ./kratos:/etc/config/kratos:ro
+    restart: on-failure
+
+  kratos:
+    image: oryd/kratos:v1.3.1
+    depends_on:
+      kratos-migrate:
+        condition: service_completed_successfully
+    environment:
+      DSN: ${KRATOS_DSN}
+    command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
+    ports:
+      - "4433:4433" # public
+      - "4434:4434" # admin
+    volumes:
+      - ./kratos:/etc/config/kratos:ro
+    restart: unless-stopped
+
+  catalog:
+    image: ${DOCKER_NAMESPACE:-furnica}/furnica-catalog:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.service
+      args:
+        SERVICE: catalog
+    environment:
+      CATALOG_GRPC_PORT: "9091"
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pricing:
+    image: ${DOCKER_NAMESPACE:-furnica}/furnica-pricing:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.service
+      args:
+        SERVICE: pricing
+    environment:
+      PRICING_GRPC_PORT: "9092"
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  import:
+    image: ${DOCKER_NAMESPACE:-furnica}/furnica-import:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.service
+      args:
+        SERVICE: import
+    environment:
+      IMPORT_GRPC_PORT: "9093"
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    image: ${DOCKER_NAMESPACE:-furnica}/furnica-gateway:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.service
+      args:
+        SERVICE: gateway
+    environment:
+      GATEWAY_PORT: "8080"
+      CATALOG_GRPC_ADDR: catalog:9091
+      PRICING_GRPC_ADDR: pricing:9092
+      IMPORT_GRPC_ADDR: import:9093
+      KRATOS_PUBLIC_URL: http://kratos:4433
+      KRATOS_ADMIN_URL: http://kratos:4434
+      WEB_ORIGINS: ${WEB_ORIGINS:-http://localhost:3000}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      - catalog
+      - pricing
+      - import
+      - kratos
+    restart: unless-stopped
+
+  web:
+    image: ${DOCKER_NAMESPACE:-furnica}/furnica-web:${IMAGE_TAG:-latest}
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_KRATOS_PUBLIC_URL: ${NEXT_PUBLIC_KRATOS_PUBLIC_URL:-http://localhost:4433}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - gateway
+    restart: unless-stopped

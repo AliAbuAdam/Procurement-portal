@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+option go_package = "github.com/furnica/backend/gen/catalog/v1;catalogv1";
+
+// CatalogService — поставщики, товарные карточки (номенклатура) и сопоставление
+// сырых строк прайсов (supplier_offer) с карточками (product).
+service CatalogService {
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  rpc CreateSupplier(CreateSupplierRequest) returns (Supplier);
+  rpc ListSuppliers(ListSuppliersRequest) returns (ListSuppliersResponse);
+
+  // --- Номенклатура (products) ---
+  rpc CreateProduct(CreateProductRequest) returns (Product);
+  // ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+
+  // --- Сопоставление (matching) ---
+  // Кандидаты для конкретных offer'ов (топ-N по similarity названия).
+  rpc SuggestMatches(SuggestMatchesRequest) returns (SuggestMatchesResponse);
+  // Несопоставленные строки батча + счётчики прогресса.
+  rpc ListUnmatchedOffers(ListUnmatchedOffersRequest) returns (ListUnmatchedOffersResponse);
+  // Подтвердить связку offer -> существующая карточка.
+  rpc ConfirmMatch(ConfirmMatchRequest) returns (Match);
+  // Создать новую карточку из offer и сразу подтвердить (кандидат не подошёл).
+  rpc CreateProductFromOffer(CreateProductFromOfferRequest) returns (Match);
+  // Снять сопоставление.
+  rpc Unmatch(UnmatchRequest) returns (UnmatchResponse);
+}
+
+message HealthCheckRequest {}
+message HealthCheckResponse {
+  string status = 1;
+  string service = 2;
+}
+
+enum SupplierType {
+  SUPPLIER_TYPE_UNSPECIFIED = 0;
+  SUPPLIER_TYPE_EXCEL = 1;   // прайсы файлами
+  SUPPLIER_TYPE_API = 2;     // подключение по API
+  SUPPLIER_TYPE_PARSING = 3; // парсинг сайта
+}
+
+message Supplier {
+  string id = 1;
+  string name = 2;
+  SupplierType type = 3;
+  string created_at = 4;
+}
+
+message CreateSupplierRequest {
+  string name = 1;
+  SupplierType type = 2;
+}
+
+message ListSuppliersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListSuppliersResponse {
+  repeated Supplier suppliers = 1;
+  string next_page_token = 2;
+}
+
+// --- Номенклатура (products) ---
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string article = 3;
+  string created_at = 4;
+}
+
+message CreateProductRequest {
+  string name = 1;
+  string article = 2;
+}
+
+message ListProductsRequest {
+  string query = 1;      // непустой -> триграммный поиск по имени
+  int32 page_size = 2;
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+}
+
+// --- Сопоставление (matching) ---
+
+// Candidate — карточка-кандидат для строки прайса и её похожесть (0..1).
+message Candidate {
+  string product_id = 1;
+  string product_name = 2;
+  string product_article = 3;
+  float score = 4;
+}
+
+// OfferSuggestion — сырая строка и подобранные под неё кандидаты.
+message OfferSuggestion {
+  string offer_id = 1;
+  string raw_name = 2;
+  string raw_article = 3;
+  repeated Candidate candidates = 4;
+}
+
+message SuggestMatchesRequest {
+  repeated string offer_ids = 1;
+  int32 limit = 2;        // сколько кандидатов на строку (по умолчанию 5)
+}
+
+message SuggestMatchesResponse {
+  repeated OfferSuggestion suggestions = 1;
+}
+
+// UnmatchedOffer — несопоставленная строка прайса.
+message UnmatchedOffer {
+  string offer_id = 1;
+  int32 row_num = 2;
+  string raw_name = 3;
+  string raw_article = 4;
+  double price = 5;
+  string currency = 6;
+}
+
+message ListUnmatchedOffersRequest {
+  string batch_id = 1;
+  int32 page_size = 2;
+}
+
+message ListUnmatchedOffersResponse {
+  repeated UnmatchedOffer offers = 1;
+  int32 total = 2;        // всего строк в батче
+  int32 matched = 3;      // из них сопоставлено
+}
+
+// Match — подтверждённая связка offer -> product.
+message Match {
+  string offer_id = 1;
+  string product_id = 2;
+  float score = 3;
+  string matched_by = 4;
+  string matched_at = 5;
+}
+
+message ConfirmMatchRequest {
+  string offer_id = 1;
+  string product_id = 2;
+  string matched_by = 3; // email подтвердившего (проставляет gateway)
+}
+
+message CreateProductFromOfferRequest {
+  string offer_id = 1;
+  string name = 2;       // опц.: если пусто — берём raw_name строки
+  string article = 3;    // опц.: если пусто — берём raw_article строки
+  string matched_by = 4; // email подтвердившего (проставляет gateway)
+}
+
+message UnmatchRequest {
+  string offer_id = 1;
+}
+
+message UnmatchResponse {
+  bool ok = 1;
+}

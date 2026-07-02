@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package pricing.v1;
+
+option go_package = "github.com/furnica/backend/gen/pricing/v1;pricingv1";
+
+// PricingService — цены, наличие, история и сравнение по товарной карточке.
+service PricingService {
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // Сравнение: по товару — цены всех поставщиков (фаза 3).
+  rpc CompareByProduct(CompareByProductRequest) returns (CompareByProductResponse);
+}
+
+message HealthCheckRequest {}
+message HealthCheckResponse {
+  string status = 1;
+  string service = 2;
+}
+
+message PriceOffer {
+  string supplier_id = 1;
+  string supplier_name = 2;
+  double price = 3;
+  string currency = 4;
+  bool in_stock = 5;
+  int64 stock_qty = 6;
+  string updated_at = 7;
+}
+
+message CompareByProductRequest {
+  string product_id = 1;
+}
+
+message CompareByProductResponse {
+  string product_id = 1;
+  repeated PriceOffer offers = 2;
+  string cheapest_supplier_id = 3;
+}

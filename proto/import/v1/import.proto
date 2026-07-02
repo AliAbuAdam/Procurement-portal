@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package importer.v1;
+
+option go_package = "github.com/furnica/backend/gen/import/v1;importv1";
+
+// ImportService — загрузка прайсов (Excel/CSV) с гибким маппингом колонок
+// и просмотр разобранных строк (raw offers).
+service ImportService {
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // Шаг 1: разобрать заголовки и первые строки, предложить маппинг.
+  rpc PreviewFile(PreviewFileRequest) returns (FilePreview);
+  // Шаг 2: разобрать весь файл по маппингу и сохранить строки.
+  rpc ProcessFile(ProcessFileRequest) returns (ImportBatch);
+
+  rpc GetImportBatch(GetImportBatchRequest) returns (ImportBatch);
+  rpc ListBatches(ListBatchesRequest) returns (ListBatchesResponse);
+  rpc ListOffers(ListOffersRequest) returns (ListOffersResponse);
+}
+
+message HealthCheckRequest {}
+message HealthCheckResponse {
+  string status = 1;
+  string service = 2;
+}
+
+enum ImportStatus {
+  IMPORT_STATUS_UNSPECIFIED = 0;
+  IMPORT_STATUS_PENDING = 1;
+  IMPORT_STATUS_PROCESSING = 2;
+  IMPORT_STATUS_DONE = 3;
+  IMPORT_STATUS_FAILED = 4;
+}
+
+// ColumnMapping — какая колонка файла соответствует какому полю.
+// Индекс колонки (0-based); -1 = колонка не задана.
+message ColumnMapping {
+  int32 name_col = 1;
+  int32 article_col = 2;
+  int32 price_col = 3;
+  int32 stock_col = 4;
+  int32 currency_col = 5;
+}
+
+message PreviewRow {
+  repeated string cells = 1;
+}
+
+message FilePreview {
+  repeated string headers = 1;
+  repeated PreviewRow rows = 2;   // первые N строк для предпросмотра
+  ColumnMapping suggested = 3;    // авто-предложение по названиям колонок
+  int32 total_rows = 4;           // всего строк данных в файле
+}
+
+message PreviewFileRequest {
+  string file_name = 1;
+  bytes content = 2;
+}
+
+message ProcessFileRequest {
+  string supplier_id = 1;
+  string file_name = 2;
+  bytes content = 3;
+  ColumnMapping mapping = 4;
+  string created_by = 5;
+}
+
+message ImportBatch {
+  string id = 1;
+  string supplier_id = 2;
+  string file_name = 3;
+  ImportStatus status = 4;
+  int32 rows_total = 5;
+  int32 rows_matched = 6;
+  string created_by = 7;
+  string created_at = 8;
+}
+
+message GetImportBatchRequest {
+  string id = 1;
+}
+
+message ListBatchesRequest {
+  string supplier_id = 1; // пусто = все
+}
+
+message ListBatchesResponse {
+  repeated ImportBatch batches = 1;
+}
+
+// SupplierOffer — «сырая» строка прайса до сопоставления с карточкой (фаза 2).
+message SupplierOffer {
+  string id = 1;
+  string batch_id = 2;
+  string supplier_id = 3;
+  int32 row_num = 4;
+  string raw_name = 5;
+  string raw_article = 6;
+  double price = 7;
+  string currency = 8;
+  bool in_stock = 9;
+  int64 stock_qty = 10;
+}
+
+message ListOffersRequest {
+  string batch_id = 1;
+  int32 page_size = 2;
+  int32 offset = 3;
+}
+
+message ListOffersResponse {
+  repeated SupplierOffer offers = 1;
+  int32 total = 2;
+}

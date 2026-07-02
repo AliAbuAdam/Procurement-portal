@@ -1,0 +1,79 @@
+version: v1.3.1
+
+# DSN приходит из переменной окружения (search_path=kratos).
+
+serve:
+  public:
+    base_url: http://localhost:4433/
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://localhost:3000
+      allowed_methods: [POST, GET, PUT, PATCH, DELETE]
+      allowed_headers: [Authorization, Cookie, Content-Type]
+      exposed_headers: [Content-Type, Set-Cookie]
+      allow_credentials: true
+  admin:
+    base_url: http://kratos:4434/
+
+selfservice:
+  default_browser_return_url: http://localhost:3000/
+  allowed_return_urls:
+    - http://localhost:3000
+
+  methods:
+    password:
+      enabled: true
+
+  flows:
+    error:
+      ui_url: http://localhost:3000/auth/error
+
+    # Саморегистрация выключена: аккаунты заводит админ через Admin API.
+    registration:
+      enabled: false
+
+    login:
+      ui_url: http://localhost:3000/auth/login
+      lifespan: 10m
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:3000/auth/login
+
+    settings:
+      ui_url: http://localhost:3000/settings
+      privileged_session_max_age: 15m
+
+    # Восстановление/верификация по e-mail включим вместе с SMTP (фаза 1+).
+    recovery:
+      enabled: false
+    verification:
+      enabled: false
+
+session:
+  lifespan: 720h # 30 дней
+  cookie:
+    same_site: Lax
+
+identity:
+  default_schema_id: user
+  schemas:
+    - id: user
+      url: file:///etc/config/kratos/identity.schema.json
+
+# В --dev режиме секреты можно не задавать; для прод обязательно вынести в env.
+secrets:
+  cookie:
+    - CHANGE_ME_cookie_secret_at_least_32_chars
+  cipher:
+    - CHANGE_ME_cipher_secret_32_bytes
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12
+
+log:
+  level: info
+  format: text
