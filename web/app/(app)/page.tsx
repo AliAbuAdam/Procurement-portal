@@ -1,44 +1,17 @@
-"use client";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { DataTable } from "@/components/data-table";
+import { SectionCards } from "@/components/section-cards";
 
-import { useSession } from "@/lib/session";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import data from "./data.json";
 
-export default function Dashboard() {
-  const { user } = useSession();
+export default function DashboardPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Обзор</h1>
-        <p className="text-[var(--muted-foreground)] text-sm">
-          Добро пожаловать, {user?.email}
-        </p>
+    <div className="@container/main flex flex-1 flex-col gap-4 md:gap-6">
+      <SectionCards />
+      <div className="px-4 lg:px-6">
+        <ChartAreaInteractive />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Поставщики</CardTitle>
-            <CardDescription>Справочник источников цен</CardDescription>
-          </CardHeader>
-          <CardContent className="text-[var(--muted-foreground)] text-sm">
-            Добавляйте поставщиков и загружайте их прайсы.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Импорт прайсов</CardTitle>
-            <CardDescription>Excel / CSV с маппингом колонок</CardDescription>
-          </CardHeader>
-          <CardContent className="text-[var(--muted-foreground)] text-sm">
-            Загружайте таблицы — система разберёт строки по вашему маппингу.
-          </CardContent>
-        </Card>
-      </div>
+      <DataTable data={data} />
     </div>
   );
 }

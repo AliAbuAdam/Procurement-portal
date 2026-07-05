@@ -78,7 +78,7 @@ export default function UsersPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 px-4 lg:px-6">
         <h1 className="text-2xl font-semibold">Пользователи</h1>
         <p className="text-[var(--muted-foreground)] text-sm">
           Доступно только администратору.

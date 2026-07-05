@@ -7,14 +7,13 @@ import type { LoginFlow, UiText } from "@ory/client";
 import { ory } from "@/lib/ory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from "@/components/ui/field";
 
 const basePath =
   process.env.NEXT_PUBLIC_KRATOS_PUBLIC_URL ?? "http://localhost:4433";
@@ -26,6 +25,15 @@ function hiddenValue(flow: LoginFlow, name: string): string {
     if (attrs.name === name) return String(attrs.value ?? "");
   }
   return "";
+}
+
+// Иконка Яндекса (красный кружок с «Я»).
+function YandexMark() {
+  return (
+    <span className="flex size-5 items-center justify-center rounded-full bg-[#FC3F1D] text-[13px] font-bold text-white">
+      Я
+    </span>
+  );
 }
 
 function LoginForm() {
@@ -99,26 +107,31 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Вход в Furnica</CardTitle>
-          <CardDescription>Введите e-mail и пароль</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="identifier">E-mail</Label>
+    <div className="bg-muted flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm md:p-8">
+        <form onSubmit={onSubmit}>
+          <FieldGroup>
+            <div className="flex flex-col items-center gap-1 text-center">
+              <h1 className="text-2xl font-bold">Вход в Furnica</h1>
+              <p className="text-muted-foreground text-sm text-balance">
+                Введите e-mail и пароль для входа
+              </p>
+            </div>
+
+            <Field>
+              <FieldLabel htmlFor="identifier">E-mail</FieldLabel>
               <Input
                 id="identifier"
                 name="identifier"
                 type="email"
+                placeholder="you@example.ru"
                 autoComplete="username"
                 required
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Пароль</Label>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="password">Пароль</FieldLabel>
               <Input
                 id="password"
                 name="password"
@@ -126,22 +139,49 @@ function LoginForm() {
                 autoComplete="current-password"
                 required
               />
-            </div>
+            </Field>
 
             {messages.length > 0 && (
-              <ul className="text-sm text-[var(--destructive)]">
+              <ul className="text-destructive text-sm">
                 {messages.map((m) => (
                   <li key={m.id}>{m.text}</li>
                 ))}
               </ul>
             )}
 
-            <Button type="submit" disabled={submitting || !flow}>
-              {submitting ? "Вход…" : "Войти"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <Field>
+              <Button type="submit" disabled={submitting || !flow}>
+                {submitting ? "Вход…" : "Войти"}
+              </Button>
+            </Field>
+
+            <FieldSeparator>или</FieldSeparator>
+
+            <Field>
+              {/* Вход через Yandex — реализация OAuth будет подключена позже. */}
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() =>
+                  setMessages([
+                    {
+                      id: 1,
+                      type: "info",
+                      text: "Вход через Yandex будет подключён позже.",
+                    },
+                  ])
+                }
+              >
+                <YandexMark />
+                Войти через Yandex
+              </Button>
+              <FieldDescription className="text-center">
+                Аккаунты заводит администратор.
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+        </form>
+      </div>
     </div>
   );
 }

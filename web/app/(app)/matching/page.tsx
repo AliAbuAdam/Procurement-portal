@@ -106,7 +106,7 @@ export default function MatchingPage() {
   const progress = total > 0 ? Math.round((matched / total) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 lg:px-6">
       <h1 className="text-2xl font-semibold">Сопоставление</h1>
       <p className="text-[var(--muted-foreground)] text-sm">
         Привяжите строки прайса к карточкам номенклатуры. Кандидаты подобраны по
