@@ -156,7 +156,7 @@ export default function ImportsPage() {
 
   return (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
-      <h1 className="text-2xl font-semibold">Импорт прайсов</h1>
+      <h1 className="text-2xl font-semibold">Прайс-листы</h1>
 
       {/* Шаг 1: поставщик + файл */}
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-[var(--border)] p-4">

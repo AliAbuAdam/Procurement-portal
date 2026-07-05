@@ -6,10 +6,10 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const TITLES: Record<string, string> = {
-  "/": "Обзор",
+  "/": "Сводные данные",
   "/suppliers": "Поставщики",
-  "/imports": "Импорт прайсов",
-  "/products": "Номенклатура",
+  "/imports": "Прайс-листы",
+  "/products": "Номенклатуры",
   "/matching": "Сопоставление",
   "/compare": "Сравнение цен",
   "/users": "Пользователи",

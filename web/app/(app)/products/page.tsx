@@ -78,7 +78,7 @@ export default function ProductsPage() {
 
   return (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
-      <h1 className="text-2xl font-semibold">Номенклатура</h1>
+      <h1 className="text-2xl font-semibold">Номенклатуры</h1>
       <p className="text-[var(--muted-foreground)] text-sm">
         Единые карточки товаров, к которым сопоставляются строки прайсов
         поставщиков.
