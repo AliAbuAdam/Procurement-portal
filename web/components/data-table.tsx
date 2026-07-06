@@ -7,6 +7,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Columns3,
+  Loader2,
   Star,
 } from "lucide-react";
 import {
@@ -211,9 +212,12 @@ export function DataTable() {
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center text-muted-foreground"
+                    className="text-muted-foreground h-24 text-center"
                   >
-                    Загрузка…
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin text-emerald-600" />
+                      Загрузка товаров…
+                    </span>
                   </TableCell>
                 </TableRow>
               ) : rows.length ? (

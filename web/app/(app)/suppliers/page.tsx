@@ -1,34 +1,30 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import { useSession } from "@/lib/session";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { LoadingState } from "@/components/loading-state";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-// В proto тип поставщика — enum (число). Маппим в подписи.
-const TYPE_LABEL: Record<number, string> = {
-  1: "Excel/CSV",
-  2: "API",
-  3: "Парсинг",
-};
-
-interface Supplier {
-  id: string;
-  name: string;
-  type: number;
-  created_at: string;
-}
+  SuppliersTable,
+  type SupplierRow as Supplier,
+} from "@/components/suppliers-table";
+import {
+  SupplierFormFields,
+  emptySupplierForm,
+  supplierTypeToForm,
+  type SupplierFormValues,
+} from "@/components/supplier-form-fields";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 export default function SuppliersPage() {
   const { user } = useSession();
@@ -38,9 +34,14 @@ export default function SuppliersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [name, setName] = useState("");
-  const [type, setType] = useState("excel");
+  const [form, setForm] = useState<SupplierFormValues>(emptySupplierForm);
   const [saving, setSaving] = useState(false);
+
+  const [editing, setEditing] = useState<Supplier | null>(null);
+  const [editForm, setEditForm] =
+    useState<SupplierFormValues>(emptySupplierForm);
+  const [editSaving, setEditSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,15 +69,60 @@ export default function SuppliersPage() {
     try {
       await apiFetch("/api/v1/suppliers", {
         method: "POST",
-        body: JSON.stringify({ name, type }),
+        body: JSON.stringify(form),
       });
-      setName("");
-      setType("excel");
+      setForm(emptySupplierForm);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось сохранить");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function startEdit(s: Supplier) {
+    setEditing(s);
+    setEditForm({
+      name: s.name,
+      type: supplierTypeToForm(s.type),
+      city: s.city ?? "",
+      address: s.address ?? "",
+      logo: s.logo ?? "",
+      status: s.status ?? "new",
+    });
+  }
+
+  async function onDelete() {
+    if (!editing) return;
+    if (!window.confirm(`Удалить поставщика «${editing.name}»?`)) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await apiFetch(`/api/v1/suppliers/${editing.id}`, { method: "DELETE" });
+      setEditing(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось удалить");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function onSaveEdit() {
+    if (!editing) return;
+    setEditSaving(true);
+    setError("");
+    try {
+      await apiFetch(`/api/v1/suppliers/${editing.id}`, {
+        method: "PUT",
+        body: JSON.stringify(editForm),
+      });
+      setEditing(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось сохранить");
+    } finally {
+      setEditSaving(false);
     }
   }
 
@@ -87,68 +133,76 @@ export default function SuppliersPage() {
       {isAdmin && (
         <form
           onSubmit={onCreate}
-          className="flex flex-wrap items-end gap-3 rounded-lg border border-[var(--border)] p-4"
+          className="flex flex-col gap-4 rounded-lg border border-[var(--border)] p-4"
         >
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Название</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Напр. Фурнитор"
-              className="w-64"
-              required
-            />
+          <SupplierFormFields
+            idPrefix="add"
+            values={form}
+            onChange={(p) => setForm((f) => ({ ...f, ...p }))}
+          />
+          <div className="flex justify-end">
+            <Button type="submit" disabled={saving}>
+              {saving ? "Сохранение…" : "Добавить поставщика"}
+            </Button>
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="type">Тип</Label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="h-9 rounded-md border border-[var(--input)] bg-transparent px-3 text-sm"
-            >
-              <option value="excel">Excel/CSV</option>
-              <option value="api">API</option>
-              <option value="parsing">Парсинг</option>
-            </select>
-          </div>
-          <Button type="submit" disabled={saving}>
-            {saving ? "Сохранение…" : "Добавить"}
-          </Button>
         </form>
       )}
 
-      {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       {loading ? (
-        <p className="text-[var(--muted-foreground)] text-sm">Загрузка…</p>
-      ) : suppliers.length === 0 ? (
-        <p className="text-[var(--muted-foreground)] text-sm">
-          Поставщиков пока нет.
-        </p>
+        <LoadingState text="Загрузка поставщиков…" />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Название</TableHead>
-              <TableHead>Тип</TableHead>
-              <TableHead>Создан</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {suppliers.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell className="font-medium">{s.name}</TableCell>
-                <TableCell>{TYPE_LABEL[s.type] ?? "—"}</TableCell>
-                <TableCell className="text-[var(--muted-foreground)]">
-                  {new Date(s.created_at).toLocaleString("ru-RU")}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <SuppliersTable
+          suppliers={suppliers}
+          onEdit={isAdmin ? startEdit : undefined}
+        />
       )}
+
+      {/* Панель редактирования поставщика */}
+      <Sheet
+        open={editing !== null}
+        onOpenChange={(o) => {
+          if (!o) setEditing(null);
+        }}
+      >
+        <SheetContent className="overflow-y-auto sm:max-w-[35rem]">
+          <SheetHeader>
+            <SheetTitle>Изменить поставщика</SheetTitle>
+            <SheetDescription>{editing?.name}</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-3 p-4">
+            <SupplierFormFields
+              idPrefix="edit"
+              vertical
+              logoPlaceholder="initials"
+              values={editForm}
+              onChange={(p) => setEditForm((f) => ({ ...f, ...p }))}
+            />
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDelete}
+                disabled={deleting || editSaving}
+                aria-label="Удалить поставщика"
+                title="Удалить поставщика"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button onClick={onSaveEdit} disabled={editSaving || deleting}>
+              {editSaving ? "Сохранение…" : "Сохранить"}
+            </Button>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Отмена
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

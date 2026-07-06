@@ -34,17 +34,41 @@ func (t SupplierType) Valid() bool {
 	}
 }
 
+// SupplierStatus — статус работы с поставщиком.
+type SupplierStatus string
+
+const (
+	SupplierStatusNew      SupplierStatus = "new"      // Новый
+	SupplierStatusActive   SupplierStatus = "active"   // В работе
+	SupplierStatusInactive SupplierStatus = "inactive" // Не работаем
+)
+
+func (s SupplierStatus) Valid() bool {
+	switch s {
+	case SupplierStatusNew, SupplierStatusActive, SupplierStatusInactive:
+		return true
+	default:
+		return false
+	}
+}
+
 // Supplier — поставщик фурнитуры.
 type Supplier struct {
 	ID        string
 	Name      string
 	Type      SupplierType
 	CreatedAt time.Time
+	City      string
+	Address   string
+	Logo      string // URL или data-URL логотипа
+	Status    SupplierStatus
 }
 
 // SupplierRepository — контракт хранилища поставщиков (реализуется в слое repository).
 type SupplierRepository interface {
 	Create(ctx context.Context, s *Supplier) error
+	Update(ctx context.Context, s *Supplier) error
+	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, limit, offset int) ([]*Supplier, error)
 	ExistsByName(ctx context.Context, name string) (bool, error)
 }

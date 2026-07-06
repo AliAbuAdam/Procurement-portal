@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -10,8 +12,9 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-sm">Загрузка…</p>
+      <div className="text-muted-foreground flex min-h-screen items-center justify-center gap-2 text-sm">
+        <Loader2 className="size-4 animate-spin text-emerald-600" />
+        Загрузка…
       </div>
     );
   }

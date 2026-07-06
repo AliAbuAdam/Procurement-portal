@@ -38,6 +38,8 @@ func NewRouter(h *Handler, k *auth.Kratos, allowedOrigins []string) http.Handler
 		// Поставщики: чтение — всем, создание — только admin.
 		r.Get("/suppliers", h.ListSuppliers)
 		r.With(auth.RequireRole(auth.RoleAdmin)).Post("/suppliers", h.CreateSupplier)
+		r.With(auth.RequireRole(auth.RoleAdmin)).Put("/suppliers/{id}", h.UpdateSupplier)
+		r.With(auth.RequireRole(auth.RoleAdmin)).Delete("/suppliers/{id}", h.DeleteSupplier)
 
 		// Номенклатура и сопоставление: доступно и admin, и manager (рабочий процесс).
 		r.Get("/products", h.ListProducts)

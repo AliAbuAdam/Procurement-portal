@@ -28,11 +28,43 @@ func (s *CatalogServer) HealthCheck(context.Context, *catalogv1.HealthCheckReque
 }
 
 func (s *CatalogServer) CreateSupplier(ctx context.Context, req *catalogv1.CreateSupplierRequest) (*catalogv1.Supplier, error) {
-	sup, err := s.suppliers.Create(ctx, req.GetName(), typeFromProto(req.GetType()))
+	sup, err := s.suppliers.Create(
+		ctx,
+		req.GetName(),
+		typeFromProto(req.GetType()),
+		req.GetCity(),
+		req.GetAddress(),
+		req.GetLogo(),
+		domain.SupplierStatus(req.GetStatus()),
+	)
 	if err != nil {
 		return nil, toStatus(err)
 	}
 	return toProto(sup), nil
+}
+
+func (s *CatalogServer) UpdateSupplier(ctx context.Context, req *catalogv1.UpdateSupplierRequest) (*catalogv1.Supplier, error) {
+	sup, err := s.suppliers.Update(
+		ctx,
+		req.GetId(),
+		req.GetName(),
+		typeFromProto(req.GetType()),
+		req.GetCity(),
+		req.GetAddress(),
+		req.GetLogo(),
+		domain.SupplierStatus(req.GetStatus()),
+	)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return toProto(sup), nil
+}
+
+func (s *CatalogServer) DeleteSupplier(ctx context.Context, req *catalogv1.DeleteSupplierRequest) (*catalogv1.DeleteSupplierResponse, error) {
+	if err := s.suppliers.Delete(ctx, req.GetId()); err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.DeleteSupplierResponse{Ok: true}, nil
 }
 
 func (s *CatalogServer) ListSuppliers(ctx context.Context, req *catalogv1.ListSuppliersRequest) (*catalogv1.ListSuppliersResponse, error) {
@@ -170,6 +202,10 @@ func toProto(s *domain.Supplier) *catalogv1.Supplier {
 		Name:      s.Name,
 		Type:      typeToProto(s.Type),
 		CreatedAt: s.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+		City:      s.City,
+		Address:   s.Address,
+		Logo:      s.Logo,
+		Status:    string(s.Status),
 	}
 }
 

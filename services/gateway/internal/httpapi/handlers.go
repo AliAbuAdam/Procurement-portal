@@ -38,22 +38,70 @@ func (h *Handler) ListSuppliers(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateSupplier(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Name string `json:"name"`
-		Type string `json:"type"`
+		Name    string `json:"name"`
+		Type    string `json:"type"`
+		City    string `json:"city"`
+		Address string `json:"address"`
+		Logo    string `json:"logo"`
+		Status  string `json:"status"`
 	}
 	if err := decodeJSON(r, &body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
 		return
 	}
 	resp, err := h.c.Catalog.CreateSupplier(r.Context(), &catalogv1.CreateSupplierRequest{
-		Name: body.Name,
-		Type: supplierTypeFromString(body.Type),
+		Name:    body.Name,
+		Type:    supplierTypeFromString(body.Type),
+		City:    body.City,
+		Address: body.Address,
+		Logo:    body.Logo,
+		Status:  body.Status,
 	})
 	if err != nil {
 		writeError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, resp)
+}
+
+func (h *Handler) UpdateSupplier(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Name    string `json:"name"`
+		Type    string `json:"type"`
+		City    string `json:"city"`
+		Address string `json:"address"`
+		Logo    string `json:"logo"`
+		Status  string `json:"status"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.UpdateSupplier(r.Context(), &catalogv1.UpdateSupplierRequest{
+		Id:      chi.URLParam(r, "id"),
+		Name:    body.Name,
+		Type:    supplierTypeFromString(body.Type),
+		City:    body.City,
+		Address: body.Address,
+		Logo:    body.Logo,
+		Status:  body.Status,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) DeleteSupplier(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.DeleteSupplier(r.Context(), &catalogv1.DeleteSupplierRequest{
+		Id: chi.URLParam(r, "id"),
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
 }
 
 func supplierTypeFromString(s string) catalogv1.SupplierType {

@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	CatalogService_HealthCheck_FullMethodName            = "/catalog.v1.CatalogService/HealthCheck"
 	CatalogService_CreateSupplier_FullMethodName         = "/catalog.v1.CatalogService/CreateSupplier"
+	CatalogService_UpdateSupplier_FullMethodName         = "/catalog.v1.CatalogService/UpdateSupplier"
+	CatalogService_DeleteSupplier_FullMethodName         = "/catalog.v1.CatalogService/DeleteSupplier"
 	CatalogService_ListSuppliers_FullMethodName          = "/catalog.v1.CatalogService/ListSuppliers"
 	CatalogService_CreateProduct_FullMethodName          = "/catalog.v1.CatalogService/CreateProduct"
 	CatalogService_ListProducts_FullMethodName           = "/catalog.v1.CatalogService/ListProducts"
@@ -40,6 +42,8 @@ const (
 type CatalogServiceClient interface {
 	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	CreateSupplier(ctx context.Context, in *CreateSupplierRequest, opts ...grpc.CallOption) (*Supplier, error)
+	UpdateSupplier(ctx context.Context, in *UpdateSupplierRequest, opts ...grpc.CallOption) (*Supplier, error)
+	DeleteSupplier(ctx context.Context, in *DeleteSupplierRequest, opts ...grpc.CallOption) (*DeleteSupplierResponse, error)
 	ListSuppliers(ctx context.Context, in *ListSuppliersRequest, opts ...grpc.CallOption) (*ListSuppliersResponse, error)
 	// --- Номенклатура (products) ---
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
@@ -80,6 +84,26 @@ func (c *catalogServiceClient) CreateSupplier(ctx context.Context, in *CreateSup
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Supplier)
 	err := c.cc.Invoke(ctx, CatalogService_CreateSupplier_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) UpdateSupplier(ctx context.Context, in *UpdateSupplierRequest, opts ...grpc.CallOption) (*Supplier, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Supplier)
+	err := c.cc.Invoke(ctx, CatalogService_UpdateSupplier_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) DeleteSupplier(ctx context.Context, in *DeleteSupplierRequest, opts ...grpc.CallOption) (*DeleteSupplierResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteSupplierResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DeleteSupplier_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +199,8 @@ func (c *catalogServiceClient) Unmatch(ctx context.Context, in *UnmatchRequest, 
 type CatalogServiceServer interface {
 	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	CreateSupplier(context.Context, *CreateSupplierRequest) (*Supplier, error)
+	UpdateSupplier(context.Context, *UpdateSupplierRequest) (*Supplier, error)
+	DeleteSupplier(context.Context, *DeleteSupplierRequest) (*DeleteSupplierResponse, error)
 	ListSuppliers(context.Context, *ListSuppliersRequest) (*ListSuppliersResponse, error)
 	// --- Номенклатура (products) ---
 	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
@@ -206,6 +232,12 @@ func (UnimplementedCatalogServiceServer) HealthCheck(context.Context, *HealthChe
 }
 func (UnimplementedCatalogServiceServer) CreateSupplier(context.Context, *CreateSupplierRequest) (*Supplier, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateSupplier not implemented")
+}
+func (UnimplementedCatalogServiceServer) UpdateSupplier(context.Context, *UpdateSupplierRequest) (*Supplier, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateSupplier not implemented")
+}
+func (UnimplementedCatalogServiceServer) DeleteSupplier(context.Context, *DeleteSupplierRequest) (*DeleteSupplierResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteSupplier not implemented")
 }
 func (UnimplementedCatalogServiceServer) ListSuppliers(context.Context, *ListSuppliersRequest) (*ListSuppliersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListSuppliers not implemented")
@@ -284,6 +316,42 @@ func _CatalogService_CreateSupplier_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CatalogServiceServer).CreateSupplier(ctx, req.(*CreateSupplierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_UpdateSupplier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSupplierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).UpdateSupplier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_UpdateSupplier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).UpdateSupplier(ctx, req.(*UpdateSupplierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_DeleteSupplier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSupplierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).DeleteSupplier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_DeleteSupplier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).DeleteSupplier(ctx, req.(*DeleteSupplierRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -446,6 +514,14 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateSupplier",
 			Handler:    _CatalogService_CreateSupplier_Handler,
+		},
+		{
+			MethodName: "UpdateSupplier",
+			Handler:    _CatalogService_UpdateSupplier_Handler,
+		},
+		{
+			MethodName: "DeleteSupplier",
+			Handler:    _CatalogService_DeleteSupplier_Handler,
 		},
 		{
 			MethodName: "ListSuppliers",

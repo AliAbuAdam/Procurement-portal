@@ -20,7 +20,7 @@ func NewSupplierService(txm *postgres.TxManager, suppliers domain.SupplierReposi
 	return &SupplierService{txm: txm, suppliers: suppliers}
 }
 
-func (s *SupplierService) Create(ctx context.Context, name string, typ domain.SupplierType) (*domain.Supplier, error) {
+func (s *SupplierService) Create(ctx context.Context, name string, typ domain.SupplierType, city, address, logo string, status domain.SupplierStatus) (*domain.Supplier, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, fmt.Errorf("%w: name is required", domain.ErrValidation)
@@ -28,8 +28,21 @@ func (s *SupplierService) Create(ctx context.Context, name string, typ domain.Su
 	if !typ.Valid() {
 		return nil, fmt.Errorf("%w: invalid supplier type %q", domain.ErrValidation, typ)
 	}
+	if status == "" {
+		status = domain.SupplierStatusNew
+	}
+	if !status.Valid() {
+		return nil, fmt.Errorf("%w: invalid supplier status %q", domain.ErrValidation, status)
+	}
 
-	sup := &domain.Supplier{Name: name, Type: typ}
+	sup := &domain.Supplier{
+		Name:    name,
+		Type:    typ,
+		City:    strings.TrimSpace(city),
+		Address: strings.TrimSpace(address),
+		Logo:    strings.TrimSpace(logo),
+		Status:  status,
+	}
 
 	// Проверка уникальности и вставка — в одной транзакции, чтобы не словить
 	// гонку между ExistsByName и Create.
@@ -47,6 +60,50 @@ func (s *SupplierService) Create(ctx context.Context, name string, typ domain.Su
 		return nil, err
 	}
 	return sup, nil
+}
+
+// Update меняет данные существующего поставщика. Конфликт имени с другим
+// поставщиком ловится уникальным индексом на уровне БД (ErrSupplierExists).
+func (s *SupplierService) Update(ctx context.Context, id, name string, typ domain.SupplierType, city, address, logo string, status domain.SupplierStatus) (*domain.Supplier, error) {
+	id = strings.TrimSpace(id)
+	name = strings.TrimSpace(name)
+	if id == "" {
+		return nil, fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	if name == "" {
+		return nil, fmt.Errorf("%w: name is required", domain.ErrValidation)
+	}
+	if !typ.Valid() {
+		return nil, fmt.Errorf("%w: invalid supplier type %q", domain.ErrValidation, typ)
+	}
+	if status == "" {
+		status = domain.SupplierStatusNew
+	}
+	if !status.Valid() {
+		return nil, fmt.Errorf("%w: invalid supplier status %q", domain.ErrValidation, status)
+	}
+
+	sup := &domain.Supplier{
+		ID:      id,
+		Name:    name,
+		Type:    typ,
+		City:    strings.TrimSpace(city),
+		Address: strings.TrimSpace(address),
+		Logo:    strings.TrimSpace(logo),
+		Status:  status,
+	}
+	if err := s.suppliers.Update(ctx, sup); err != nil {
+		return nil, err
+	}
+	return sup, nil
+}
+
+func (s *SupplierService) Delete(ctx context.Context, id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	return s.suppliers.Delete(ctx, id)
 }
 
 func (s *SupplierService) List(ctx context.Context, limit, offset int) ([]*domain.Supplier, error) {

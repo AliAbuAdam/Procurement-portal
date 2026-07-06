@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Loader2 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
+import { LoadingState } from "@/components/loading-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -134,22 +133,7 @@ export default function ComparePage() {
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
 
       {loading ? (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Loader2 className="size-4 animate-spin text-emerald-600" />
-            Анализируем цены поставщиков…
-          </div>
-          <div className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="ml-auto h-4 w-24" />
-              </div>
-            ))}
-          </div>
-        </div>
+        <LoadingState text="Нормализация данных" />
       ) : selected && cmp ? (
         offers.length === 0 ? (
           <p className="text-[var(--muted-foreground)] text-sm">

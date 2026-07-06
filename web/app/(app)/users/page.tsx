@@ -4,24 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
 import { useSession } from "@/lib/session";
+import { LoadingState } from "@/components/loading-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+import { UsersTable, type UserRow as User } from "@/components/users-table";
 
 export default function UsersPage() {
   const { user } = useSession();
@@ -88,7 +75,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 lg:px-6">
       <h1 className="text-2xl font-semibold">Пользователи</h1>
 
       <form
@@ -140,26 +127,9 @@ export default function UsersPage() {
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
 
       {loading ? (
-        <p className="text-[var(--muted-foreground)] text-sm">Загрузка…</p>
+        <LoadingState text="Загрузка пользователей…" />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>E-mail</TableHead>
-              <TableHead>Имя</TableHead>
-              <TableHead>Роль</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell className="font-medium">{u.email}</TableCell>
-                <TableCell>{u.name || "—"}</TableCell>
-                <TableCell>{u.role || "—"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <UsersTable users={users} />
       )}
     </div>
   );

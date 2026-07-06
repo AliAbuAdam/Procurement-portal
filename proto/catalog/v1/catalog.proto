@@ -10,6 +10,8 @@ service CatalogService {
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 
   rpc CreateSupplier(CreateSupplierRequest) returns (Supplier);
+  rpc UpdateSupplier(UpdateSupplierRequest) returns (Supplier);
+  rpc DeleteSupplier(DeleteSupplierRequest) returns (DeleteSupplierResponse);
   rpc ListSuppliers(ListSuppliersRequest) returns (ListSuppliersResponse);
 
   // --- Номенклатура (products) ---
@@ -48,11 +50,37 @@ message Supplier {
   string name = 2;
   SupplierType type = 3;
   string created_at = 4;
+  string city = 5;
+  string address = 6;
+  string logo = 7;               // URL или data-URL логотипа
+  string status = 8;             // new | active | inactive
 }
 
 message CreateSupplierRequest {
   string name = 1;
   SupplierType type = 2;
+  string city = 3;
+  string address = 4;
+  string logo = 5;
+  string status = 6;
+}
+
+message UpdateSupplierRequest {
+  string id = 1;
+  string name = 2;
+  SupplierType type = 3;
+  string city = 4;
+  string address = 5;
+  string logo = 6;
+  string status = 7;
+}
+
+message DeleteSupplierRequest {
+  string id = 1;
+}
+
+message DeleteSupplierResponse {
+  bool ok = 1;
 }
 
 message ListSuppliersRequest {

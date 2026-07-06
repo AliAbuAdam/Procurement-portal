@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
+import { LoadingState } from "@/components/loading-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,7 +151,7 @@ export default function MatchingPage() {
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
 
       {loading ? (
-        <p className="text-[var(--muted-foreground)] text-sm">Загрузка…</p>
+        <LoadingState text="Подбор кандидатов…" />
       ) : batchId && offers.length === 0 ? (
         <p className="text-sm text-green-600">
           Все строки этой загрузки сопоставлены. 🎉
