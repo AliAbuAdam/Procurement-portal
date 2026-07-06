@@ -635,6 +635,7 @@ type Product struct {
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Article       string                 `protobuf:"bytes,3,opt,name=article,proto3" json:"article,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ImageUrl      string                 `protobuf:"bytes,5,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"` // URL или data-URL фото товара (S3 — позже)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -697,10 +698,18 @@ func (x *Product) GetCreatedAt() string {
 	return ""
 }
 
+func (x *Product) GetImageUrl() string {
+	if x != nil {
+		return x.ImageUrl
+	}
+	return ""
+}
+
 type CreateProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Article       string                 `protobuf:"bytes,2,opt,name=article,proto3" json:"article,omitempty"`
+	ImageUrl      string                 `protobuf:"bytes,3,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -745,6 +754,13 @@ func (x *CreateProductRequest) GetName() string {
 func (x *CreateProductRequest) GetArticle() string {
 	if x != nil {
 		return x.Article
+	}
+	return ""
+}
+
+func (x *CreateProductRequest) GetImageUrl() string {
+	if x != nil {
+		return x.ImageUrl
 	}
 	return ""
 }
@@ -1614,16 +1630,18 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"page_token\x18\x02 \x01(\tR\tpageToken\"s\n" +
 	"\x15ListSuppliersResponse\x122\n" +
 	"\tsuppliers\x18\x01 \x03(\v2\x14.catalog.v1.SupplierR\tsuppliers\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"f\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x83\x01\n" +
 	"\aProduct\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
 	"\aarticle\x18\x03 \x01(\tR\aarticle\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\tR\tcreatedAt\"D\n" +
+	"created_at\x18\x04 \x01(\tR\tcreatedAt\x12\x1b\n" +
+	"\timage_url\x18\x05 \x01(\tR\bimageUrl\"a\n" +
 	"\x14CreateProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
-	"\aarticle\x18\x02 \x01(\tR\aarticle\"H\n" +
+	"\aarticle\x18\x02 \x01(\tR\aarticle\x12\x1b\n" +
+	"\timage_url\x18\x03 \x01(\tR\bimageUrl\"H\n" +
 	"\x13ListProductsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"G\n" +

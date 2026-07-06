@@ -1,10 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { FileSpreadsheet, UploadCloud } from "lucide-react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import {
+  FileSpreadsheet,
+  GitCompareArrows,
+  Globe,
+  Plug,
+  UploadCloud,
+} from "lucide-react";
 
 import { apiFetch, apiUpload } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { BatchesTable, type BatchRow } from "@/components/batches-table";
+import { OfferMatchCard } from "@/components/offer-match-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,7 +28,20 @@ import {
 interface Supplier {
   id: string;
   name: string;
+  type: number;
 }
+
+// Типы поставщика (proto SupplierType): 1 — файлы Excel/CSV, 2 — API, 3 — парсинг.
+const SUPPLIER_TYPE = { EXCEL: 1, API: 2, PARSING: 3 } as const;
+
+const TYPE_META: Record<
+  number,
+  { label: string; className: string }
+> = {
+  1: { label: "Excel/CSV", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  2: { label: "API", className: "border-violet-200 bg-violet-50 text-violet-700" },
+  3: { label: "Парсинг", className: "border-amber-200 bg-amber-50 text-amber-700" },
+};
 
 interface Mapping {
   name_col: number;
@@ -36,15 +58,8 @@ interface Preview {
   total_rows?: number;
 }
 
-interface Batch {
-  id: string;
-  file_name: string;
-  rows_total: number;
-  created_by: string;
-  created_at: string;
-}
-
 interface Offer {
+  id: string;
   row_num: number;
   raw_name: string;
   raw_article: string;
@@ -75,8 +90,10 @@ export default function ImportsPage() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [mapping, setMapping] = useState<Mapping | null>(null);
 
-  const [batches, setBatches] = useState<Batch[]>([]);
+  const [batches, setBatches] = useState<BatchRow[]>([]);
   const [offers, setOffers] = useState<Offer[] | null>(null);
+  // Разобранные строки, у которых раскрыта встроенная карточка сопоставления.
+  const [openMatches, setOpenMatches] = useState<Set<string>>(new Set());
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -88,7 +105,7 @@ export default function ImportsPage() {
   }, []);
 
   const loadBatches = useCallback(async () => {
-    const d = await apiFetch<{ batches?: Batch[] }>("/api/v1/imports");
+    const d = await apiFetch<{ batches?: BatchRow[] }>("/api/v1/imports");
     setBatches(d.batches ?? []);
   }, []);
 
@@ -133,7 +150,7 @@ export default function ImportsPage() {
       form.append("file", file);
       form.append("supplier_id", supplierId);
       form.append("mapping", JSON.stringify(mapping));
-      const b = await apiUpload<Batch>("/api/v1/imports", form);
+      const b = await apiUpload<BatchRow>("/api/v1/imports", form);
       setNotice(`Импортировано строк: ${b.rows_total}`);
       setPreview(null);
       setMapping(null);
@@ -153,10 +170,47 @@ export default function ImportsPage() {
         `/api/v1/imports/${id}/offers`,
       );
       setOffers(d.offers ?? []);
+      setOpenMatches(new Set());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки строк");
     }
   }
+
+  // Показать/скрыть карточку сопоставления у конкретной строки (toggle) —
+  // связку можно как задать, так и позже изменить.
+  function toggleMatch(offerId: string) {
+    setOpenMatches((prev) => {
+      const next = new Set(prev);
+      if (next.has(offerId)) next.delete(offerId);
+      else next.add(offerId);
+      return next;
+    });
+  }
+
+  // При смене поставщика сбрасываем незавершённую загрузку файла и предпросмотр —
+  // способ прикрепления зависит от типа нового поставщика.
+  function onSelectSupplier(id: string) {
+    setSupplierId(id);
+    setFile(null);
+    setPreview(null);
+    setMapping(null);
+    setError("");
+    setNotice("");
+  }
+
+  const selected = suppliers.find((s) => s.id === supplierId) ?? null;
+  const selectedType = selected?.type;
+
+  // Имя поставщика в батче резолвим на клиенте: список поставщиков уже загружен,
+  // а бэкенд отдаёт в батче только supplier_id.
+  const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
+  const batchRows = batches
+    // Поставщик не выбран — все загрузки; выбран — только его.
+    .filter((b) => !supplierId || b.supplier_id === supplierId)
+    .map((b) => ({
+      ...b,
+      supplier_name: supplierName.get(b.supplier_id),
+    }));
 
   return (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
@@ -166,89 +220,130 @@ export default function ImportsPage() {
       <div className="flex flex-col gap-4 rounded-lg border border-[var(--border)] p-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="supplier">Поставщик</Label>
-          <select
-            id="supplier"
-            value={supplierId}
-            onChange={(e) => setSupplierId(e.target.value)}
-            className="h-9 w-full max-w-xs rounded-md border border-[var(--input)] bg-transparent px-3 text-sm"
-          >
-            <option value="">— выберите —</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label>Файл прайс-листа</Label>
-          {/* Зона загрузки: клик или перетаскивание. Подсветка синей рамкой при drag. */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              setDragging(false);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragging(false);
-              const f = e.dataTransfer.files?.[0];
-              if (f) setFile(f);
-            }}
-            className={cn(
-              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors outline-none",
-              dragging
-                ? "border-blue-500 bg-blue-500/5"
-                : "border-[var(--border)] hover:border-blue-400 hover:bg-[var(--secondary)]",
-            )}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.csv,.txt"
-              className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-            {file ? (
-              <>
-                <FileSpreadsheet className="size-7 text-blue-600" />
-                <div className="text-sm font-medium">{file.name}</div>
-                <div className="text-muted-foreground text-xs">
-                  Нажмите или перетащите другой файл, чтобы заменить
-                </div>
-              </>
-            ) : (
-              <>
-                <UploadCloud className="text-muted-foreground size-7" />
-                <div className="text-sm">
-                  <span className="font-medium text-blue-600">
-                    Нажмите, чтобы выбрать
-                  </span>{" "}
-                  или перетащите файл сюда
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  Excel (.xlsx) или CSV
-                </div>
-              </>
+          <div className="flex items-center gap-3">
+            <select
+              id="supplier"
+              value={supplierId}
+              onChange={(e) => onSelectSupplier(e.target.value)}
+              className="h-9 w-full max-w-xs rounded-md border border-[var(--input)] bg-transparent px-3 text-sm"
+            >
+              <option value="">Не выбрано</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {selectedType !== undefined && TYPE_META[selectedType] && (
+              <Badge
+                variant="outline"
+                className={cn("shrink-0", TYPE_META[selectedType].className)}
+              >
+                {TYPE_META[selectedType].label}
+              </Badge>
             )}
           </div>
         </div>
 
-        <div>
-          <Button onClick={onPreview} disabled={!file || busy} variant="outline">
-            Предпросмотр
-          </Button>
-        </div>
+        {/* Способ прикрепления прайса зависит от типа поставщика. */}
+        {!selected ? (
+          <p className="text-muted-foreground text-sm">
+            Выберите поставщика, чтобы прикрепить прайс-лист.
+          </p>
+        ) : selectedType === SUPPLIER_TYPE.EXCEL ? (
+          <>
+            <div className="flex flex-col gap-2">
+              <Label>Файл прайс-листа</Label>
+              {/* Зона загрузки: клик или перетаскивание. Подсветка синей рамкой при drag. */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) setFile(f);
+                }}
+                className={cn(
+                  "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors outline-none",
+                  dragging
+                    ? "border-blue-500 bg-blue-500/5"
+                    : "border-[var(--border)] hover:border-blue-400 hover:bg-[var(--secondary)]",
+                )}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.csv,.txt"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+                {file ? (
+                  <>
+                    <FileSpreadsheet className="size-7 text-blue-600" />
+                    <div className="text-sm font-medium">{file.name}</div>
+                    <div className="text-muted-foreground text-xs">
+                      Нажмите или перетащите другой файл, чтобы заменить
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="text-muted-foreground size-7" />
+                    <div className="text-sm">
+                      <span className="font-medium text-blue-600">
+                        Нажмите, чтобы выбрать
+                      </span>{" "}
+                      или перетащите файл сюда
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      Excel (.xlsx) или CSV
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <Button onClick={onPreview} disabled={!file || busy} variant="outline">
+                Предпросмотр
+              </Button>
+            </div>
+          </>
+        ) : selectedType === SUPPLIER_TYPE.API ? (
+          <div className="flex items-start gap-3 rounded-lg border border-dashed border-[var(--border)] p-6">
+            <Plug className="size-6 shrink-0 text-violet-600" />
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">Поставщик подключается по API</span>
+              <span className="text-muted-foreground">
+                Прайс обновляется автоматически из API поставщика — файл прикреплять
+                не нужно. Настройка подключения появится позже.
+              </span>
+            </div>
+          </div>
+        ) : selectedType === SUPPLIER_TYPE.PARSING ? (
+          <div className="flex items-start gap-3 rounded-lg border border-dashed border-[var(--border)] p-6">
+            <Globe className="size-6 shrink-0 text-amber-600" />
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">Прайс собирается парсингом сайта</span>
+              <span className="text-muted-foreground">
+                Цены подтягиваются автоматически с сайта поставщика — файл прикреплять
+                не нужно. Настройка парсинга появится позже.
+              </span>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
@@ -334,24 +429,50 @@ export default function ImportsPage() {
                 <TableHead>Артикул</TableHead>
                 <TableHead>Цена</TableHead>
                 <TableHead>Наличие</TableHead>
+                <TableHead className="w-0 text-right">Сопоставление</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {offers.map((o) => (
-                <TableRow key={o.row_num}>
-                  <TableCell className="text-[var(--muted-foreground)]">
-                    {o.row_num}
-                  </TableCell>
-                  <TableCell className="font-medium">{o.raw_name}</TableCell>
-                  <TableCell>{o.raw_article || "—"}</TableCell>
-                  <TableCell>
-                    {o.price} {o.currency}
-                  </TableCell>
-                  <TableCell>
-                    {o.in_stock ? `в наличии${o.stock_qty ? ` (${o.stock_qty})` : ""}` : "нет"}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {offers.map((o) => {
+                const open = openMatches.has(o.id);
+                return (
+                  <Fragment key={o.id}>
+                    <TableRow>
+                      <TableCell className="text-[var(--muted-foreground)]">
+                        {o.row_num}
+                      </TableCell>
+                      <TableCell className="font-medium">{o.raw_name}</TableCell>
+                      <TableCell>{o.raw_article || "—"}</TableCell>
+                      <TableCell>
+                        {o.price} {o.currency}
+                      </TableCell>
+                      <TableCell>
+                        {o.in_stock ? `в наличии${o.stock_qty ? ` (${o.stock_qty})` : ""}` : "нет"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="icon"
+                          variant={open ? "secondary" : "ghost"}
+                          className="size-8"
+                          aria-label={open ? "Скрыть сопоставление" : "Сопоставить"}
+                          title={open ? "Скрыть сопоставление" : "Сопоставить"}
+                          aria-pressed={open}
+                          onClick={() => toggleMatch(o.id)}
+                        >
+                          <GitCompareArrows className="size-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {open && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="bg-[var(--secondary)]/40">
+                          <OfferMatchCard offerId={o.id} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -360,40 +481,7 @@ export default function ImportsPage() {
       {/* История загрузок */}
       <div className="flex flex-col gap-2">
         <h2 className="font-medium">Загрузки</h2>
-        {batches.length === 0 ? (
-          <p className="text-[var(--muted-foreground)] text-sm">Пока нет загрузок.</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Файл</TableHead>
-                <TableHead>Строк</TableHead>
-                <TableHead>Кто</TableHead>
-                <TableHead>Когда</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {batches.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell className="font-medium">{b.file_name}</TableCell>
-                  <TableCell>{b.rows_total}</TableCell>
-                  <TableCell className="text-[var(--muted-foreground)]">
-                    {b.created_by}
-                  </TableCell>
-                  <TableCell className="text-[var(--muted-foreground)]">
-                    {new Date(b.created_at).toLocaleString("ru-RU")}
-                  </TableCell>
-                  <TableCell>
-                    <Button size="sm" variant="ghost" onClick={() => openBatch(b.id)}>
-                      Строки
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+        <BatchesTable batches={batchRows} onOpen={openBatch} />
       </div>
     </div>
   );

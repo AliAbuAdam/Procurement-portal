@@ -98,6 +98,16 @@ export default function MatchingPage() {
     loadBatch(id);
   }
 
+  // Переход из «Прайс-листов» по иконке сопоставления: ?batch=<id> — сразу
+  // открываем эту загрузку, не заставляя выбирать файл заново.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("batch");
+    if (id) {
+      setBatchId(id);
+      loadBatch(id);
+    }
+  }, [loadBatch]);
+
   // После успешного сопоставления убираем строку и двигаем прогресс.
   const onDone = useCallback((offerId: string) => {
     setOffers((prev) => prev.filter((o) => o.offer_id !== offerId));

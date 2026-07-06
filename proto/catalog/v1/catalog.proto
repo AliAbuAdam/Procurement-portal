@@ -100,11 +100,13 @@ message Product {
   string name = 2;
   string article = 3;
   string created_at = 4;
+  string image_url = 5;          // URL или data-URL фото товара (S3 — позже)
 }
 
 message CreateProductRequest {
   string name = 1;
   string article = 2;
+  string image_url = 3;
 }
 
 message ListProductsRequest {

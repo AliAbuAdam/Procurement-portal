@@ -133,16 +133,18 @@ func (h *Handler) ListProducts(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Name    string `json:"name"`
-		Article string `json:"article"`
+		Name     string `json:"name"`
+		Article  string `json:"article"`
+		ImageURL string `json:"image_url"`
 	}
 	if err := decodeJSON(r, &body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
 		return
 	}
 	resp, err := h.c.Catalog.CreateProduct(r.Context(), &catalogv1.CreateProductRequest{
-		Name:    body.Name,
-		Article: body.Article,
+		Name:     body.Name,
+		Article:  body.Article,
+		ImageUrl: body.ImageURL,
 	})
 	if err != nil {
 		writeError(w, err)

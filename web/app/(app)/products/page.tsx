@@ -1,36 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { LayoutGrid, List } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import { LoadingState } from "@/components/loading-state";
+import { ProductsGrid } from "@/components/products-grid";
+import { ProductsTable, type ProductRow } from "@/components/products-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-interface Product {
-  id: string;
-  name: string;
-  article: string;
-  created_at: string;
-}
+type ViewMode = "cards" | "table";
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductRow[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [view, setView] = useState<ViewMode>("cards");
 
   const [name, setName] = useState("");
   const [article, setArticle] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async (q: string) => {
@@ -40,7 +33,7 @@ export default function ProductsPage() {
       const path = q.trim()
         ? `/api/v1/products?q=${encodeURIComponent(q.trim())}`
         : "/api/v1/products";
-      const data = await apiFetch<{ products?: Product[] }>(path);
+      const data = await apiFetch<{ products?: ProductRow[] }>(path);
       setProducts(data.products ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
@@ -49,14 +42,14 @@ export default function ProductsPage() {
     }
   }, []);
 
+  // Живой поиск: ищем по мере ввода с задержкой (debounce), а не по кнопке.
+  // Срабатывает и на монтировании (query === "" → все карточки).
   useEffect(() => {
-    load("");
-  }, [load]);
-
-  async function onSearch(e: React.FormEvent) {
-    e.preventDefault();
-    await load(query);
-  }
+    const t = setTimeout(() => {
+      load(query);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query, load]);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -65,10 +58,11 @@ export default function ProductsPage() {
     try {
       await apiFetch("/api/v1/products", {
         method: "POST",
-        body: JSON.stringify({ name, article }),
+        body: JSON.stringify({ name, article, image_url: imageUrl }),
       });
       setName("");
       setArticle("");
+      setImageUrl("");
       await load(query);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось сохранить");
@@ -109,37 +103,57 @@ export default function ProductsPage() {
             placeholder="необязательно"
           />
         </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="image_url">Фото (URL)</Label>
+          <Input
+            id="image_url"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://… (загрузка в S3 — позже)"
+            className="w-72"
+          />
+        </div>
         <Button type="submit" disabled={saving}>
           {saving ? "Сохранение…" : "Добавить карточку"}
         </Button>
       </form>
 
-      <form onSubmit={onSearch} className="flex items-end gap-2">
-        <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor="search">Поиск по названию</Label>
-          <Input
-            id="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="начните вводить название…"
-          />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-1 items-end gap-2">
+          <div className="flex flex-1 flex-col gap-2">
+            <Label htmlFor="search">Поиск по названию</Label>
+            <Input
+              id="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="начните вводить название…"
+            />
+          </div>
+          {query && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setQuery("")}
+            >
+              Сбросить
+            </Button>
+          )}
         </div>
-        <Button type="submit" variant="outline">
-          Найти
-        </Button>
-        {query && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setQuery("");
-              load("");
-            }}
-          >
-            Сбросить
-          </Button>
-        )}
-      </form>
+
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={view}
+          onValueChange={(v) => v && setView(v as ViewMode)}
+        >
+          <ToggleGroupItem value="cards" aria-label="Карточки">
+            <LayoutGrid className="size-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="table" aria-label="Таблица">
+            <List className="size-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
 
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
 
@@ -149,27 +163,10 @@ export default function ProductsPage() {
         <p className="text-[var(--muted-foreground)] text-sm">
           {query ? "Ничего не найдено." : "Карточек пока нет."}
         </p>
+      ) : view === "cards" ? (
+        <ProductsGrid products={products} />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Название</TableHead>
-              <TableHead>Артикул</TableHead>
-              <TableHead>Создана</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.name}</TableCell>
-                <TableCell>{p.article || "—"}</TableCell>
-                <TableCell className="text-[var(--muted-foreground)]">
-                  {new Date(p.created_at).toLocaleString("ru-RU")}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ProductsTable products={products} />
       )}
     </div>
   );

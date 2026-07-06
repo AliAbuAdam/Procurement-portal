@@ -82,7 +82,7 @@ func (s *CatalogServer) ListSuppliers(ctx context.Context, req *catalogv1.ListSu
 // --- номенклатура (products) ---
 
 func (s *CatalogServer) CreateProduct(ctx context.Context, req *catalogv1.CreateProductRequest) (*catalogv1.Product, error) {
-	p, err := s.matching.CreateProduct(ctx, req.GetName(), req.GetArticle())
+	p, err := s.matching.CreateProduct(ctx, req.GetName(), req.GetArticle(), req.GetImageUrl())
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -182,6 +182,7 @@ func productToProto(p *domain.Product) *catalogv1.Product {
 		Id:        p.ID,
 		Name:      p.Name,
 		Article:   p.Article,
+		ImageUrl:  p.ImageURL,
 		CreatedAt: p.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
 	}
 }

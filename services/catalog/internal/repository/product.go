@@ -20,11 +20,11 @@ func NewProductRepository(db *postgres.TxManager) *ProductRepository {
 
 func (r *ProductRepository) Create(ctx context.Context, p *domain.Product) error {
 	const q = `
-		INSERT INTO catalog.products (name, article)
-		VALUES ($1, $2)
+		INSERT INTO catalog.products (name, article, image_url)
+		VALUES ($1, $2, $3)
 		RETURNING id, created_at`
 	err := r.db.Querier(ctx).
-		QueryRow(ctx, q, p.Name, p.Article).
+		QueryRow(ctx, q, p.Name, p.Article, p.ImageURL).
 		Scan(&p.ID, &p.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("insert product: %w", err)
@@ -34,7 +34,7 @@ func (r *ProductRepository) Create(ctx context.Context, p *domain.Product) error
 
 func (r *ProductRepository) List(ctx context.Context, limit int) ([]*domain.Product, error) {
 	const q = `
-		SELECT id, name, article, created_at
+		SELECT id, name, article, image_url, created_at
 		FROM catalog.products
 		ORDER BY created_at DESC, id
 		LIMIT $1`
@@ -53,7 +53,7 @@ func (r *ProductRepository) List(ctx context.Context, limit int) ([]*domain.Prod
 // длинных названий. Сортировка — по похожести слова, точные подстроки выше.
 func (r *ProductRepository) Search(ctx context.Context, query string, limit int) ([]*domain.Product, error) {
 	const q = `
-		SELECT id, name, article, created_at
+		SELECT id, name, article, image_url, created_at
 		FROM catalog.products
 		WHERE name ILIKE '%' || $1 || '%' OR $1 %> name
 		ORDER BY word_similarity($1, name) DESC, name
@@ -68,12 +68,12 @@ func (r *ProductRepository) Search(ctx context.Context, query string, limit int)
 
 func (r *ProductRepository) GetByID(ctx context.Context, id string) (*domain.Product, error) {
 	const q = `
-		SELECT id, name, article, created_at
+		SELECT id, name, article, image_url, created_at
 		FROM catalog.products
 		WHERE id = $1`
 	var p domain.Product
 	err := r.db.Querier(ctx).QueryRow(ctx, q, id).
-		Scan(&p.ID, &p.Name, &p.Article, &p.CreatedAt)
+		Scan(&p.ID, &p.Name, &p.Article, &p.ImageURL, &p.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, domain.ErrProductNotFound
 	}
@@ -87,7 +87,7 @@ func scanProducts(rows pgx.Rows) ([]*domain.Product, error) {
 	var out []*domain.Product
 	for rows.Next() {
 		var p domain.Product
-		if err := rows.Scan(&p.ID, &p.Name, &p.Article, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Article, &p.ImageURL, &p.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan product: %w", err)
 		}
 		out = append(out, &p)

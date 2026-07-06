@@ -31,13 +31,14 @@ const (
 	maxSuggestOffers      = 200
 )
 
-func (s *MatchingService) CreateProduct(ctx context.Context, name, article string) (*domain.Product, error) {
+func (s *MatchingService) CreateProduct(ctx context.Context, name, article, imageURL string) (*domain.Product, error) {
 	name = strings.TrimSpace(name)
 	article = strings.TrimSpace(article)
+	imageURL = strings.TrimSpace(imageURL)
 	if name == "" {
 		return nil, fmt.Errorf("%w: name is required", domain.ErrValidation)
 	}
-	p := &domain.Product{Name: name, Article: article}
+	p := &domain.Product{Name: name, Article: article, ImageURL: imageURL}
 	if err := s.products.Create(ctx, p); err != nil {
 		return nil, err
 	}
