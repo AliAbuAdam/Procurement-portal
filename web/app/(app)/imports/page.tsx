@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FileSpreadsheet, UploadCloud } from "lucide-react";
 
 import { apiFetch, apiUpload } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -67,6 +69,8 @@ export default function ImportsPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [supplierId, setSupplierId] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<Preview | null>(null);
   const [mapping, setMapping] = useState<Mapping | null>(null);
@@ -159,14 +163,14 @@ export default function ImportsPage() {
       <h1 className="text-2xl font-semibold">Прайс-листы</h1>
 
       {/* Шаг 1: поставщик + файл */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-[var(--border)] p-4">
+      <div className="flex flex-col gap-4 rounded-lg border border-[var(--border)] p-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="supplier">Поставщик</Label>
           <select
             id="supplier"
             value={supplierId}
             onChange={(e) => setSupplierId(e.target.value)}
-            className="h-9 rounded-md border border-[var(--input)] bg-transparent px-3 text-sm"
+            className="h-9 w-full max-w-xs rounded-md border border-[var(--input)] bg-transparent px-3 text-sm"
           >
             <option value="">— выберите —</option>
             {suppliers.map((s) => (
@@ -176,19 +180,75 @@ export default function ImportsPage() {
             ))}
           </select>
         </div>
+
         <div className="flex flex-col gap-2">
-          <Label htmlFor="file">Файл (.xlsx / .csv)</Label>
-          <input
-            id="file"
-            type="file"
-            accept=".xlsx,.csv,.txt"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="text-sm"
-          />
+          <Label>Файл прайс-листа</Label>
+          {/* Зона загрузки: клик или перетаскивание. Подсветка синей рамкой при drag. */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setDragging(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) setFile(f);
+            }}
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors outline-none",
+              dragging
+                ? "border-blue-500 bg-blue-500/5"
+                : "border-[var(--border)] hover:border-blue-400 hover:bg-[var(--secondary)]",
+            )}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.csv,.txt"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            {file ? (
+              <>
+                <FileSpreadsheet className="size-7 text-blue-600" />
+                <div className="text-sm font-medium">{file.name}</div>
+                <div className="text-muted-foreground text-xs">
+                  Нажмите или перетащите другой файл, чтобы заменить
+                </div>
+              </>
+            ) : (
+              <>
+                <UploadCloud className="text-muted-foreground size-7" />
+                <div className="text-sm">
+                  <span className="font-medium text-blue-600">
+                    Нажмите, чтобы выбрать
+                  </span>{" "}
+                  или перетащите файл сюда
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  Excel (.xlsx) или CSV
+                </div>
+              </>
+            )}
+          </div>
         </div>
-        <Button onClick={onPreview} disabled={!file || busy} variant="outline">
-          Предпросмотр
-        </Button>
+
+        <div>
+          <Button onClick={onPreview} disabled={!file || busy} variant="outline">
+            Предпросмотр
+          </Button>
+        </div>
       </div>
 
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}

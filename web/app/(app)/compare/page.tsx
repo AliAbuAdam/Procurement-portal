@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -69,9 +71,11 @@ export default function ComparePage() {
     setError("");
     setCmp(null);
     try {
-      const d = await apiFetch<Comparison>(
-        `/api/v1/products/${p.id}/prices`,
-      );
+      // Минимальная длительность, чтобы индикатор анализа был заметен.
+      const [d] = await Promise.all([
+        apiFetch<Comparison>(`/api/v1/products/${p.id}/prices`),
+        new Promise((r) => setTimeout(r, 550)),
+      ]);
       setCmp(d);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки цен");
@@ -130,7 +134,22 @@ export default function ComparePage() {
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
 
       {loading ? (
-        <p className="text-[var(--muted-foreground)] text-sm">Загрузка…</p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Loader2 className="size-4 animate-spin text-emerald-600" />
+            Анализируем цены поставщиков…
+          </div>
+          <div className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="ml-auto h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : selected && cmp ? (
         offers.length === 0 ? (
           <p className="text-[var(--muted-foreground)] text-sm">

@@ -60,8 +60,8 @@ const NAV: NavItem[] = [
     roles: ["admin", "manager"],
     items: [
       { title: "Поставщики", url: "/suppliers" },
-      { title: "Номенклатуры", url: "/products" },
       { title: "Прайс-листы", url: "/imports" },
+      { title: "Номенклатуры", url: "/products" },
     ],
   },
   {

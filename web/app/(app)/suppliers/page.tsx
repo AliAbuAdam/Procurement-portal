@@ -96,6 +96,7 @@ export default function SuppliersPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Напр. Фурнитор"
+              className="w-64"
               required
             />
           </div>

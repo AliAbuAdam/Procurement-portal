@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { LoginFlow, UiText } from "@ory/client";
+import { Boxes } from "lucide-react";
 
 import { ory } from "@/lib/ory";
 import { Button } from "@/components/ui/button";
@@ -107,89 +108,126 @@ function LoginForm() {
   }
 
   return (
-    <div className="bg-muted flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm md:p-8">
-        <form onSubmit={onSubmit}>
-          <FieldGroup>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <h1 className="text-2xl font-bold">Вход в Furnica</h1>
-              <p className="text-muted-foreground text-sm text-balance">
-                Введите e-mail и пароль для входа
-              </p>
-            </div>
+    <form onSubmit={onSubmit}>
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h1 className="text-2xl font-bold">Вход в Furnica</h1>
+          <p className="text-muted-foreground text-sm text-balance">
+            Введите e-mail и пароль для входа
+          </p>
+        </div>
 
-            <Field>
-              <FieldLabel htmlFor="identifier">E-mail</FieldLabel>
-              <Input
-                id="identifier"
-                name="identifier"
-                type="email"
-                placeholder="you@example.ru"
-                autoComplete="username"
-                required
-              />
-            </Field>
+        <Field>
+          <FieldLabel htmlFor="identifier">E-mail</FieldLabel>
+          <Input
+            id="identifier"
+            name="identifier"
+            type="email"
+            placeholder="you@example.ru"
+            autoComplete="username"
+            required
+          />
+        </Field>
 
-            <Field>
-              <FieldLabel htmlFor="password">Пароль</FieldLabel>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </Field>
+        <Field>
+          <div className="flex items-center">
+            <FieldLabel htmlFor="password">Пароль</FieldLabel>
+            {/* Восстановление пароля — функция появится позже. */}
+            <a
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              className="ml-auto text-sm underline-offset-4 hover:underline"
+            >
+              Забыли пароль?
+            </a>
+          </div>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+          />
+        </Field>
 
-            {messages.length > 0 && (
-              <ul className="text-destructive text-sm">
-                {messages.map((m) => (
-                  <li key={m.id}>{m.text}</li>
-                ))}
-              </ul>
-            )}
+        {messages.length > 0 && (
+          <ul className="text-destructive text-sm">
+            {messages.map((m) => (
+              <li key={m.id}>{m.text}</li>
+            ))}
+          </ul>
+        )}
 
-            <Field>
-              <Button type="submit" disabled={submitting || !flow}>
-                {submitting ? "Вход…" : "Войти"}
-              </Button>
-            </Field>
+        <Field>
+          <Button type="submit" disabled={submitting || !flow}>
+            {submitting ? "Вход…" : "Войти"}
+          </Button>
+        </Field>
 
-            <FieldSeparator>или</FieldSeparator>
+        <FieldSeparator>или</FieldSeparator>
 
-            <Field>
-              {/* Вход через Yandex — реализация OAuth будет подключена позже. */}
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() =>
-                  setMessages([
-                    {
-                      id: 1,
-                      type: "info",
-                      text: "Вход через Yandex будет подключён позже.",
-                    },
-                  ])
-                }
-              >
-                <YandexMark />
-                Войти через Yandex
-              </Button>
-              <FieldDescription className="text-center">
-                Аккаунты заводит администратор.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </form>
-      </div>
-    </div>
+        <Field>
+          {/* Вход через Yandex — реализация OAuth будет подключена позже. */}
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() =>
+              setMessages([
+                {
+                  id: 1,
+                  type: "info",
+                  text: "Вход через Yandex будет подключён позже.",
+                },
+              ])
+            }
+          >
+            <YandexMark />
+            Войти через Yandex
+          </Button>
+          <FieldDescription className="text-center">
+            Аккаунты заводит администратор.
+          </FieldDescription>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
-      <LoginForm />
-    </Suspense>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      {/* Левая колонка — логотип + форма */}
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <span className="flex items-center gap-2 font-medium">
+            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+              <Boxes className="size-4" />
+            </div>
+            Furnica
+          </span>
+        </div>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-sm">
+            <Suspense fallback={null}>
+              <LoginForm />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+
+      {/* Правая колонка — брендовая панель (вместо картинки; можно заменить на фото). */}
+      <div className="bg-muted relative hidden lg:block">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-emerald-600/15 via-transparent to-slate-500/10">
+          <div className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-2xl">
+            <Boxes className="size-9" />
+          </div>
+          <div className="text-3xl font-semibold">Furnica</div>
+          <p className="text-muted-foreground max-w-xs text-center text-sm text-balance">
+            Аналитика закупок мебельной фурнитуры: цены, номенклатура, сравнение
+            поставщиков.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
