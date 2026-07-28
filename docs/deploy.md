@@ -125,7 +125,8 @@ gateway, web и Caddy. Caddy сам получит TLS-сертификат дл
 
 ```bash
 docker compose --env-file .env.prod -f deploy/docker-compose.prod.yml ps
-curl -sf https://DOMAIN/api/healthz     # {"status":"ok","service":"gateway"}
+curl -s https://DOMAIN/api/v1/healthz   # {"error":"unauthenticated"} = gateway жив
+curl -s https://DOMAIN/.ory/kratos/public/health/ready   # {"status":"ok"}
 ```
 
 Логи при проблемах:
@@ -185,3 +186,6 @@ docker compose --env-file .env.prod -f deploy/docker-compose.prod.yml \
 - **Логин не проходит / слетает сессия**: проверьте `DOMAIN` в `.env.prod`
   (должен совпадать с реальным) и что заходите по `https://` (не по IP).
 - **`cipher: invalid length`**: `KRATOS_CIPHER_SECRET` должен быть ровно 32 символа.
+- **kratos-migrate в рестарт-лупе с `operator class "gin_trgm_ops" does not exist`**:
+  расширение pg_trgm установлено в `public` (миграцией catalog), а Kratos его не
+  видит — в `KRATOS_DSN` должно быть `search_path=kratos,public`.
