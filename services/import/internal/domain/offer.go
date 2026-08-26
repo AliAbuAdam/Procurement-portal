@@ -4,11 +4,13 @@ import "context"
 
 // ColumnMapping — соответствие колонок файла полям. Индекс 0-based, -1 = нет.
 type ColumnMapping struct {
-	Name     int
-	Article  int
-	Price    int
-	Stock    int
-	Currency int
+	Name      int
+	Article   int
+	Price     int // базовая (розничная) цена
+	Stock     int
+	Currency  int
+	PriceOpt  int // оптовая цена
+	PriceBulk int // крупный опт
 }
 
 // SupplierOffer — «сырая» строка прайса до сопоставления с карточкой (фаза 2).
@@ -23,6 +25,8 @@ type SupplierOffer struct {
 	Currency   string
 	InStock    bool
 	StockQty   int64
+	PriceOpt   float64 // 0 = в прайсе не было
+	PriceBulk  float64 // 0 = в прайсе не было
 }
 
 // ParsedSheet — результат разбора файла: заголовки и строки данных.

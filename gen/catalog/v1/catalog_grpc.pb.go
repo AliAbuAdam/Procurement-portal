@@ -26,6 +26,11 @@ const (
 	CatalogService_ListSuppliers_FullMethodName          = "/catalog.v1.CatalogService/ListSuppliers"
 	CatalogService_CreateProduct_FullMethodName          = "/catalog.v1.CatalogService/CreateProduct"
 	CatalogService_ListProducts_FullMethodName           = "/catalog.v1.CatalogService/ListProducts"
+	CatalogService_ListProductImages_FullMethodName      = "/catalog.v1.CatalogService/ListProductImages"
+	CatalogService_AddProductImage_FullMethodName        = "/catalog.v1.CatalogService/AddProductImage"
+	CatalogService_DeleteProductImage_FullMethodName     = "/catalog.v1.CatalogService/DeleteProductImage"
+	CatalogService_ReorderProductImages_FullMethodName   = "/catalog.v1.CatalogService/ReorderProductImages"
+	CatalogService_GetProductImage_FullMethodName        = "/catalog.v1.CatalogService/GetProductImage"
 	CatalogService_SuggestMatches_FullMethodName         = "/catalog.v1.CatalogService/SuggestMatches"
 	CatalogService_ListUnmatchedOffers_FullMethodName    = "/catalog.v1.CatalogService/ListUnmatchedOffers"
 	CatalogService_ConfirmMatch_FullMethodName           = "/catalog.v1.CatalogService/ConfirmMatch"
@@ -49,6 +54,14 @@ type CatalogServiceClient interface {
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	// ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
+	// --- Фото карточки (галерея, до 10 шт.) ---
+	// Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
+	ListProductImages(ctx context.Context, in *ListProductImagesRequest, opts ...grpc.CallOption) (*ListProductImagesResponse, error)
+	AddProductImage(ctx context.Context, in *AddProductImageRequest, opts ...grpc.CallOption) (*ProductImage, error)
+	DeleteProductImage(ctx context.Context, in *DeleteProductImageRequest, opts ...grpc.CallOption) (*DeleteProductImageResponse, error)
+	// Полный новый порядок фото карточки (все id, в нужной последовательности).
+	ReorderProductImages(ctx context.Context, in *ReorderProductImagesRequest, opts ...grpc.CallOption) (*ListProductImagesResponse, error)
+	GetProductImage(ctx context.Context, in *GetProductImageRequest, opts ...grpc.CallOption) (*GetProductImageResponse, error)
 	// --- Сопоставление (matching) ---
 	// Кандидаты для конкретных offer'ов (топ-N по similarity названия).
 	SuggestMatches(ctx context.Context, in *SuggestMatchesRequest, opts ...grpc.CallOption) (*SuggestMatchesResponse, error)
@@ -140,6 +153,56 @@ func (c *catalogServiceClient) ListProducts(ctx context.Context, in *ListProduct
 	return out, nil
 }
 
+func (c *catalogServiceClient) ListProductImages(ctx context.Context, in *ListProductImagesRequest, opts ...grpc.CallOption) (*ListProductImagesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProductImagesResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListProductImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) AddProductImage(ctx context.Context, in *AddProductImageRequest, opts ...grpc.CallOption) (*ProductImage, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductImage)
+	err := c.cc.Invoke(ctx, CatalogService_AddProductImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) DeleteProductImage(ctx context.Context, in *DeleteProductImageRequest, opts ...grpc.CallOption) (*DeleteProductImageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProductImageResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DeleteProductImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) ReorderProductImages(ctx context.Context, in *ReorderProductImagesRequest, opts ...grpc.CallOption) (*ListProductImagesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProductImagesResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ReorderProductImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetProductImage(ctx context.Context, in *GetProductImageRequest, opts ...grpc.CallOption) (*GetProductImageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProductImageResponse)
+	err := c.cc.Invoke(ctx, CatalogService_GetProductImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *catalogServiceClient) SuggestMatches(ctx context.Context, in *SuggestMatchesRequest, opts ...grpc.CallOption) (*SuggestMatchesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SuggestMatchesResponse)
@@ -206,6 +269,14 @@ type CatalogServiceServer interface {
 	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
 	// ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
+	// --- Фото карточки (галерея, до 10 шт.) ---
+	// Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
+	ListProductImages(context.Context, *ListProductImagesRequest) (*ListProductImagesResponse, error)
+	AddProductImage(context.Context, *AddProductImageRequest) (*ProductImage, error)
+	DeleteProductImage(context.Context, *DeleteProductImageRequest) (*DeleteProductImageResponse, error)
+	// Полный новый порядок фото карточки (все id, в нужной последовательности).
+	ReorderProductImages(context.Context, *ReorderProductImagesRequest) (*ListProductImagesResponse, error)
+	GetProductImage(context.Context, *GetProductImageRequest) (*GetProductImageResponse, error)
 	// --- Сопоставление (matching) ---
 	// Кандидаты для конкретных offer'ов (топ-N по similarity названия).
 	SuggestMatches(context.Context, *SuggestMatchesRequest) (*SuggestMatchesResponse, error)
@@ -247,6 +318,21 @@ func (UnimplementedCatalogServiceServer) CreateProduct(context.Context, *CreateP
 }
 func (UnimplementedCatalogServiceServer) ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListProducts not implemented")
+}
+func (UnimplementedCatalogServiceServer) ListProductImages(context.Context, *ListProductImagesRequest) (*ListProductImagesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListProductImages not implemented")
+}
+func (UnimplementedCatalogServiceServer) AddProductImage(context.Context, *AddProductImageRequest) (*ProductImage, error) {
+	return nil, status.Error(codes.Unimplemented, "method AddProductImage not implemented")
+}
+func (UnimplementedCatalogServiceServer) DeleteProductImage(context.Context, *DeleteProductImageRequest) (*DeleteProductImageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteProductImage not implemented")
+}
+func (UnimplementedCatalogServiceServer) ReorderProductImages(context.Context, *ReorderProductImagesRequest) (*ListProductImagesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReorderProductImages not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetProductImage(context.Context, *GetProductImageRequest) (*GetProductImageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProductImage not implemented")
 }
 func (UnimplementedCatalogServiceServer) SuggestMatches(context.Context, *SuggestMatchesRequest) (*SuggestMatchesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SuggestMatches not implemented")
@@ -410,6 +496,96 @@ func _CatalogService_ListProducts_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CatalogService_ListProductImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProductImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ListProductImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ListProductImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ListProductImages(ctx, req.(*ListProductImagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_AddProductImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddProductImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).AddProductImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_AddProductImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).AddProductImage(ctx, req.(*AddProductImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_DeleteProductImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).DeleteProductImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_DeleteProductImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).DeleteProductImage(ctx, req.(*DeleteProductImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_ReorderProductImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReorderProductImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ReorderProductImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ReorderProductImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ReorderProductImages(ctx, req.(*ReorderProductImagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetProductImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetProductImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetProductImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetProductImage(ctx, req.(*GetProductImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CatalogService_SuggestMatches_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SuggestMatchesRequest)
 	if err := dec(in); err != nil {
@@ -534,6 +710,26 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListProducts",
 			Handler:    _CatalogService_ListProducts_Handler,
+		},
+		{
+			MethodName: "ListProductImages",
+			Handler:    _CatalogService_ListProductImages_Handler,
+		},
+		{
+			MethodName: "AddProductImage",
+			Handler:    _CatalogService_AddProductImage_Handler,
+		},
+		{
+			MethodName: "DeleteProductImage",
+			Handler:    _CatalogService_DeleteProductImage_Handler,
+		},
+		{
+			MethodName: "ReorderProductImages",
+			Handler:    _CatalogService_ReorderProductImages_Handler,
+		},
+		{
+			MethodName: "GetProductImage",
+			Handler:    _CatalogService_GetProductImage_Handler,
 		},
 		{
 			MethodName: "SuggestMatches",

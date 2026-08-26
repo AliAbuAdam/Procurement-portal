@@ -32,7 +32,9 @@ func (r *PriceRepository) OffersByProduct(ctx context.Context, productID string)
 		    o.currency,
 		    o.in_stock,
 		    o.stock_qty,
-		    to_char(b.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS updated_at
+		    to_char(b.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS updated_at,
+		    o.price_opt,
+		    o.price_bulk
 		FROM catalog.offer_matches m
 		JOIN importer.supplier_offers o ON o.id = m.offer_id
 		JOIN importer.import_batches  b ON b.id = o.batch_id
@@ -48,7 +50,7 @@ func (r *PriceRepository) OffersByProduct(ctx context.Context, productID string)
 	var out []*domain.PriceOffer
 	for rows.Next() {
 		var o domain.PriceOffer
-		if err := rows.Scan(&o.SupplierID, &o.SupplierName, &o.Price, &o.Currency, &o.InStock, &o.StockQty, &o.UpdatedAt); err != nil {
+		if err := rows.Scan(&o.SupplierID, &o.SupplierName, &o.Price, &o.Currency, &o.InStock, &o.StockQty, &o.UpdatedAt, &o.PriceOpt, &o.PriceBulk); err != nil {
 			return nil, fmt.Errorf("scan offer: %w", err)
 		}
 		out = append(out, &o)

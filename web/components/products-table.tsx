@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  Camera,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -9,6 +10,8 @@ import {
   Columns3,
   Package,
 } from "lucide-react";
+
+import { imageUrl } from "@/lib/api";
 import {
   flexRender,
   getCoreRowModel,
@@ -50,7 +53,14 @@ export interface ProductRow {
   name: string;
   article: string;
   image_url?: string;
+  cover_image_id?: string;
   created_at: string;
+}
+
+// coverSrc — обложка: первое фото галереи, иначе легаси-URL.
+export function coverSrc(p: ProductRow): string | undefined {
+  if (p.cover_image_id) return imageUrl(p.cover_image_id, true);
+  return p.image_url || undefined;
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -58,15 +68,22 @@ const COLUMN_LABELS: Record<string, string> = {
   name: "Название",
   article: "Артикул",
   created_at: "Создана",
+  actions: "Действия",
 };
 
-const columns: ColumnDef<ProductRow>[] = [
+const makeColumns = (
+  onManageImages: (p: ProductRow) => void,
+): ColumnDef<ProductRow>[] => [
   {
     id: "image",
     header: "",
     cell: ({ row }) => (
       <Avatar className="size-9 rounded-md">
-        <AvatarImage src={row.original.image_url} alt={row.original.name} />
+        <AvatarImage
+          src={coverSrc(row.original)}
+          crossOrigin="use-credentials"
+          alt={row.original.name}
+        />
         <AvatarFallback className="rounded-md">
           <Package className="text-muted-foreground size-4" />
         </AvatarFallback>
@@ -94,12 +111,38 @@ const columns: ColumnDef<ProductRow>[] = [
       </span>
     ),
   },
+  {
+    id: "actions",
+    header: "",
+    cell: ({ row }) => (
+      <Button
+        size="icon"
+        variant="ghost"
+        className="size-8"
+        aria-label="Фото карточки"
+        title="Фото карточки"
+        onClick={() => onManageImages(row.original)}
+      >
+        <Camera className="size-4" />
+      </Button>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
 ];
 
-export function ProductsTable({ products }: { products: ProductRow[] }) {
+export function ProductsTable({
+  products,
+  onManageImages,
+}: {
+  products: ProductRow[];
+  onManageImages: (p: ProductRow) => void;
+}) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+
+  const columns = React.useMemo(() => makeColumns(onManageImages), [onManageImages]);
 
   const table = useReactTable({
     data: products,

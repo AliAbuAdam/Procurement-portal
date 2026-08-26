@@ -88,6 +88,8 @@ func (s *ImportServer) ListOffers(ctx context.Context, req *importv1.ListOffersR
 			Currency:   o.Currency,
 			InStock:    o.InStock,
 			StockQty:   o.StockQty,
+			PriceOpt:   o.PriceOpt,
+			PriceBulk:  o.PriceBulk,
 		})
 	}
 	return &importv1.ListOffersResponse{Offers: out, Total: int32(total)}, nil
@@ -97,24 +99,28 @@ func (s *ImportServer) ListOffers(ctx context.Context, req *importv1.ListOffersR
 
 func mappingFromProto(m *importv1.ColumnMapping) domain.ColumnMapping {
 	if m == nil {
-		return domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1}
+		return domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1}
 	}
 	return domain.ColumnMapping{
-		Name:     int(m.GetNameCol()),
-		Article:  int(m.GetArticleCol()),
-		Price:    int(m.GetPriceCol()),
-		Stock:    int(m.GetStockCol()),
-		Currency: int(m.GetCurrencyCol()),
+		Name:      int(m.GetNameCol()),
+		Article:   int(m.GetArticleCol()),
+		Price:     int(m.GetPriceCol()),
+		Stock:     int(m.GetStockCol()),
+		Currency:  int(m.GetCurrencyCol()),
+		PriceOpt:  int(m.GetPriceOptCol()),
+		PriceBulk: int(m.GetPriceBulkCol()),
 	}
 }
 
 func mappingToProto(m domain.ColumnMapping) *importv1.ColumnMapping {
 	return &importv1.ColumnMapping{
-		NameCol:     int32(m.Name),
-		ArticleCol:  int32(m.Article),
-		PriceCol:    int32(m.Price),
-		StockCol:    int32(m.Stock),
-		CurrencyCol: int32(m.Currency),
+		NameCol:      int32(m.Name),
+		ArticleCol:   int32(m.Article),
+		PriceCol:     int32(m.Price),
+		StockCol:     int32(m.Stock),
+		CurrencyCol:  int32(m.Currency),
+		PriceOptCol:  int32(m.PriceOpt),
+		PriceBulkCol: int32(m.PriceBulk),
 	}
 }
 

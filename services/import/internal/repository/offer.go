@@ -26,13 +26,13 @@ func (r *OfferRepository) InsertOffers(ctx context.Context, offers []*domain.Sup
 	for _, o := range offers {
 		rows = append(rows, []any{
 			o.BatchID, o.SupplierID, o.RowNum, o.RawName, o.RawArticle,
-			o.Price, o.Currency, o.InStock, o.StockQty,
+			o.Price, o.Currency, o.InStock, o.StockQty, o.PriceOpt, o.PriceBulk,
 		})
 	}
 	_, err := r.db.Querier(ctx).CopyFrom(
 		ctx,
 		pgx.Identifier{"importer", "supplier_offers"},
-		[]string{"batch_id", "supplier_id", "row_num", "raw_name", "raw_article", "price", "currency", "in_stock", "stock_qty"},
+		[]string{"batch_id", "supplier_id", "row_num", "raw_name", "raw_article", "price", "currency", "in_stock", "stock_qty", "price_opt", "price_bulk"},
 		pgx.CopyFromRows(rows),
 	)
 	if err != nil {
@@ -50,7 +50,7 @@ func (r *OfferRepository) ListOffers(ctx context.Context, batchID string, limit,
 	}
 
 	const q = `
-		SELECT id, batch_id, supplier_id, row_num, raw_name, raw_article, price, currency, in_stock, stock_qty
+		SELECT id, batch_id, supplier_id, row_num, raw_name, raw_article, price, currency, in_stock, stock_qty, price_opt, price_bulk
 		FROM importer.supplier_offers
 		WHERE batch_id = $1
 		ORDER BY row_num
@@ -64,7 +64,7 @@ func (r *OfferRepository) ListOffers(ctx context.Context, batchID string, limit,
 	var out []*domain.SupplierOffer
 	for rows.Next() {
 		var o domain.SupplierOffer
-		if err := rows.Scan(&o.ID, &o.BatchID, &o.SupplierID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency, &o.InStock, &o.StockQty); err != nil {
+		if err := rows.Scan(&o.ID, &o.BatchID, &o.SupplierID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency, &o.InStock, &o.StockQty, &o.PriceOpt, &o.PriceBulk); err != nil {
 			return nil, 0, fmt.Errorf("scan offer: %w", err)
 		}
 		out = append(out, &o)

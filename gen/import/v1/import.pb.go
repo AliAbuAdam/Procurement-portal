@@ -170,9 +170,11 @@ type ColumnMapping struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NameCol       int32                  `protobuf:"varint,1,opt,name=name_col,json=nameCol,proto3" json:"name_col,omitempty"`
 	ArticleCol    int32                  `protobuf:"varint,2,opt,name=article_col,json=articleCol,proto3" json:"article_col,omitempty"`
-	PriceCol      int32                  `protobuf:"varint,3,opt,name=price_col,json=priceCol,proto3" json:"price_col,omitempty"`
+	PriceCol      int32                  `protobuf:"varint,3,opt,name=price_col,json=priceCol,proto3" json:"price_col,omitempty"` // базовая (розничная) цена
 	StockCol      int32                  `protobuf:"varint,4,opt,name=stock_col,json=stockCol,proto3" json:"stock_col,omitempty"`
 	CurrencyCol   int32                  `protobuf:"varint,5,opt,name=currency_col,json=currencyCol,proto3" json:"currency_col,omitempty"`
+	PriceOptCol   int32                  `protobuf:"varint,6,opt,name=price_opt_col,json=priceOptCol,proto3" json:"price_opt_col,omitempty"`    // оптовая цена
+	PriceBulkCol  int32                  `protobuf:"varint,7,opt,name=price_bulk_col,json=priceBulkCol,proto3" json:"price_bulk_col,omitempty"` // крупный опт
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -238,6 +240,20 @@ func (x *ColumnMapping) GetStockCol() int32 {
 func (x *ColumnMapping) GetCurrencyCol() int32 {
 	if x != nil {
 		return x.CurrencyCol
+	}
+	return 0
+}
+
+func (x *ColumnMapping) GetPriceOptCol() int32 {
+	if x != nil {
+		return x.PriceOptCol
+	}
+	return 0
+}
+
+func (x *ColumnMapping) GetPriceBulkCol() int32 {
+	if x != nil {
+		return x.PriceBulkCol
 	}
 	return 0
 }
@@ -727,6 +743,8 @@ type SupplierOffer struct {
 	Currency      string                 `protobuf:"bytes,8,opt,name=currency,proto3" json:"currency,omitempty"`
 	InStock       bool                   `protobuf:"varint,9,opt,name=in_stock,json=inStock,proto3" json:"in_stock,omitempty"`
 	StockQty      int64                  `protobuf:"varint,10,opt,name=stock_qty,json=stockQty,proto3" json:"stock_qty,omitempty"`
+	PriceOpt      float64                `protobuf:"fixed64,11,opt,name=price_opt,json=priceOpt,proto3" json:"price_opt,omitempty"`    // оптовая цена (0 = в прайсе не было)
+	PriceBulk     float64                `protobuf:"fixed64,12,opt,name=price_bulk,json=priceBulk,proto3" json:"price_bulk,omitempty"` // крупный опт (0 = в прайсе не было)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -827,6 +845,20 @@ func (x *SupplierOffer) GetInStock() bool {
 func (x *SupplierOffer) GetStockQty() int64 {
 	if x != nil {
 		return x.StockQty
+	}
+	return 0
+}
+
+func (x *SupplierOffer) GetPriceOpt() float64 {
+	if x != nil {
+		return x.PriceOpt
+	}
+	return 0
+}
+
+func (x *SupplierOffer) GetPriceBulk() float64 {
+	if x != nil {
+		return x.PriceBulk
 	}
 	return 0
 }
@@ -951,14 +983,16 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\x12HealthCheckRequest\"G\n" +
 	"\x13HealthCheckResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
-	"\aservice\x18\x02 \x01(\tR\aservice\"\xa8\x01\n" +
+	"\aservice\x18\x02 \x01(\tR\aservice\"\xf2\x01\n" +
 	"\rColumnMapping\x12\x19\n" +
 	"\bname_col\x18\x01 \x01(\x05R\anameCol\x12\x1f\n" +
 	"\varticle_col\x18\x02 \x01(\x05R\n" +
 	"articleCol\x12\x1b\n" +
 	"\tprice_col\x18\x03 \x01(\x05R\bpriceCol\x12\x1b\n" +
 	"\tstock_col\x18\x04 \x01(\x05R\bstockCol\x12!\n" +
-	"\fcurrency_col\x18\x05 \x01(\x05R\vcurrencyCol\"\"\n" +
+	"\fcurrency_col\x18\x05 \x01(\x05R\vcurrencyCol\x12\"\n" +
+	"\rprice_opt_col\x18\x06 \x01(\x05R\vpriceOptCol\x12$\n" +
+	"\x0eprice_bulk_col\x18\a \x01(\x05R\fpriceBulkCol\"\"\n" +
 	"\n" +
 	"PreviewRow\x12\x14\n" +
 	"\x05cells\x18\x01 \x03(\tR\x05cells\"\xad\x01\n" +
@@ -998,7 +1032,7 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\vsupplier_id\x18\x01 \x01(\tR\n" +
 	"supplierId\"I\n" +
 	"\x13ListBatchesResponse\x122\n" +
-	"\abatches\x18\x01 \x03(\v2\x18.importer.v1.ImportBatchR\abatches\"\x9a\x02\n" +
+	"\abatches\x18\x01 \x03(\v2\x18.importer.v1.ImportBatchR\abatches\"\xd6\x02\n" +
 	"\rSupplierOffer\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bbatch_id\x18\x02 \x01(\tR\abatchId\x12\x1f\n" +
@@ -1012,7 +1046,10 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\bcurrency\x18\b \x01(\tR\bcurrency\x12\x19\n" +
 	"\bin_stock\x18\t \x01(\bR\ainStock\x12\x1b\n" +
 	"\tstock_qty\x18\n" +
-	" \x01(\x03R\bstockQty\"c\n" +
+	" \x01(\x03R\bstockQty\x12\x1b\n" +
+	"\tprice_opt\x18\v \x01(\x01R\bpriceOpt\x12\x1d\n" +
+	"\n" +
+	"price_bulk\x18\f \x01(\x01R\tpriceBulk\"c\n" +
 	"\x11ListOffersRequest\x12\x19\n" +
 	"\bbatch_id\x18\x01 \x01(\tR\abatchId\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x16\n" +

@@ -19,6 +19,15 @@ service CatalogService {
   // ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
 
+  // --- Фото карточки (галерея, до 10 шт.) ---
+  // Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
+  rpc ListProductImages(ListProductImagesRequest) returns (ListProductImagesResponse);
+  rpc AddProductImage(AddProductImageRequest) returns (ProductImage);
+  rpc DeleteProductImage(DeleteProductImageRequest) returns (DeleteProductImageResponse);
+  // Полный новый порядок фото карточки (все id, в нужной последовательности).
+  rpc ReorderProductImages(ReorderProductImagesRequest) returns (ListProductImagesResponse);
+  rpc GetProductImage(GetProductImageRequest) returns (GetProductImageResponse);
+
   // --- Сопоставление (matching) ---
   // Кандидаты для конкретных offer'ов (топ-N по similarity названия).
   rpc SuggestMatches(SuggestMatchesRequest) returns (SuggestMatchesResponse);
@@ -100,7 +109,8 @@ message Product {
   string name = 2;
   string article = 3;
   string created_at = 4;
-  string image_url = 5;          // URL или data-URL фото товара (S3 — позже)
+  string image_url = 5;          // легаси: внешний URL фото (для старых карточек)
+  string cover_image_id = 6;     // id первого фото галереи (пусто, если фото нет)
 }
 
 message CreateProductRequest {
@@ -116,6 +126,55 @@ message ListProductsRequest {
 
 message ListProductsResponse {
   repeated Product products = 1;
+}
+
+// --- Фото карточки ---
+
+// ProductImage — метаданные фото (без байтов: их отдаёт GetProductImage).
+message ProductImage {
+  string id = 1;
+  string product_id = 2;
+  int32 position = 3;
+  string content_type = 4;
+  string created_at = 5;
+}
+
+message ListProductImagesRequest {
+  string product_id = 1;
+}
+
+message ListProductImagesResponse {
+  repeated ProductImage images = 1;
+}
+
+message AddProductImageRequest {
+  string product_id = 1;
+  string content_type = 2; // image/jpeg | image/png | image/webp
+  bytes data = 3;          // сжатое фото (клиент ресайзит до ~1600px)
+  bytes thumb = 4;         // миниатюра для списков (~320px)
+}
+
+message DeleteProductImageRequest {
+  string id = 1;
+}
+
+message DeleteProductImageResponse {
+  bool ok = 1;
+}
+
+message ReorderProductImagesRequest {
+  string product_id = 1;
+  repeated string image_ids = 2; // все фото карточки в новом порядке
+}
+
+message GetProductImageRequest {
+  string id = 1;
+  bool thumb = 2; // true — отдать миниатюру
+}
+
+message GetProductImageResponse {
+  string content_type = 1;
+  bytes data = 2;
 }
 
 // --- Сопоставление (matching) ---

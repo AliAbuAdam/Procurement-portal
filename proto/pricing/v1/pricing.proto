@@ -21,15 +21,20 @@ message HealthCheckResponse {
 message PriceOffer {
   string supplier_id = 1;
   string supplier_name = 2;
-  double price = 3;
+  double price = 3;       // базовая (розничная) цена
   string currency = 4;
   bool in_stock = 5;
   int64 stock_qty = 6;
   string updated_at = 7;
+  double price_opt = 8;   // оптовая цена (0 = поставщик не дал)
+  double price_bulk = 9;  // крупный опт (0 = поставщик не дал)
 }
 
 message CompareByProductRequest {
   string product_id = 1;
+  // Уровень цены для сравнения: base (по умолчанию) | opt | bulk.
+  // Самый дешёвый ищется среди поставщиков, у которых эта цена задана.
+  string price_tier = 2;
 }
 
 message CompareByProductResponse {

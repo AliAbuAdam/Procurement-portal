@@ -113,11 +113,13 @@ type PriceOffer struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SupplierId    string                 `protobuf:"bytes,1,opt,name=supplier_id,json=supplierId,proto3" json:"supplier_id,omitempty"`
 	SupplierName  string                 `protobuf:"bytes,2,opt,name=supplier_name,json=supplierName,proto3" json:"supplier_name,omitempty"`
-	Price         float64                `protobuf:"fixed64,3,opt,name=price,proto3" json:"price,omitempty"`
+	Price         float64                `protobuf:"fixed64,3,opt,name=price,proto3" json:"price,omitempty"` // базовая (розничная) цена
 	Currency      string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
 	InStock       bool                   `protobuf:"varint,5,opt,name=in_stock,json=inStock,proto3" json:"in_stock,omitempty"`
 	StockQty      int64                  `protobuf:"varint,6,opt,name=stock_qty,json=stockQty,proto3" json:"stock_qty,omitempty"`
 	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	PriceOpt      float64                `protobuf:"fixed64,8,opt,name=price_opt,json=priceOpt,proto3" json:"price_opt,omitempty"`    // оптовая цена (0 = поставщик не дал)
+	PriceBulk     float64                `protobuf:"fixed64,9,opt,name=price_bulk,json=priceBulk,proto3" json:"price_bulk,omitempty"` // крупный опт (0 = поставщик не дал)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -201,9 +203,26 @@ func (x *PriceOffer) GetUpdatedAt() string {
 	return ""
 }
 
+func (x *PriceOffer) GetPriceOpt() float64 {
+	if x != nil {
+		return x.PriceOpt
+	}
+	return 0
+}
+
+func (x *PriceOffer) GetPriceBulk() float64 {
+	if x != nil {
+		return x.PriceBulk
+	}
+	return 0
+}
+
 type CompareByProductRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	ProductId string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	// Уровень цены для сравнения: base (по умолчанию) | opt | bulk.
+	// Самый дешёвый ищется среди поставщиков, у которых эта цена задана.
+	PriceTier     string `protobuf:"bytes,2,opt,name=price_tier,json=priceTier,proto3" json:"price_tier,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -241,6 +260,13 @@ func (*CompareByProductRequest) Descriptor() ([]byte, []int) {
 func (x *CompareByProductRequest) GetProductId() string {
 	if x != nil {
 		return x.ProductId
+	}
+	return ""
+}
+
+func (x *CompareByProductRequest) GetPriceTier() string {
+	if x != nil {
+		return x.PriceTier
 	}
 	return ""
 }
@@ -314,7 +340,7 @@ const file_pricing_v1_pricing_proto_rawDesc = "" +
 	"\x12HealthCheckRequest\"G\n" +
 	"\x13HealthCheckResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
-	"\aservice\x18\x02 \x01(\tR\aservice\"\xdb\x01\n" +
+	"\aservice\x18\x02 \x01(\tR\aservice\"\x97\x02\n" +
 	"\n" +
 	"PriceOffer\x12\x1f\n" +
 	"\vsupplier_id\x18\x01 \x01(\tR\n" +
@@ -325,10 +351,15 @@ const file_pricing_v1_pricing_proto_rawDesc = "" +
 	"\bin_stock\x18\x05 \x01(\bR\ainStock\x12\x1b\n" +
 	"\tstock_qty\x18\x06 \x01(\x03R\bstockQty\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\tR\tupdatedAt\"8\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\x12\x1b\n" +
+	"\tprice_opt\x18\b \x01(\x01R\bpriceOpt\x12\x1d\n" +
+	"\n" +
+	"price_bulk\x18\t \x01(\x01R\tpriceBulk\"W\n" +
 	"\x17CompareByProductRequest\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x01 \x01(\tR\tproductId\"\x9b\x01\n" +
+	"product_id\x18\x01 \x01(\tR\tproductId\x12\x1d\n" +
+	"\n" +
+	"price_tier\x18\x02 \x01(\tR\tpriceTier\"\x9b\x01\n" +
 	"\x18CompareByProductResponse\x12\x1d\n" +
 	"\n" +
 	"product_id\x18\x01 \x01(\tR\tproductId\x12.\n" +

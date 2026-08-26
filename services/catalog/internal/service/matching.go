@@ -10,15 +10,16 @@ import (
 	"github.com/furnica/backend/services/catalog/internal/domain"
 )
 
-// MatchingService — карточки номенклатуры и сопоставление строк прайсов с ними.
+// MatchingService — карточки номенклатуры, их фото и сопоставление строк прайсов.
 type MatchingService struct {
 	txm      *postgres.TxManager
 	products domain.ProductRepository
 	matches  domain.MatchRepository
+	images   domain.ProductImageRepository
 }
 
-func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository) *MatchingService {
-	return &MatchingService{txm: txm, products: products, matches: matches}
+func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository) *MatchingService {
+	return &MatchingService{txm: txm, products: products, matches: matches, images: images}
 }
 
 const (
@@ -53,6 +54,92 @@ func (s *MatchingService) ListProducts(ctx context.Context, query string, limit 
 		return s.products.Search(ctx, query, limit)
 	}
 	return s.products.List(ctx, limit)
+}
+
+// --- фото карточки (галерея) ---
+
+const (
+	maxImageBytes = 3 << 20  // 3 МиБ на сжатое фото — с запасом к клиентскому ресайзу
+	maxThumbBytes = 512 << 10
+)
+
+var allowedImageTypes = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/webp": true,
+}
+
+func (s *MatchingService) ListProductImages(ctx context.Context, productID string) ([]*domain.ProductImage, error) {
+	productID = strings.TrimSpace(productID)
+	if productID == "" {
+		return nil, fmt.Errorf("%w: product_id is required", domain.ErrValidation)
+	}
+	return s.images.ListByProduct(ctx, productID)
+}
+
+func (s *MatchingService) AddProductImage(ctx context.Context, productID, contentType string, data, thumb []byte) (*domain.ProductImage, error) {
+	productID = strings.TrimSpace(productID)
+	if productID == "" {
+		return nil, fmt.Errorf("%w: product_id is required", domain.ErrValidation)
+	}
+	if len(data) == 0 {
+		return nil, fmt.Errorf("%w: пустой файл фото", domain.ErrValidation)
+	}
+	if len(data) > maxImageBytes || len(thumb) > maxThumbBytes {
+		return nil, fmt.Errorf("%w: фото слишком большое (максимум %d МБ)", domain.ErrValidation, maxImageBytes>>20)
+	}
+	if !allowedImageTypes[contentType] {
+		return nil, fmt.Errorf("%w: поддерживаются только JPEG, PNG и WebP", domain.ErrValidation)
+	}
+
+	img := &domain.ProductImage{ProductID: productID, ContentType: contentType, Data: data, Thumb: thumb}
+	// Проверка лимита и вставка в одной транзакции, чтобы параллельные загрузки
+	// не перепрыгнули лимит.
+	err := s.txm.WithinTx(ctx, func(ctx context.Context) error {
+		if _, err := s.products.GetByID(ctx, productID); err != nil {
+			return err
+		}
+		n, err := s.images.CountByProduct(ctx, productID)
+		if err != nil {
+			return err
+		}
+		if n >= domain.MaxImagesPerProduct {
+			return fmt.Errorf("%w: у карточки уже %d фото (максимум)", domain.ErrValidation, domain.MaxImagesPerProduct)
+		}
+		return s.images.Insert(ctx, img)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
+}
+
+func (s *MatchingService) DeleteProductImage(ctx context.Context, id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	return s.images.Delete(ctx, id)
+}
+
+func (s *MatchingService) ReorderProductImages(ctx context.Context, productID string, ids []string) ([]*domain.ProductImage, error) {
+	productID = strings.TrimSpace(productID)
+	ids = trimIDs(ids)
+	if productID == "" || len(ids) == 0 {
+		return nil, fmt.Errorf("%w: product_id and image_ids are required", domain.ErrValidation)
+	}
+	if err := s.images.Reorder(ctx, productID, ids); err != nil {
+		return nil, err
+	}
+	return s.images.ListByProduct(ctx, productID)
+}
+
+func (s *MatchingService) GetProductImage(ctx context.Context, id string, thumb bool) (string, []byte, error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return "", nil, fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	return s.images.GetData(ctx, id, thumb)
 }
 
 func (s *MatchingService) Suggest(ctx context.Context, offerIDs []string, limit int) ([]*domain.OfferSuggestion, error) {

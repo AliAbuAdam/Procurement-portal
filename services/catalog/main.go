@@ -58,7 +58,8 @@ func run() error {
 
 	productRepo := repository.NewProductRepository(txm)
 	matchRepo := repository.NewMatchRepository(txm)
-	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo)
+	imageRepo := repository.NewProductImageRepository(txm)
+	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo)
 
 	srv := api.NewCatalogServer(supplierSvc, matchingSvc)
 

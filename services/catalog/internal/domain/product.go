@@ -11,11 +11,12 @@ var ErrProductNotFound = errors.New("product not found")
 
 // Product — мастер-карточка номенклатуры, к которой сопоставляются строки прайсов.
 type Product struct {
-	ID        string
-	Name      string
-	Article   string
-	ImageURL  string
-	CreatedAt time.Time
+	ID           string
+	Name         string
+	Article      string
+	ImageURL     string // легаси: внешний URL фото (новые фото — в product_images)
+	CoverImageID string // id первого фото галереи ("" — фото нет)
+	CreatedAt    time.Time
 }
 
 // ProductRepository — хранилище карточек (схема catalog).

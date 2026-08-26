@@ -1,6 +1,16 @@
 // Клиент REST API (gateway). Куки сессии Kratos шлём через credentials.
 const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
+// apiUrl — абсолютный URL ресурса gateway (для <img src>, ссылок и т.п.).
+export function apiUrl(path: string): string {
+  return base + path;
+}
+
+// imageUrl — адрес фото галереи товара (см. gateway GET /api/v1/images/{id}).
+export function imageUrl(id: string, thumb = false): string {
+  return `${base}/api/v1/images/${id}${thumb ? "?thumb=1" : ""}`;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {

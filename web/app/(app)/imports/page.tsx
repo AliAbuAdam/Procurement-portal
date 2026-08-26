@@ -49,6 +49,8 @@ interface Mapping {
   price_col: number;
   stock_col: number;
   currency_col: number;
+  price_opt_col: number;
+  price_bulk_col: number;
 }
 
 interface Preview {
@@ -67,6 +69,8 @@ interface Offer {
   currency: string;
   in_stock?: boolean;
   stock_qty?: number;
+  price_opt?: number;
+  price_bulk?: number;
 }
 
 // В proto нулевой индекс не сериализуется — undefined трактуем как 0.
@@ -75,7 +79,9 @@ const col = (v?: number) => (v === undefined ? 0 : v);
 const FIELDS: { key: keyof Mapping; label: string; required?: boolean }[] = [
   { key: "name_col", label: "Название", required: true },
   { key: "article_col", label: "Артикул" },
-  { key: "price_col", label: "Цена" },
+  { key: "price_col", label: "Цена (розница)" },
+  { key: "price_opt_col", label: "Цена опт" },
+  { key: "price_bulk_col", label: "Цена крупный опт" },
   { key: "stock_col", label: "Наличие / остаток" },
   { key: "currency_col", label: "Валюта" },
 ];
@@ -132,6 +138,8 @@ export default function ImportsPage() {
         price_col: col(s.price_col),
         stock_col: col(s.stock_col),
         currency_col: col(s.currency_col),
+        price_opt_col: col(s.price_opt_col),
+        price_bulk_col: col(s.price_bulk_col),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка предпросмотра");
@@ -417,8 +425,13 @@ export default function ImportsPage() {
         </div>
       )}
 
-      {/* Разобранные строки выбранного батча */}
-      {offers && (
+      {/* Разобранные строки выбранного батча. Колонки опта показываем,
+          только если такие цены в батче вообще есть. */}
+      {offers && (() => {
+        const hasOpt = offers.some((o) => (o.price_opt ?? 0) > 0);
+        const hasBulk = offers.some((o) => (o.price_bulk ?? 0) > 0);
+        const cols = 6 + (hasOpt ? 1 : 0) + (hasBulk ? 1 : 0);
+        return (
         <div className="flex flex-col gap-2">
           <h2 className="font-medium">Разобранные строки ({offers.length})</h2>
           <Table>
@@ -428,6 +441,8 @@ export default function ImportsPage() {
                 <TableHead>Название</TableHead>
                 <TableHead>Артикул</TableHead>
                 <TableHead>Цена</TableHead>
+                {hasOpt && <TableHead>Опт</TableHead>}
+                {hasBulk && <TableHead>Крупный опт</TableHead>}
                 <TableHead>Наличие</TableHead>
                 <TableHead className="w-0 text-right">Сопоставление</TableHead>
               </TableRow>
@@ -446,6 +461,16 @@ export default function ImportsPage() {
                       <TableCell>
                         {o.price} {o.currency}
                       </TableCell>
+                      {hasOpt && (
+                        <TableCell>
+                          {(o.price_opt ?? 0) > 0 ? `${o.price_opt} ${o.currency}` : "—"}
+                        </TableCell>
+                      )}
+                      {hasBulk && (
+                        <TableCell>
+                          {(o.price_bulk ?? 0) > 0 ? `${o.price_bulk} ${o.currency}` : "—"}
+                        </TableCell>
+                      )}
                       <TableCell>
                         {o.in_stock ? `в наличии${o.stock_qty ? ` (${o.stock_qty})` : ""}` : "нет"}
                       </TableCell>
@@ -465,7 +490,7 @@ export default function ImportsPage() {
                     </TableRow>
                     {open && (
                       <TableRow>
-                        <TableCell colSpan={6} className="bg-[var(--secondary)]/40">
+                        <TableCell colSpan={cols} className="bg-[var(--secondary)]/40">
                           <OfferMatchCard offerId={o.id} />
                         </TableCell>
                       </TableRow>
@@ -476,7 +501,8 @@ export default function ImportsPage() {
             </TableBody>
           </Table>
         </div>
-      )}
+        );
+      })()}
 
       {/* История загрузок */}
       <div className="flex flex-col gap-2">

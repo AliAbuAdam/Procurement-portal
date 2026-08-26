@@ -38,9 +38,11 @@ enum ImportStatus {
 message ColumnMapping {
   int32 name_col = 1;
   int32 article_col = 2;
-  int32 price_col = 3;
+  int32 price_col = 3;      // базовая (розничная) цена
   int32 stock_col = 4;
   int32 currency_col = 5;
+  int32 price_opt_col = 6;  // оптовая цена
+  int32 price_bulk_col = 7; // крупный опт
 }
 
 message PreviewRow {
@@ -102,6 +104,8 @@ message SupplierOffer {
   string currency = 8;
   bool in_stock = 9;
   int64 stock_qty = 10;
+  double price_opt = 11;  // оптовая цена (0 = в прайсе не было)
+  double price_bulk = 12; // крупный опт (0 = в прайсе не было)
 }
 
 message ListOffersRequest {

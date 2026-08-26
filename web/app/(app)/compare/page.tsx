@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { LoadingState } from "@/components/loading-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Table,
   TableBody,
@@ -30,6 +31,8 @@ interface Offer {
   in_stock?: boolean;
   stock_qty?: number;
   updated_at?: string;
+  price_opt?: number;
+  price_bulk?: number;
 }
 
 interface Comparison {
@@ -38,11 +41,28 @@ interface Comparison {
   cheapest_supplier_id?: string;
 }
 
+// Уровень цены. Все три цены приходят в одном ответе, поэтому переключение —
+// чисто клиентское, без повторного запроса.
+type Tier = "base" | "opt" | "bulk";
+
+const TIERS: { value: Tier; label: string }[] = [
+  { value: "base", label: "Розница" },
+  { value: "opt", label: "Опт" },
+  { value: "bulk", label: "Крупный опт" },
+];
+
+function tierPrice(o: Offer, t: Tier): number {
+  if (t === "opt") return o.price_opt ?? 0;
+  if (t === "bulk") return o.price_bulk ?? 0;
+  return o.price ?? 0;
+}
+
 export default function ComparePage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [cmp, setCmp] = useState<Comparison | null>(null);
+  const [tier, setTier] = useState<Tier>("base");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -83,11 +103,13 @@ export default function ComparePage() {
     }
   }
 
-  // Сортируем по цене и берём минимум как базу для разницы в %.
+  // Сортируем по цене выбранного уровня; поставщики без этой цены — в конце.
+  // Минимум заданных цен — база для разницы в %.
   const offers = [...(cmp?.offers ?? [])].sort(
-    (a, b) => (a.price ?? 0) - (b.price ?? 0),
+    (a, b) =>
+      (tierPrice(a, tier) || Infinity) - (tierPrice(b, tier) || Infinity),
   );
-  const cheapestPrice = offers.length ? (offers[0].price ?? 0) : 0;
+  const cheapestPrice = offers.length ? tierPrice(offers[0], tier) : 0;
 
   return (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
@@ -142,7 +164,22 @@ export default function ComparePage() {
           </p>
         ) : (
           <div className="flex flex-col gap-3">
-            <h2 className="font-medium">{selected.name}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-medium">{selected.name}</h2>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                value={tier}
+                onValueChange={(v) => v && setTier(v as Tier)}
+              >
+                {TIERS.map((t) => (
+                  <ToggleGroupItem key={t.value} value={t.value}>
+                    {t.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -155,8 +192,9 @@ export default function ComparePage() {
               </TableHeader>
               <TableBody>
                 {offers.map((o, i) => {
-                  const price = o.price ?? 0;
-                  const isCheapest = i === 0;
+                  const price = tierPrice(o, tier);
+                  const hasPrice = price > 0;
+                  const isCheapest = i === 0 && hasPrice;
                   const diff =
                     cheapestPrice > 0
                       ? ((price - cheapestPrice) / cheapestPrice) * 100
@@ -175,7 +213,7 @@ export default function ComparePage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {price} {o.currency ?? ""}
+                        {hasPrice ? `${price} ${o.currency ?? ""}` : "—"}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -184,7 +222,7 @@ export default function ComparePage() {
                             : "text-[var(--muted-foreground)]",
                         )}
                       >
-                        {isCheapest ? "—" : `+${diff.toFixed(1)}%`}
+                        {isCheapest || !hasPrice ? "—" : `+${diff.toFixed(1)}%`}
                       </TableCell>
                       <TableCell>
                         {o.in_stock

@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ImagePlus, LayoutGrid, List } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
+import { compressImage } from "@/lib/image";
 import { LoadingState } from "@/components/loading-state";
+import {
+  MAX_IMAGES,
+  ProductImagesSheet,
+} from "@/components/product-images-sheet";
 import { ProductsGrid } from "@/components/products-grid";
 import { ProductsTable, type ProductRow } from "@/components/products-table";
 import { Button } from "@/components/ui/button";
@@ -23,8 +28,12 @@ export default function ProductsPage() {
 
   const [name, setName] = useState("");
   const [article, setArticle] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Карточка, чья галерея открыта в боковой панели.
+  const [imagesFor, setImagesFor] = useState<ProductRow | null>(null);
 
   const load = useCallback(async (q: string) => {
     setLoading(true);
@@ -56,13 +65,26 @@ export default function ProductsPage() {
     setSaving(true);
     setError("");
     try {
-      await apiFetch("/api/v1/products", {
+      const created = await apiFetch<{ id: string }>("/api/v1/products", {
         method: "POST",
-        body: JSON.stringify({ name, article, image_url: imageUrl }),
+        body: JSON.stringify({ name, article }),
       });
+      // Фото грузим после создания карточки: сжимаем на клиенте и шлём по одному.
+      for (const f of files.slice(0, MAX_IMAGES)) {
+        const img = await compressImage(f);
+        await apiFetch(`/api/v1/products/${created.id}/images`, {
+          method: "POST",
+          body: JSON.stringify({
+            content_type: img.contentType,
+            data_base64: img.dataBase64,
+            thumb_base64: img.thumbBase64,
+          }),
+        });
+      }
       setName("");
       setArticle("");
-      setImageUrl("");
+      setFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await load(query);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось сохранить");
@@ -104,13 +126,24 @@ export default function ProductsPage() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="image_url">Фото (URL)</Label>
-          <Input
-            id="image_url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://… (загрузка в S3 — позже)"
-            className="w-72"
+          <Label>Фото (до {MAX_IMAGES} шт.)</Label>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImagePlus className="size-4" />
+            {files.length > 0 ? `Выбрано: ${files.length}` : "Выбрать файлы"}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            className="hidden"
+            onChange={(e) =>
+              setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))
+            }
           />
         </div>
         <Button type="submit" disabled={saving}>
@@ -164,10 +197,16 @@ export default function ProductsPage() {
           {query ? "Ничего не найдено." : "Карточек пока нет."}
         </p>
       ) : view === "cards" ? (
-        <ProductsGrid products={products} />
+        <ProductsGrid products={products} onManageImages={setImagesFor} />
       ) : (
-        <ProductsTable products={products} />
+        <ProductsTable products={products} onManageImages={setImagesFor} />
       )}
+
+      <ProductImagesSheet
+        product={imagesFor}
+        onClose={() => setImagesFor(null)}
+        onChanged={() => load(query)}
+      />
     </div>
   );
 }

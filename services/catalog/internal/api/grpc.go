@@ -101,6 +101,47 @@ func (s *CatalogServer) ListProducts(ctx context.Context, req *catalogv1.ListPro
 	return &catalogv1.ListProductsResponse{Products: out}, nil
 }
 
+// --- фото карточки (галерея) ---
+
+func (s *CatalogServer) ListProductImages(ctx context.Context, req *catalogv1.ListProductImagesRequest) (*catalogv1.ListProductImagesResponse, error) {
+	list, err := s.matching.ListProductImages(ctx, req.GetProductId())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.ListProductImagesResponse{Images: imagesToProto(list)}, nil
+}
+
+func (s *CatalogServer) AddProductImage(ctx context.Context, req *catalogv1.AddProductImageRequest) (*catalogv1.ProductImage, error) {
+	img, err := s.matching.AddProductImage(ctx, req.GetProductId(), req.GetContentType(), req.GetData(), req.GetThumb())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return imageToProto(img), nil
+}
+
+func (s *CatalogServer) DeleteProductImage(ctx context.Context, req *catalogv1.DeleteProductImageRequest) (*catalogv1.DeleteProductImageResponse, error) {
+	if err := s.matching.DeleteProductImage(ctx, req.GetId()); err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.DeleteProductImageResponse{Ok: true}, nil
+}
+
+func (s *CatalogServer) ReorderProductImages(ctx context.Context, req *catalogv1.ReorderProductImagesRequest) (*catalogv1.ListProductImagesResponse, error) {
+	list, err := s.matching.ReorderProductImages(ctx, req.GetProductId(), req.GetImageIds())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.ListProductImagesResponse{Images: imagesToProto(list)}, nil
+}
+
+func (s *CatalogServer) GetProductImage(ctx context.Context, req *catalogv1.GetProductImageRequest) (*catalogv1.GetProductImageResponse, error) {
+	contentType, data, err := s.matching.GetProductImage(ctx, req.GetId(), req.GetThumb())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.GetProductImageResponse{ContentType: contentType, Data: data}, nil
+}
+
 // --- сопоставление (matching) ---
 
 func (s *CatalogServer) SuggestMatches(ctx context.Context, req *catalogv1.SuggestMatchesRequest) (*catalogv1.SuggestMatchesResponse, error) {
@@ -179,12 +220,31 @@ func (s *CatalogServer) Unmatch(ctx context.Context, req *catalogv1.UnmatchReque
 
 func productToProto(p *domain.Product) *catalogv1.Product {
 	return &catalogv1.Product{
-		Id:        p.ID,
-		Name:      p.Name,
-		Article:   p.Article,
-		ImageUrl:  p.ImageURL,
-		CreatedAt: p.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+		Id:           p.ID,
+		Name:         p.Name,
+		Article:      p.Article,
+		ImageUrl:     p.ImageURL,
+		CoverImageId: p.CoverImageID,
+		CreatedAt:    p.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
 	}
+}
+
+func imageToProto(img *domain.ProductImage) *catalogv1.ProductImage {
+	return &catalogv1.ProductImage{
+		Id:          img.ID,
+		ProductId:   img.ProductID,
+		Position:    int32(img.Position),
+		ContentType: img.ContentType,
+		CreatedAt:   img.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func imagesToProto(list []*domain.ProductImage) []*catalogv1.ProductImage {
+	out := make([]*catalogv1.ProductImage, 0, len(list))
+	for _, img := range list {
+		out = append(out, imageToProto(img))
+	}
+	return out
 }
 
 func matchToProto(m *domain.Match) *catalogv1.Match {
@@ -242,6 +302,7 @@ func toStatus(err error) error {
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, domain.ErrNotFound),
 		errors.Is(err, domain.ErrProductNotFound),
+		errors.Is(err, domain.ErrImageNotFound),
 		errors.Is(err, domain.ErrOfferNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, domain.ErrSupplierExists):

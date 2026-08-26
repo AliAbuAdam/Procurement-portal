@@ -26,7 +26,7 @@ func (s *PricingServer) HealthCheck(context.Context, *pricingv1.HealthCheckReque
 }
 
 func (s *PricingServer) CompareByProduct(ctx context.Context, req *pricingv1.CompareByProductRequest) (*pricingv1.CompareByProductResponse, error) {
-	cmp, err := s.prices.CompareByProduct(ctx, req.GetProductId())
+	cmp, err := s.prices.CompareByProduct(ctx, req.GetProductId(), domain.PriceTier(req.GetPriceTier()))
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -40,6 +40,8 @@ func (s *PricingServer) CompareByProduct(ctx context.Context, req *pricingv1.Com
 			InStock:      o.InStock,
 			StockQty:     o.StockQty,
 			UpdatedAt:    o.UpdatedAt,
+			PriceOpt:     o.PriceOpt,
+			PriceBulk:    o.PriceBulk,
 		})
 	}
 	return &pricingv1.CompareByProductResponse{

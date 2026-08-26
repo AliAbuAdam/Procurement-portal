@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -153,6 +154,101 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, resp)
 }
 
+// --- фото карточки (галерея) ---
+
+func (h *Handler) ListProductImages(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.ListProductImages(r.Context(), &catalogv1.ListProductImagesRequest{
+		ProductId: chi.URLParam(r, "id"),
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// AddProductImage принимает JSON с base64 (фото уже сжато на клиенте).
+func (h *Handler) AddProductImage(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ContentType string `json:"content_type"`
+		Data        string `json:"data_base64"`
+		Thumb       string `json:"thumb_base64"`
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	data, err := base64.StdEncoding.DecodeString(body.Data)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid data_base64"})
+		return
+	}
+	thumb, err := base64.StdEncoding.DecodeString(body.Thumb)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid thumb_base64"})
+		return
+	}
+	resp, err := h.c.Catalog.AddProductImage(r.Context(), &catalogv1.AddProductImageRequest{
+		ProductId:   chi.URLParam(r, "id"),
+		ContentType: body.ContentType,
+		Data:        data,
+		Thumb:       thumb,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, resp)
+}
+
+func (h *Handler) DeleteProductImage(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.DeleteProductImage(r.Context(), &catalogv1.DeleteProductImageRequest{
+		Id: chi.URLParam(r, "imageID"),
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) ReorderProductImages(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ImageIDs []string `json:"image_ids"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.ReorderProductImages(r.Context(), &catalogv1.ReorderProductImagesRequest{
+		ProductId: chi.URLParam(r, "id"),
+		ImageIds:  body.ImageIDs,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// GetImage отдаёт бинарное содержимое фото (или миниатюру ?thumb=1).
+// Содержимое фото по id неизменно, поэтому кэшируем в браузере надолго.
+func (h *Handler) GetImage(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.GetProductImage(r.Context(), &catalogv1.GetProductImageRequest{
+		Id:    chi.URLParam(r, "imageID"),
+		Thumb: r.URL.Query().Get("thumb") == "1",
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", resp.GetContentType())
+	w.Header().Set("Cache-Control", "private, max-age=604800, immutable")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(resp.GetData())
+}
+
 func (h *Handler) ListUnmatchedOffers(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.c.Catalog.ListUnmatchedOffers(r.Context(), &catalogv1.ListUnmatchedOffersRequest{
 		BatchId:  chi.URLParam(r, "id"),
@@ -252,7 +348,10 @@ func actorEmail(r *http.Request) string {
 
 func (h *Handler) CompareByProduct(w http.ResponseWriter, r *http.Request) {
 	productID := chi.URLParam(r, "productID")
-	resp, err := h.c.Pricing.CompareByProduct(r.Context(), &pricingv1.CompareByProductRequest{ProductId: productID})
+	resp, err := h.c.Pricing.CompareByProduct(r.Context(), &pricingv1.CompareByProductRequest{
+		ProductId: productID,
+		PriceTier: r.URL.Query().Get("tier"), // base (по умолчанию) | opt | bulk
+	})
 	if err != nil {
 		writeError(w, err)
 		return
@@ -264,20 +363,24 @@ func (h *Handler) CompareByProduct(w http.ResponseWriter, r *http.Request) {
 
 // clientMapping — маппинг колонок из формы (индексы 0-based, -1 = не задано).
 type clientMapping struct {
-	NameCol     int32 `json:"name_col"`
-	ArticleCol  int32 `json:"article_col"`
-	PriceCol    int32 `json:"price_col"`
-	StockCol    int32 `json:"stock_col"`
-	CurrencyCol int32 `json:"currency_col"`
+	NameCol      int32 `json:"name_col"`
+	ArticleCol   int32 `json:"article_col"`
+	PriceCol     int32 `json:"price_col"`
+	StockCol     int32 `json:"stock_col"`
+	CurrencyCol  int32 `json:"currency_col"`
+	PriceOptCol  int32 `json:"price_opt_col"`
+	PriceBulkCol int32 `json:"price_bulk_col"`
 }
 
 func (m clientMapping) toProto() *importv1.ColumnMapping {
 	return &importv1.ColumnMapping{
-		NameCol:     m.NameCol,
-		ArticleCol:  m.ArticleCol,
-		PriceCol:    m.PriceCol,
-		StockCol:    m.StockCol,
-		CurrencyCol: m.CurrencyCol,
+		NameCol:      m.NameCol,
+		ArticleCol:   m.ArticleCol,
+		PriceCol:     m.PriceCol,
+		StockCol:     m.StockCol,
+		CurrencyCol:  m.CurrencyCol,
+		PriceOptCol:  m.PriceOptCol,
+		PriceBulkCol: m.PriceBulkCol,
 	}
 }
 
@@ -304,7 +407,9 @@ func (h *Handler) CreateImport(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var m clientMapping
+	// Новые опциональные колонки по умолчанию «не заданы» (-1): старый клиент,
+	// не знающий про них, не должен случайно замапить их на колонку 0.
+	m := clientMapping{PriceOptCol: -1, PriceBulkCol: -1}
 	if raw := r.FormValue("mapping"); raw != "" {
 		if err := json.Unmarshal([]byte(raw), &m); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid mapping json"})
