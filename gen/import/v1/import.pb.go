@@ -76,6 +76,95 @@ func (ImportStatus) EnumDescriptor() ([]byte, []int) {
 	return file_import_v1_import_proto_rawDescGZIP(), []int{0}
 }
 
+type WipeDataRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WipeDataRequest) Reset() {
+	*x = WipeDataRequest{}
+	mi := &file_import_v1_import_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WipeDataRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WipeDataRequest) ProtoMessage() {}
+
+func (x *WipeDataRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_import_v1_import_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WipeDataRequest.ProtoReflect.Descriptor instead.
+func (*WipeDataRequest) Descriptor() ([]byte, []int) {
+	return file_import_v1_import_proto_rawDescGZIP(), []int{0}
+}
+
+// WipeDataResponse — сколько строк удалено (для отчёта в UI).
+type WipeDataResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Batches       int64                  `protobuf:"varint,1,opt,name=batches,proto3" json:"batches,omitempty"`
+	Offers        int64                  `protobuf:"varint,2,opt,name=offers,proto3" json:"offers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WipeDataResponse) Reset() {
+	*x = WipeDataResponse{}
+	mi := &file_import_v1_import_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WipeDataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WipeDataResponse) ProtoMessage() {}
+
+func (x *WipeDataResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_import_v1_import_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WipeDataResponse.ProtoReflect.Descriptor instead.
+func (*WipeDataResponse) Descriptor() ([]byte, []int) {
+	return file_import_v1_import_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *WipeDataResponse) GetBatches() int64 {
+	if x != nil {
+		return x.Batches
+	}
+	return 0
+}
+
+func (x *WipeDataResponse) GetOffers() int64 {
+	if x != nil {
+		return x.Offers
+	}
+	return 0
+}
+
 type HealthCheckRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -84,7 +173,7 @@ type HealthCheckRequest struct {
 
 func (x *HealthCheckRequest) Reset() {
 	*x = HealthCheckRequest{}
-	mi := &file_import_v1_import_proto_msgTypes[0]
+	mi := &file_import_v1_import_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -96,7 +185,7 @@ func (x *HealthCheckRequest) String() string {
 func (*HealthCheckRequest) ProtoMessage() {}
 
 func (x *HealthCheckRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[0]
+	mi := &file_import_v1_import_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +198,7 @@ func (x *HealthCheckRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthCheckRequest.ProtoReflect.Descriptor instead.
 func (*HealthCheckRequest) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{0}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{2}
 }
 
 type HealthCheckResponse struct {
@@ -122,7 +211,7 @@ type HealthCheckResponse struct {
 
 func (x *HealthCheckResponse) Reset() {
 	*x = HealthCheckResponse{}
-	mi := &file_import_v1_import_proto_msgTypes[1]
+	mi := &file_import_v1_import_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -134,7 +223,7 @@ func (x *HealthCheckResponse) String() string {
 func (*HealthCheckResponse) ProtoMessage() {}
 
 func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[1]
+	mi := &file_import_v1_import_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -147,7 +236,7 @@ func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthCheckResponse.ProtoReflect.Descriptor instead.
 func (*HealthCheckResponse) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{1}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *HealthCheckResponse) GetStatus() string {
@@ -181,7 +270,7 @@ type ColumnMapping struct {
 
 func (x *ColumnMapping) Reset() {
 	*x = ColumnMapping{}
-	mi := &file_import_v1_import_proto_msgTypes[2]
+	mi := &file_import_v1_import_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -193,7 +282,7 @@ func (x *ColumnMapping) String() string {
 func (*ColumnMapping) ProtoMessage() {}
 
 func (x *ColumnMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[2]
+	mi := &file_import_v1_import_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -206,7 +295,7 @@ func (x *ColumnMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ColumnMapping.ProtoReflect.Descriptor instead.
 func (*ColumnMapping) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{2}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ColumnMapping) GetNameCol() int32 {
@@ -267,7 +356,7 @@ type PreviewRow struct {
 
 func (x *PreviewRow) Reset() {
 	*x = PreviewRow{}
-	mi := &file_import_v1_import_proto_msgTypes[3]
+	mi := &file_import_v1_import_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -279,7 +368,7 @@ func (x *PreviewRow) String() string {
 func (*PreviewRow) ProtoMessage() {}
 
 func (x *PreviewRow) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[3]
+	mi := &file_import_v1_import_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -292,7 +381,7 @@ func (x *PreviewRow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreviewRow.ProtoReflect.Descriptor instead.
 func (*PreviewRow) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{3}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PreviewRow) GetCells() []string {
@@ -314,7 +403,7 @@ type FilePreview struct {
 
 func (x *FilePreview) Reset() {
 	*x = FilePreview{}
-	mi := &file_import_v1_import_proto_msgTypes[4]
+	mi := &file_import_v1_import_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -326,7 +415,7 @@ func (x *FilePreview) String() string {
 func (*FilePreview) ProtoMessage() {}
 
 func (x *FilePreview) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[4]
+	mi := &file_import_v1_import_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -339,7 +428,7 @@ func (x *FilePreview) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FilePreview.ProtoReflect.Descriptor instead.
 func (*FilePreview) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{4}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *FilePreview) GetHeaders() []string {
@@ -380,7 +469,7 @@ type PreviewFileRequest struct {
 
 func (x *PreviewFileRequest) Reset() {
 	*x = PreviewFileRequest{}
-	mi := &file_import_v1_import_proto_msgTypes[5]
+	mi := &file_import_v1_import_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -392,7 +481,7 @@ func (x *PreviewFileRequest) String() string {
 func (*PreviewFileRequest) ProtoMessage() {}
 
 func (x *PreviewFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[5]
+	mi := &file_import_v1_import_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -405,7 +494,7 @@ func (x *PreviewFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreviewFileRequest.ProtoReflect.Descriptor instead.
 func (*PreviewFileRequest) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{5}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *PreviewFileRequest) GetFileName() string {
@@ -435,7 +524,7 @@ type ProcessFileRequest struct {
 
 func (x *ProcessFileRequest) Reset() {
 	*x = ProcessFileRequest{}
-	mi := &file_import_v1_import_proto_msgTypes[6]
+	mi := &file_import_v1_import_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -447,7 +536,7 @@ func (x *ProcessFileRequest) String() string {
 func (*ProcessFileRequest) ProtoMessage() {}
 
 func (x *ProcessFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[6]
+	mi := &file_import_v1_import_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -460,7 +549,7 @@ func (x *ProcessFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessFileRequest.ProtoReflect.Descriptor instead.
 func (*ProcessFileRequest) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{6}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ProcessFileRequest) GetSupplierId() string {
@@ -514,7 +603,7 @@ type ImportBatch struct {
 
 func (x *ImportBatch) Reset() {
 	*x = ImportBatch{}
-	mi := &file_import_v1_import_proto_msgTypes[7]
+	mi := &file_import_v1_import_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -526,7 +615,7 @@ func (x *ImportBatch) String() string {
 func (*ImportBatch) ProtoMessage() {}
 
 func (x *ImportBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[7]
+	mi := &file_import_v1_import_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -539,7 +628,7 @@ func (x *ImportBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportBatch.ProtoReflect.Descriptor instead.
 func (*ImportBatch) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{7}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ImportBatch) GetId() string {
@@ -607,7 +696,7 @@ type GetImportBatchRequest struct {
 
 func (x *GetImportBatchRequest) Reset() {
 	*x = GetImportBatchRequest{}
-	mi := &file_import_v1_import_proto_msgTypes[8]
+	mi := &file_import_v1_import_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -619,7 +708,7 @@ func (x *GetImportBatchRequest) String() string {
 func (*GetImportBatchRequest) ProtoMessage() {}
 
 func (x *GetImportBatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[8]
+	mi := &file_import_v1_import_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -632,7 +721,7 @@ func (x *GetImportBatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetImportBatchRequest.ProtoReflect.Descriptor instead.
 func (*GetImportBatchRequest) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{8}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetImportBatchRequest) GetId() string {
@@ -651,7 +740,7 @@ type ListBatchesRequest struct {
 
 func (x *ListBatchesRequest) Reset() {
 	*x = ListBatchesRequest{}
-	mi := &file_import_v1_import_proto_msgTypes[9]
+	mi := &file_import_v1_import_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -663,7 +752,7 @@ func (x *ListBatchesRequest) String() string {
 func (*ListBatchesRequest) ProtoMessage() {}
 
 func (x *ListBatchesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[9]
+	mi := &file_import_v1_import_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -676,7 +765,7 @@ func (x *ListBatchesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBatchesRequest.ProtoReflect.Descriptor instead.
 func (*ListBatchesRequest) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{9}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListBatchesRequest) GetSupplierId() string {
@@ -695,7 +784,7 @@ type ListBatchesResponse struct {
 
 func (x *ListBatchesResponse) Reset() {
 	*x = ListBatchesResponse{}
-	mi := &file_import_v1_import_proto_msgTypes[10]
+	mi := &file_import_v1_import_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -707,7 +796,7 @@ func (x *ListBatchesResponse) String() string {
 func (*ListBatchesResponse) ProtoMessage() {}
 
 func (x *ListBatchesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[10]
+	mi := &file_import_v1_import_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -720,7 +809,7 @@ func (x *ListBatchesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBatchesResponse.ProtoReflect.Descriptor instead.
 func (*ListBatchesResponse) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{10}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListBatchesResponse) GetBatches() []*ImportBatch {
@@ -751,7 +840,7 @@ type SupplierOffer struct {
 
 func (x *SupplierOffer) Reset() {
 	*x = SupplierOffer{}
-	mi := &file_import_v1_import_proto_msgTypes[11]
+	mi := &file_import_v1_import_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -763,7 +852,7 @@ func (x *SupplierOffer) String() string {
 func (*SupplierOffer) ProtoMessage() {}
 
 func (x *SupplierOffer) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[11]
+	mi := &file_import_v1_import_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -776,7 +865,7 @@ func (x *SupplierOffer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SupplierOffer.ProtoReflect.Descriptor instead.
 func (*SupplierOffer) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{11}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *SupplierOffer) GetId() string {
@@ -874,7 +963,7 @@ type ListOffersRequest struct {
 
 func (x *ListOffersRequest) Reset() {
 	*x = ListOffersRequest{}
-	mi := &file_import_v1_import_proto_msgTypes[12]
+	mi := &file_import_v1_import_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -886,7 +975,7 @@ func (x *ListOffersRequest) String() string {
 func (*ListOffersRequest) ProtoMessage() {}
 
 func (x *ListOffersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[12]
+	mi := &file_import_v1_import_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -899,7 +988,7 @@ func (x *ListOffersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListOffersRequest.ProtoReflect.Descriptor instead.
 func (*ListOffersRequest) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{12}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListOffersRequest) GetBatchId() string {
@@ -933,7 +1022,7 @@ type ListOffersResponse struct {
 
 func (x *ListOffersResponse) Reset() {
 	*x = ListOffersResponse{}
-	mi := &file_import_v1_import_proto_msgTypes[13]
+	mi := &file_import_v1_import_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -945,7 +1034,7 @@ func (x *ListOffersResponse) String() string {
 func (*ListOffersResponse) ProtoMessage() {}
 
 func (x *ListOffersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_import_v1_import_proto_msgTypes[13]
+	mi := &file_import_v1_import_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -958,7 +1047,7 @@ func (x *ListOffersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListOffersResponse.ProtoReflect.Descriptor instead.
 func (*ListOffersResponse) Descriptor() ([]byte, []int) {
-	return file_import_v1_import_proto_rawDescGZIP(), []int{13}
+	return file_import_v1_import_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListOffersResponse) GetOffers() []*SupplierOffer {
@@ -979,7 +1068,11 @@ var File_import_v1_import_proto protoreflect.FileDescriptor
 
 const file_import_v1_import_proto_rawDesc = "" +
 	"\n" +
-	"\x16import/v1/import.proto\x12\vimporter.v1\"\x14\n" +
+	"\x16import/v1/import.proto\x12\vimporter.v1\"\x11\n" +
+	"\x0fWipeDataRequest\"D\n" +
+	"\x10WipeDataResponse\x12\x18\n" +
+	"\abatches\x18\x01 \x01(\x03R\abatches\x12\x16\n" +
+	"\x06offers\x18\x02 \x01(\x03R\x06offers\"\x14\n" +
 	"\x12HealthCheckRequest\"G\n" +
 	"\x13HealthCheckResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
@@ -1062,7 +1155,7 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\x15IMPORT_STATUS_PENDING\x10\x01\x12\x1c\n" +
 	"\x18IMPORT_STATUS_PROCESSING\x10\x02\x12\x16\n" +
 	"\x12IMPORT_STATUS_DONE\x10\x03\x12\x18\n" +
-	"\x14IMPORT_STATUS_FAILED\x10\x042\xe6\x03\n" +
+	"\x14IMPORT_STATUS_FAILED\x10\x042\xaf\x04\n" +
 	"\rImportService\x12P\n" +
 	"\vHealthCheck\x12\x1f.importer.v1.HealthCheckRequest\x1a .importer.v1.HealthCheckResponse\x12H\n" +
 	"\vPreviewFile\x12\x1f.importer.v1.PreviewFileRequest\x1a\x18.importer.v1.FilePreview\x12H\n" +
@@ -1070,7 +1163,8 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\x0eGetImportBatch\x12\".importer.v1.GetImportBatchRequest\x1a\x18.importer.v1.ImportBatch\x12P\n" +
 	"\vListBatches\x12\x1f.importer.v1.ListBatchesRequest\x1a .importer.v1.ListBatchesResponse\x12M\n" +
 	"\n" +
-	"ListOffers\x12\x1e.importer.v1.ListOffersRequest\x1a\x1f.importer.v1.ListOffersResponseB3Z1github.com/furnica/backend/gen/import/v1;importv1b\x06proto3"
+	"ListOffers\x12\x1e.importer.v1.ListOffersRequest\x1a\x1f.importer.v1.ListOffersResponse\x12G\n" +
+	"\bWipeData\x12\x1c.importer.v1.WipeDataRequest\x1a\x1d.importer.v1.WipeDataResponseB3Z1github.com/furnica/backend/gen/import/v1;importv1b\x06proto3"
 
 var (
 	file_import_v1_import_proto_rawDescOnce sync.Once
@@ -1085,45 +1179,49 @@ func file_import_v1_import_proto_rawDescGZIP() []byte {
 }
 
 var file_import_v1_import_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_import_v1_import_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_import_v1_import_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_import_v1_import_proto_goTypes = []any{
 	(ImportStatus)(0),             // 0: importer.v1.ImportStatus
-	(*HealthCheckRequest)(nil),    // 1: importer.v1.HealthCheckRequest
-	(*HealthCheckResponse)(nil),   // 2: importer.v1.HealthCheckResponse
-	(*ColumnMapping)(nil),         // 3: importer.v1.ColumnMapping
-	(*PreviewRow)(nil),            // 4: importer.v1.PreviewRow
-	(*FilePreview)(nil),           // 5: importer.v1.FilePreview
-	(*PreviewFileRequest)(nil),    // 6: importer.v1.PreviewFileRequest
-	(*ProcessFileRequest)(nil),    // 7: importer.v1.ProcessFileRequest
-	(*ImportBatch)(nil),           // 8: importer.v1.ImportBatch
-	(*GetImportBatchRequest)(nil), // 9: importer.v1.GetImportBatchRequest
-	(*ListBatchesRequest)(nil),    // 10: importer.v1.ListBatchesRequest
-	(*ListBatchesResponse)(nil),   // 11: importer.v1.ListBatchesResponse
-	(*SupplierOffer)(nil),         // 12: importer.v1.SupplierOffer
-	(*ListOffersRequest)(nil),     // 13: importer.v1.ListOffersRequest
-	(*ListOffersResponse)(nil),    // 14: importer.v1.ListOffersResponse
+	(*WipeDataRequest)(nil),       // 1: importer.v1.WipeDataRequest
+	(*WipeDataResponse)(nil),      // 2: importer.v1.WipeDataResponse
+	(*HealthCheckRequest)(nil),    // 3: importer.v1.HealthCheckRequest
+	(*HealthCheckResponse)(nil),   // 4: importer.v1.HealthCheckResponse
+	(*ColumnMapping)(nil),         // 5: importer.v1.ColumnMapping
+	(*PreviewRow)(nil),            // 6: importer.v1.PreviewRow
+	(*FilePreview)(nil),           // 7: importer.v1.FilePreview
+	(*PreviewFileRequest)(nil),    // 8: importer.v1.PreviewFileRequest
+	(*ProcessFileRequest)(nil),    // 9: importer.v1.ProcessFileRequest
+	(*ImportBatch)(nil),           // 10: importer.v1.ImportBatch
+	(*GetImportBatchRequest)(nil), // 11: importer.v1.GetImportBatchRequest
+	(*ListBatchesRequest)(nil),    // 12: importer.v1.ListBatchesRequest
+	(*ListBatchesResponse)(nil),   // 13: importer.v1.ListBatchesResponse
+	(*SupplierOffer)(nil),         // 14: importer.v1.SupplierOffer
+	(*ListOffersRequest)(nil),     // 15: importer.v1.ListOffersRequest
+	(*ListOffersResponse)(nil),    // 16: importer.v1.ListOffersResponse
 }
 var file_import_v1_import_proto_depIdxs = []int32{
-	4,  // 0: importer.v1.FilePreview.rows:type_name -> importer.v1.PreviewRow
-	3,  // 1: importer.v1.FilePreview.suggested:type_name -> importer.v1.ColumnMapping
-	3,  // 2: importer.v1.ProcessFileRequest.mapping:type_name -> importer.v1.ColumnMapping
+	6,  // 0: importer.v1.FilePreview.rows:type_name -> importer.v1.PreviewRow
+	5,  // 1: importer.v1.FilePreview.suggested:type_name -> importer.v1.ColumnMapping
+	5,  // 2: importer.v1.ProcessFileRequest.mapping:type_name -> importer.v1.ColumnMapping
 	0,  // 3: importer.v1.ImportBatch.status:type_name -> importer.v1.ImportStatus
-	8,  // 4: importer.v1.ListBatchesResponse.batches:type_name -> importer.v1.ImportBatch
-	12, // 5: importer.v1.ListOffersResponse.offers:type_name -> importer.v1.SupplierOffer
-	1,  // 6: importer.v1.ImportService.HealthCheck:input_type -> importer.v1.HealthCheckRequest
-	6,  // 7: importer.v1.ImportService.PreviewFile:input_type -> importer.v1.PreviewFileRequest
-	7,  // 8: importer.v1.ImportService.ProcessFile:input_type -> importer.v1.ProcessFileRequest
-	9,  // 9: importer.v1.ImportService.GetImportBatch:input_type -> importer.v1.GetImportBatchRequest
-	10, // 10: importer.v1.ImportService.ListBatches:input_type -> importer.v1.ListBatchesRequest
-	13, // 11: importer.v1.ImportService.ListOffers:input_type -> importer.v1.ListOffersRequest
-	2,  // 12: importer.v1.ImportService.HealthCheck:output_type -> importer.v1.HealthCheckResponse
-	5,  // 13: importer.v1.ImportService.PreviewFile:output_type -> importer.v1.FilePreview
-	8,  // 14: importer.v1.ImportService.ProcessFile:output_type -> importer.v1.ImportBatch
-	8,  // 15: importer.v1.ImportService.GetImportBatch:output_type -> importer.v1.ImportBatch
-	11, // 16: importer.v1.ImportService.ListBatches:output_type -> importer.v1.ListBatchesResponse
-	14, // 17: importer.v1.ImportService.ListOffers:output_type -> importer.v1.ListOffersResponse
-	12, // [12:18] is the sub-list for method output_type
-	6,  // [6:12] is the sub-list for method input_type
+	10, // 4: importer.v1.ListBatchesResponse.batches:type_name -> importer.v1.ImportBatch
+	14, // 5: importer.v1.ListOffersResponse.offers:type_name -> importer.v1.SupplierOffer
+	3,  // 6: importer.v1.ImportService.HealthCheck:input_type -> importer.v1.HealthCheckRequest
+	8,  // 7: importer.v1.ImportService.PreviewFile:input_type -> importer.v1.PreviewFileRequest
+	9,  // 8: importer.v1.ImportService.ProcessFile:input_type -> importer.v1.ProcessFileRequest
+	11, // 9: importer.v1.ImportService.GetImportBatch:input_type -> importer.v1.GetImportBatchRequest
+	12, // 10: importer.v1.ImportService.ListBatches:input_type -> importer.v1.ListBatchesRequest
+	15, // 11: importer.v1.ImportService.ListOffers:input_type -> importer.v1.ListOffersRequest
+	1,  // 12: importer.v1.ImportService.WipeData:input_type -> importer.v1.WipeDataRequest
+	4,  // 13: importer.v1.ImportService.HealthCheck:output_type -> importer.v1.HealthCheckResponse
+	7,  // 14: importer.v1.ImportService.PreviewFile:output_type -> importer.v1.FilePreview
+	10, // 15: importer.v1.ImportService.ProcessFile:output_type -> importer.v1.ImportBatch
+	10, // 16: importer.v1.ImportService.GetImportBatch:output_type -> importer.v1.ImportBatch
+	13, // 17: importer.v1.ImportService.ListBatches:output_type -> importer.v1.ListBatchesResponse
+	16, // 18: importer.v1.ImportService.ListOffers:output_type -> importer.v1.ListOffersResponse
+	2,  // 19: importer.v1.ImportService.WipeData:output_type -> importer.v1.WipeDataResponse
+	13, // [13:20] is the sub-list for method output_type
+	6,  // [6:13] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -1140,7 +1238,7 @@ func file_import_v1_import_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_import_v1_import_proto_rawDesc), len(file_import_v1_import_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

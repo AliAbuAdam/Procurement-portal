@@ -127,6 +127,20 @@ func (s *ImportService) ListBatches(ctx context.Context, supplierID string) ([]*
 	return s.batches.ListBySupplier(ctx, strings.TrimSpace(supplierID))
 }
 
+// WipeData удаляет все импорты и их строки одной транзакцией (админ-очистка).
+// Строки — первыми: у них FK на батчи.
+func (s *ImportService) WipeData(ctx context.Context) (offers, batches int64, err error) {
+	err = s.txm.WithinTx(ctx, func(ctx context.Context) error {
+		var e error
+		if offers, e = s.offers.DeleteAll(ctx); e != nil {
+			return e
+		}
+		batches, e = s.batches.DeleteAll(ctx)
+		return e
+	})
+	return offers, batches, err
+}
+
 func (s *ImportService) ListOffers(ctx context.Context, batchID string, limit, offset int) ([]*domain.SupplierOffer, int, error) {
 	if strings.TrimSpace(batchID) == "" {
 		return nil, 0, fmt.Errorf("%w: batch_id is required", domain.ErrValidation)

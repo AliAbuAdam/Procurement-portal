@@ -475,6 +475,39 @@ func (h *Handler) MinPrices(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// WipeData — полная очистка данных (только admin, маршрут под RequireRole).
+// Сначала импорты, затем каталог; сервисы чистят свои схемы транзакционно.
+func (h *Handler) WipeData(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		IncludeSuppliers bool `json:"include_suppliers"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	imp, err := h.c.Import.WipeData(r.Context(), &importv1.WipeDataRequest{})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	cat, err := h.c.Catalog.WipeData(r.Context(), &catalogv1.WipeDataRequest{
+		IncludeSuppliers: body.IncludeSuppliers,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int64{
+		"batches":    imp.GetBatches(),
+		"offers":     imp.GetOffers(),
+		"products":   cat.GetProducts(),
+		"images":     cat.GetImages(),
+		"matches":    cat.GetMatches(),
+		"categories": cat.GetCategories(),
+		"suppliers":  cat.GetSuppliers(),
+	})
+}
+
 // --- imports (import) ---
 
 // clientMapping — маппинг колонок из формы (индексы 0-based, -1 = не задано).

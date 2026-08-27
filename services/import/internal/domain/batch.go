@@ -41,4 +41,6 @@ type ImportRepository interface {
 	GetByID(ctx context.Context, id string) (*ImportBatch, error)
 	ListBySupplier(ctx context.Context, supplierID string) ([]*ImportBatch, error)
 	UpdateResult(ctx context.Context, id string, status ImportStatus, rowsTotal int) error
+	// DeleteAll — очистка всех импортов (админ). Возвращает число удалённых.
+	DeleteAll(ctx context.Context) (int64, error)
 }

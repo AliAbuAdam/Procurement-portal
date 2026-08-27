@@ -25,6 +25,7 @@ const (
 	ImportService_GetImportBatch_FullMethodName = "/importer.v1.ImportService/GetImportBatch"
 	ImportService_ListBatches_FullMethodName    = "/importer.v1.ImportService/ListBatches"
 	ImportService_ListOffers_FullMethodName     = "/importer.v1.ImportService/ListOffers"
+	ImportService_WipeData_FullMethodName       = "/importer.v1.ImportService/WipeData"
 )
 
 // ImportServiceClient is the client API for ImportService service.
@@ -42,6 +43,8 @@ type ImportServiceClient interface {
 	GetImportBatch(ctx context.Context, in *GetImportBatchRequest, opts ...grpc.CallOption) (*ImportBatch, error)
 	ListBatches(ctx context.Context, in *ListBatchesRequest, opts ...grpc.CallOption) (*ListBatchesResponse, error)
 	ListOffers(ctx context.Context, in *ListOffersRequest, opts ...grpc.CallOption) (*ListOffersResponse, error)
+	// Админ: удалить все импорты и их строки. Необратимо, доступ ограничивает gateway.
+	WipeData(ctx context.Context, in *WipeDataRequest, opts ...grpc.CallOption) (*WipeDataResponse, error)
 }
 
 type importServiceClient struct {
@@ -112,6 +115,16 @@ func (c *importServiceClient) ListOffers(ctx context.Context, in *ListOffersRequ
 	return out, nil
 }
 
+func (c *importServiceClient) WipeData(ctx context.Context, in *WipeDataRequest, opts ...grpc.CallOption) (*WipeDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WipeDataResponse)
+	err := c.cc.Invoke(ctx, ImportService_WipeData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ImportServiceServer is the server API for ImportService service.
 // All implementations must embed UnimplementedImportServiceServer
 // for forward compatibility.
@@ -127,6 +140,8 @@ type ImportServiceServer interface {
 	GetImportBatch(context.Context, *GetImportBatchRequest) (*ImportBatch, error)
 	ListBatches(context.Context, *ListBatchesRequest) (*ListBatchesResponse, error)
 	ListOffers(context.Context, *ListOffersRequest) (*ListOffersResponse, error)
+	// Админ: удалить все импорты и их строки. Необратимо, доступ ограничивает gateway.
+	WipeData(context.Context, *WipeDataRequest) (*WipeDataResponse, error)
 	mustEmbedUnimplementedImportServiceServer()
 }
 
@@ -154,6 +169,9 @@ func (UnimplementedImportServiceServer) ListBatches(context.Context, *ListBatche
 }
 func (UnimplementedImportServiceServer) ListOffers(context.Context, *ListOffersRequest) (*ListOffersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListOffers not implemented")
+}
+func (UnimplementedImportServiceServer) WipeData(context.Context, *WipeDataRequest) (*WipeDataResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method WipeData not implemented")
 }
 func (UnimplementedImportServiceServer) mustEmbedUnimplementedImportServiceServer() {}
 func (UnimplementedImportServiceServer) testEmbeddedByValue()                       {}
@@ -284,6 +302,24 @@ func _ImportService_ListOffers_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ImportService_WipeData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WipeDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImportServiceServer).WipeData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ImportService_WipeData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImportServiceServer).WipeData(ctx, req.(*WipeDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ImportService_ServiceDesc is the grpc.ServiceDesc for ImportService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +350,10 @@ var ImportService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListOffers",
 			Handler:    _ImportService_ListOffers_Handler,
+		},
+		{
+			MethodName: "WipeData",
+			Handler:    _ImportService_WipeData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

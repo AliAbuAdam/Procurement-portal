@@ -32,6 +32,7 @@ const (
 	CatalogService_CreateCategory_FullMethodName         = "/catalog.v1.CatalogService/CreateCategory"
 	CatalogService_UpdateCategory_FullMethodName         = "/catalog.v1.CatalogService/UpdateCategory"
 	CatalogService_DeleteCategory_FullMethodName         = "/catalog.v1.CatalogService/DeleteCategory"
+	CatalogService_WipeData_FullMethodName               = "/catalog.v1.CatalogService/WipeData"
 	CatalogService_ListProductImages_FullMethodName      = "/catalog.v1.CatalogService/ListProductImages"
 	CatalogService_AddProductImage_FullMethodName        = "/catalog.v1.CatalogService/AddProductImage"
 	CatalogService_DeleteProductImage_FullMethodName     = "/catalog.v1.CatalogService/DeleteProductImage"
@@ -69,6 +70,9 @@ type CatalogServiceClient interface {
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
 	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
 	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*DeleteCategoryResponse, error)
+	// --- Админ: очистка данных каталога (карточки, фото, сопоставления,
+	// категории; опционально поставщики). Необратимо, доступ ограничивает gateway.
+	WipeData(ctx context.Context, in *WipeDataRequest, opts ...grpc.CallOption) (*WipeDataResponse, error)
 	// --- Фото карточки (галерея, до 10 шт.) ---
 	// Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
 	ListProductImages(ctx context.Context, in *ListProductImagesRequest, opts ...grpc.CallOption) (*ListProductImagesResponse, error)
@@ -228,6 +232,16 @@ func (c *catalogServiceClient) DeleteCategory(ctx context.Context, in *DeleteCat
 	return out, nil
 }
 
+func (c *catalogServiceClient) WipeData(ctx context.Context, in *WipeDataRequest, opts ...grpc.CallOption) (*WipeDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WipeDataResponse)
+	err := c.cc.Invoke(ctx, CatalogService_WipeData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *catalogServiceClient) ListProductImages(ctx context.Context, in *ListProductImagesRequest, opts ...grpc.CallOption) (*ListProductImagesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListProductImagesResponse)
@@ -353,6 +367,9 @@ type CatalogServiceServer interface {
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
 	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error)
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*DeleteCategoryResponse, error)
+	// --- Админ: очистка данных каталога (карточки, фото, сопоставления,
+	// категории; опционально поставщики). Необратимо, доступ ограничивает gateway.
+	WipeData(context.Context, *WipeDataRequest) (*WipeDataResponse, error)
 	// --- Фото карточки (галерея, до 10 шт.) ---
 	// Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
 	ListProductImages(context.Context, *ListProductImagesRequest) (*ListProductImagesResponse, error)
@@ -420,6 +437,9 @@ func (UnimplementedCatalogServiceServer) UpdateCategory(context.Context, *Update
 }
 func (UnimplementedCatalogServiceServer) DeleteCategory(context.Context, *DeleteCategoryRequest) (*DeleteCategoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteCategory not implemented")
+}
+func (UnimplementedCatalogServiceServer) WipeData(context.Context, *WipeDataRequest) (*WipeDataResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method WipeData not implemented")
 }
 func (UnimplementedCatalogServiceServer) ListProductImages(context.Context, *ListProductImagesRequest) (*ListProductImagesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListProductImages not implemented")
@@ -706,6 +726,24 @@ func _CatalogService_DeleteCategory_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CatalogService_WipeData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WipeDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).WipeData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_WipeData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).WipeData(ctx, req.(*WipeDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CatalogService_ListProductImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListProductImagesRequest)
 	if err := dec(in); err != nil {
@@ -944,6 +982,10 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCategory",
 			Handler:    _CatalogService_DeleteCategory_Handler,
+		},
+		{
+			MethodName: "WipeData",
+			Handler:    _CatalogService_WipeData_Handler,
 		},
 		{
 			MethodName: "ListProductImages",

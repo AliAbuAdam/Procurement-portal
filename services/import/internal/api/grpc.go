@@ -70,6 +70,14 @@ func (s *ImportServer) ListBatches(ctx context.Context, req *importv1.ListBatche
 	return &importv1.ListBatchesResponse{Batches: out}, nil
 }
 
+func (s *ImportServer) WipeData(ctx context.Context, _ *importv1.WipeDataRequest) (*importv1.WipeDataResponse, error) {
+	offers, batches, err := s.imports.WipeData(ctx)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &importv1.WipeDataResponse{Batches: batches, Offers: offers}, nil
+}
+
 func (s *ImportServer) ListOffers(ctx context.Context, req *importv1.ListOffersRequest) (*importv1.ListOffersResponse, error) {
 	offers, total, err := s.imports.ListOffers(ctx, req.GetBatchId(), int(req.GetPageSize()), int(req.GetOffset()))
 	if err != nil {

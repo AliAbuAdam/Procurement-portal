@@ -17,6 +17,14 @@ func NewOfferRepository(db *postgres.TxManager) *OfferRepository {
 	return &OfferRepository{db: db}
 }
 
+func (r *OfferRepository) DeleteAll(ctx context.Context) (int64, error) {
+	tag, err := r.db.Querier(ctx).Exec(ctx, `DELETE FROM importer.supplier_offers`)
+	if err != nil {
+		return 0, fmt.Errorf("delete all offers: %w", err)
+	}
+	return tag.RowsAffected(), nil
+}
+
 // InsertOffers пакетно вставляет строки прайса (в транзакции с батчем).
 func (r *OfferRepository) InsertOffers(ctx context.Context, offers []*domain.SupplierOffer) error {
 	if len(offers) == 0 {

@@ -39,4 +39,6 @@ type ParsedSheet struct {
 type OfferRepository interface {
 	InsertOffers(ctx context.Context, offers []*SupplierOffer) error
 	ListOffers(ctx context.Context, batchID string, limit, offset int) ([]*SupplierOffer, int, error)
+	// DeleteAll — очистка всех строк прайсов (админ). Возвращает число удалённых.
+	DeleteAll(ctx context.Context) (int64, error)
 }

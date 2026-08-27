@@ -18,10 +18,25 @@ type CatalogServer struct {
 	suppliers  *service.SupplierService
 	matching   *service.MatchingService
 	categories *service.CategoryService
+	admin      *service.AdminService
 }
 
-func NewCatalogServer(suppliers *service.SupplierService, matching *service.MatchingService, categories *service.CategoryService) *CatalogServer {
-	return &CatalogServer{suppliers: suppliers, matching: matching, categories: categories}
+func NewCatalogServer(suppliers *service.SupplierService, matching *service.MatchingService, categories *service.CategoryService, admin *service.AdminService) *CatalogServer {
+	return &CatalogServer{suppliers: suppliers, matching: matching, categories: categories, admin: admin}
+}
+
+func (s *CatalogServer) WipeData(ctx context.Context, req *catalogv1.WipeDataRequest) (*catalogv1.WipeDataResponse, error) {
+	res, err := s.admin.WipeData(ctx, req.GetIncludeSuppliers())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.WipeDataResponse{
+		Products:   res.Products,
+		Images:     res.Images,
+		Matches:    res.Matches,
+		Categories: res.Categories,
+		Suppliers:  res.Suppliers,
+	}, nil
 }
 
 func (s *CatalogServer) HealthCheck(context.Context, *catalogv1.HealthCheckRequest) (*catalogv1.HealthCheckResponse, error) {

@@ -29,6 +29,10 @@ service CatalogService {
   rpc UpdateCategory(UpdateCategoryRequest) returns (Category);
   rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
 
+  // --- Админ: очистка данных каталога (карточки, фото, сопоставления,
+  // категории; опционально поставщики). Необратимо, доступ ограничивает gateway.
+  rpc WipeData(WipeDataRequest) returns (WipeDataResponse);
+
   // --- Фото карточки (галерея, до 10 шт.) ---
   // Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
   rpc ListProductImages(ListProductImagesRequest) returns (ListProductImagesResponse);
@@ -192,6 +196,21 @@ message DeleteCategoryRequest {
 
 message DeleteCategoryResponse {
   bool ok = 1;
+}
+
+// --- Очистка данных ---
+
+message WipeDataRequest {
+  bool include_suppliers = 1; // удалить и поставщиков
+}
+
+// WipeDataResponse — сколько строк удалено (для отчёта в UI).
+message WipeDataResponse {
+  int64 products = 1;
+  int64 images = 2;
+  int64 matches = 3;
+  int64 categories = 4;
+  int64 suppliers = 5;
 }
 
 // --- Фото карточки ---

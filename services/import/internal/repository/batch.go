@@ -19,6 +19,14 @@ func NewImportRepository(db *postgres.TxManager) *ImportRepository {
 	return &ImportRepository{db: db}
 }
 
+func (r *ImportRepository) DeleteAll(ctx context.Context) (int64, error) {
+	tag, err := r.db.Querier(ctx).Exec(ctx, `DELETE FROM importer.import_batches`)
+	if err != nil {
+		return 0, fmt.Errorf("delete all batches: %w", err)
+	}
+	return tag.RowsAffected(), nil
+}
+
 func (r *ImportRepository) Create(ctx context.Context, b *domain.ImportBatch) error {
 	const q = `
 		INSERT INTO importer.import_batches (supplier_id, file_name, status, created_by)

@@ -17,6 +17,17 @@ service ImportService {
   rpc GetImportBatch(GetImportBatchRequest) returns (ImportBatch);
   rpc ListBatches(ListBatchesRequest) returns (ListBatchesResponse);
   rpc ListOffers(ListOffersRequest) returns (ListOffersResponse);
+
+  // Админ: удалить все импорты и их строки. Необратимо, доступ ограничивает gateway.
+  rpc WipeData(WipeDataRequest) returns (WipeDataResponse);
+}
+
+message WipeDataRequest {}
+
+// WipeDataResponse — сколько строк удалено (для отчёта в UI).
+message WipeDataResponse {
+  int64 batches = 1;
+  int64 offers = 2;
 }
 
 message HealthCheckRequest {}

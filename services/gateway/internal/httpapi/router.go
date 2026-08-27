@@ -76,11 +76,12 @@ func NewRouter(h *Handler, k *auth.Kratos, allowedOrigins []string) http.Handler
 		r.Get("/imports/{id}", h.GetImport)
 		r.Get("/imports/{id}/offers", h.ListImportOffers)
 
-		// Управление пользователями — только admin.
+		// Управление пользователями и очистка данных — только admin.
 		r.Group(func(r chi.Router) {
 			r.Use(auth.RequireRole(auth.RoleAdmin))
 			r.Get("/users", h.ListUsers)
 			r.Post("/users", h.CreateUser)
+			r.Post("/admin/wipe", h.WipeData)
 		})
 	})
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -7,8 +8,11 @@ import {
   Layers,
   LayoutDashboard,
   LogOut,
+  Trash2,
   Users,
 } from "lucide-react";
+
+import { WipeDataDialog } from "@/components/wipe-data-dialog";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -53,6 +57,7 @@ export function NavUser({
   onLogout: () => void;
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const [wipeOpen, setWipeOpen] = useState(false);
   const initials = (email || "?").slice(0, 2).toUpperCase();
   const roleLabel = role === "admin" ? "Администратор" : "Менеджер";
 
@@ -153,6 +158,13 @@ export function NavUser({
                     Пользователи
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => setWipeOpen(true)}
+                >
+                  <Trash2 />
+                  Очистить данные…
+                </DropdownMenuItem>
               </>
             )}
 
@@ -163,6 +175,7 @@ export function NavUser({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <WipeDataDialog open={wipeOpen} onClose={() => setWipeOpen(false)} />
       </SidebarMenuItem>
     </SidebarMenu>
   );
