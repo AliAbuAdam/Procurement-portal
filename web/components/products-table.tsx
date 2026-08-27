@@ -54,8 +54,19 @@ export interface ProductRow {
   article: string;
   image_url?: string;
   cover_image_id?: string;
+  category_id?: string;
   created_at: string;
 }
+
+/** Пункт списка категорий для назначения из таблицы (с отступом по глубине). */
+export interface CategoryOption {
+  id: string;
+  name: string;
+  depth: number;
+}
+
+// Select не принимает пустое значение — «без категории» кодируем маркером.
+const NO_CATEGORY = "none";
 
 // coverSrc — обложка: первое фото галереи, иначе легаси-URL.
 export function coverSrc(p: ProductRow): string | undefined {
@@ -67,12 +78,15 @@ const COLUMN_LABELS: Record<string, string> = {
   image: "Фото",
   name: "Название",
   article: "Артикул",
+  category: "Категория",
   created_at: "Создана",
   actions: "Действия",
 };
 
 const makeColumns = (
   onManageImages: (p: ProductRow) => void,
+  categories: CategoryOption[],
+  onSetCategory: (p: ProductRow, categoryID: string) => void,
 ): ColumnDef<ProductRow>[] => [
   {
     id: "image",
@@ -101,6 +115,32 @@ const makeColumns = (
     accessorKey: "article",
     header: "Артикул",
     cell: ({ row }) => row.original.article || "—",
+  },
+  {
+    id: "category",
+    header: "Категория",
+    cell: ({ row }) => (
+      <Select
+        value={row.original.category_id || NO_CATEGORY}
+        onValueChange={(v) =>
+          onSetCategory(row.original, v === NO_CATEGORY ? "" : v)
+        }
+      >
+        <SelectTrigger size="sm" className="w-44">
+          <SelectValue placeholder="Без категории" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NO_CATEGORY}>Без категории</SelectItem>
+          {categories.map((c) => (
+            <SelectItem key={c.id} value={c.id}>
+              {" ".repeat(c.depth * 2)}
+              {c.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
+    enableSorting: false,
   },
   {
     accessorKey: "created_at",
@@ -133,16 +173,23 @@ const makeColumns = (
 
 export function ProductsTable({
   products,
+  categories = [],
   onManageImages,
+  onSetCategory = () => {},
 }: {
   products: ProductRow[];
+  categories?: CategoryOption[];
   onManageImages: (p: ProductRow) => void;
+  onSetCategory?: (p: ProductRow, categoryID: string) => void;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
-  const columns = React.useMemo(() => makeColumns(onManageImages), [onManageImages]);
+  const columns = React.useMemo(
+    () => makeColumns(onManageImages, categories, onSetCategory),
+    [onManageImages, categories, onSetCategory],
+  );
 
   const table = useReactTable({
     data: products,

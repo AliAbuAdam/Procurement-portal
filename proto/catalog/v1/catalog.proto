@@ -17,7 +17,17 @@ service CatalogService {
   // --- Номенклатура (products) ---
   rpc CreateProduct(CreateProductRequest) returns (Product);
   // ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
+  // category_id дополнительно сужает выборку категорией и всеми её подкатегориями.
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc GetProduct(GetProductRequest) returns (Product);
+  // Назначить категорию нескольким карточкам (пустой category_id — снять).
+  rpc SetProductCategory(SetProductCategoryRequest) returns (SetProductCategoryResponse);
+
+  // --- Категории (дерево витрины) ---
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
+  rpc CreateCategory(CreateCategoryRequest) returns (Category);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (Category);
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
 
   // --- Фото карточки (галерея, до 10 шт.) ---
   // Байты хранятся в Postgres; списки отдают только метаданные, содержимое — GetProductImage.
@@ -111,21 +121,77 @@ message Product {
   string created_at = 4;
   string image_url = 5;          // легаси: внешний URL фото (для старых карточек)
   string cover_image_id = 6;     // id первого фото галереи (пусто, если фото нет)
+  string category_id = 7;        // категория витрины (пусто — без категории)
 }
 
 message CreateProductRequest {
   string name = 1;
   string article = 2;
   string image_url = 3;
+  string category_id = 4;        // опц.: сразу положить в категорию
 }
 
 message ListProductsRequest {
-  string query = 1;      // непустой -> триграммный поиск по имени
+  string query = 1;       // непустой -> триграммный поиск по имени
   int32 page_size = 2;
+  // Непустой -> только эта категория и её подкатегории.
+  // Спец-значение "none" -> только товары без категории.
+  string category_id = 3;
 }
 
 message ListProductsResponse {
   repeated Product products = 1;
+}
+
+message GetProductRequest {
+  string id = 1;
+}
+
+message SetProductCategoryRequest {
+  repeated string product_ids = 1;
+  string category_id = 2; // пусто — снять категорию
+}
+
+message SetProductCategoryResponse {
+  int32 updated = 1;
+}
+
+// --- Категории ---
+
+// Category — узел дерева категорий витрины.
+message Category {
+  string id = 1;
+  string parent_id = 2;     // пусто — корневая
+  string name = 3;
+  int32 position = 4;       // порядок среди сиблингов
+  int32 product_count = 5;  // товаров непосредственно в категории (без подкатегорий)
+  string created_at = 6;
+}
+
+message ListCategoriesRequest {}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;   // плоский список, дерево собирает клиент
+  int32 uncategorized_count = 2;      // товаров без категории (для пункта «Без категории»)
+}
+
+message CreateCategoryRequest {
+  string name = 1;
+  string parent_id = 2; // пусто — корневая
+}
+
+message UpdateCategoryRequest {
+  string id = 1;
+  string name = 2;
+  string parent_id = 3; // пусто — сделать корневой
+}
+
+message DeleteCategoryRequest {
+  string id = 1; // подкатегории удаляются каскадом, товары остаются без категории
+}
+
+message DeleteCategoryResponse {
+  bool ok = 1;
 }
 
 // --- Фото карточки ---

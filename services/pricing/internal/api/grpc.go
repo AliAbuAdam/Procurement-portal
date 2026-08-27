@@ -51,6 +51,24 @@ func (s *PricingServer) CompareByProduct(ctx context.Context, req *pricingv1.Com
 	}, nil
 }
 
+func (s *PricingServer) MinPricesByProducts(ctx context.Context, req *pricingv1.MinPricesByProductsRequest) (*pricingv1.MinPricesByProductsResponse, error) {
+	list, err := s.prices.MinPricesByProducts(ctx, req.GetProductIds())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	out := make([]*pricingv1.ProductMinPrice, 0, len(list))
+	for _, p := range list {
+		out = append(out, &pricingv1.ProductMinPrice{
+			ProductId:     p.ProductID,
+			MinPrice:      p.MinPrice,
+			Currency:      p.Currency,
+			SupplierCount: int32(p.SupplierCount),
+			InStock:       p.InStock,
+		})
+	}
+	return &pricingv1.MinPricesByProductsResponse{Prices: out}, nil
+}
+
 func toStatus(err error) error {
 	switch {
 	case errors.Is(err, domain.ErrValidation):

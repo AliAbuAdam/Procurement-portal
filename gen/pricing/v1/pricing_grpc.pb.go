@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PricingService_HealthCheck_FullMethodName      = "/pricing.v1.PricingService/HealthCheck"
-	PricingService_CompareByProduct_FullMethodName = "/pricing.v1.PricingService/CompareByProduct"
+	PricingService_HealthCheck_FullMethodName         = "/pricing.v1.PricingService/HealthCheck"
+	PricingService_CompareByProduct_FullMethodName    = "/pricing.v1.PricingService/CompareByProduct"
+	PricingService_MinPricesByProducts_FullMethodName = "/pricing.v1.PricingService/MinPricesByProducts"
 )
 
 // PricingServiceClient is the client API for PricingService service.
@@ -32,6 +33,9 @@ type PricingServiceClient interface {
 	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	// Сравнение: по товару — цены всех поставщиков (фаза 3).
 	CompareByProduct(ctx context.Context, in *CompareByProductRequest, opts ...grpc.CallOption) (*CompareByProductResponse, error)
+	// Витрина: минимальная базовая цена и число поставщиков по списку товаров
+	// (для бейджа «от X ₽» на карточках каталога).
+	MinPricesByProducts(ctx context.Context, in *MinPricesByProductsRequest, opts ...grpc.CallOption) (*MinPricesByProductsResponse, error)
 }
 
 type pricingServiceClient struct {
@@ -62,6 +66,16 @@ func (c *pricingServiceClient) CompareByProduct(ctx context.Context, in *Compare
 	return out, nil
 }
 
+func (c *pricingServiceClient) MinPricesByProducts(ctx context.Context, in *MinPricesByProductsRequest, opts ...grpc.CallOption) (*MinPricesByProductsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MinPricesByProductsResponse)
+	err := c.cc.Invoke(ctx, PricingService_MinPricesByProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PricingServiceServer is the server API for PricingService service.
 // All implementations must embed UnimplementedPricingServiceServer
 // for forward compatibility.
@@ -71,6 +85,9 @@ type PricingServiceServer interface {
 	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	// Сравнение: по товару — цены всех поставщиков (фаза 3).
 	CompareByProduct(context.Context, *CompareByProductRequest) (*CompareByProductResponse, error)
+	// Витрина: минимальная базовая цена и число поставщиков по списку товаров
+	// (для бейджа «от X ₽» на карточках каталога).
+	MinPricesByProducts(context.Context, *MinPricesByProductsRequest) (*MinPricesByProductsResponse, error)
 	mustEmbedUnimplementedPricingServiceServer()
 }
 
@@ -86,6 +103,9 @@ func (UnimplementedPricingServiceServer) HealthCheck(context.Context, *HealthChe
 }
 func (UnimplementedPricingServiceServer) CompareByProduct(context.Context, *CompareByProductRequest) (*CompareByProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CompareByProduct not implemented")
+}
+func (UnimplementedPricingServiceServer) MinPricesByProducts(context.Context, *MinPricesByProductsRequest) (*MinPricesByProductsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method MinPricesByProducts not implemented")
 }
 func (UnimplementedPricingServiceServer) mustEmbedUnimplementedPricingServiceServer() {}
 func (UnimplementedPricingServiceServer) testEmbeddedByValue()                        {}
@@ -144,6 +164,24 @@ func _PricingService_CompareByProduct_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PricingService_MinPricesByProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MinPricesByProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PricingServiceServer).MinPricesByProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PricingService_MinPricesByProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PricingServiceServer).MinPricesByProducts(ctx, req.(*MinPricesByProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PricingService_ServiceDesc is the grpc.ServiceDesc for PricingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -158,6 +196,10 @@ var PricingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompareByProduct",
 			Handler:    _PricingService_CompareByProduct_Handler,
+		},
+		{
+			MethodName: "MinPricesByProducts",
+			Handler:    _PricingService_MinPricesByProducts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

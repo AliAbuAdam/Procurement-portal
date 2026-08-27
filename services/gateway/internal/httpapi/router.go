@@ -44,6 +44,15 @@ func NewRouter(h *Handler, k *auth.Kratos, allowedOrigins []string) http.Handler
 		// Номенклатура и сопоставление: доступно и admin, и manager (рабочий процесс).
 		r.Get("/products", h.ListProducts)
 		r.Post("/products", h.CreateProduct)
+		r.Get("/products/{id}", h.GetProduct)
+		r.Put("/products/category", h.SetProductCategory)
+		r.Post("/products/min-prices", h.MinPrices)
+
+		// Категории витрины: дерево каталога, ведут admin и manager.
+		r.Get("/categories", h.ListCategories)
+		r.Post("/categories", h.CreateCategory)
+		r.Put("/categories/{id}", h.UpdateCategory)
+		r.Delete("/categories/{id}", h.DeleteCategory)
 
 		// Фото карточек (галерея, до 10 шт.) — тот же доступ, что и карточки.
 		r.Get("/products/{id}/images", h.ListProductImages)

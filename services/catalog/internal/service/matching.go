@@ -32,14 +32,14 @@ const (
 	maxSuggestOffers      = 200
 )
 
-func (s *MatchingService) CreateProduct(ctx context.Context, name, article, imageURL string) (*domain.Product, error) {
+func (s *MatchingService) CreateProduct(ctx context.Context, name, article, imageURL, categoryID string) (*domain.Product, error) {
 	name = strings.TrimSpace(name)
 	article = strings.TrimSpace(article)
 	imageURL = strings.TrimSpace(imageURL)
 	if name == "" {
 		return nil, fmt.Errorf("%w: name is required", domain.ErrValidation)
 	}
-	p := &domain.Product{Name: name, Article: article, ImageURL: imageURL}
+	p := &domain.Product{Name: name, Article: article, ImageURL: imageURL, CategoryID: strings.TrimSpace(categoryID)}
 	if err := s.products.Create(ctx, p); err != nil {
 		return nil, err
 	}
@@ -47,13 +47,32 @@ func (s *MatchingService) CreateProduct(ctx context.Context, name, article, imag
 }
 
 // ListProducts: с непустым query — триграммный поиск, иначе последние карточки.
-func (s *MatchingService) ListProducts(ctx context.Context, query string, limit int) ([]*domain.Product, error) {
+// Непустой categoryID сужает выборку категорией и её подкатегориями.
+func (s *MatchingService) ListProducts(ctx context.Context, query, categoryID string, limit int) ([]*domain.Product, error) {
 	limit = clamp(limit, defaultProductLimit, maxProductLimit)
 	query = strings.TrimSpace(query)
+	categoryID = strings.TrimSpace(categoryID)
 	if query != "" {
-		return s.products.Search(ctx, query, limit)
+		return s.products.Search(ctx, query, categoryID, limit)
 	}
-	return s.products.List(ctx, limit)
+	return s.products.List(ctx, categoryID, limit)
+}
+
+func (s *MatchingService) GetProduct(ctx context.Context, id string) (*domain.Product, error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return nil, fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	return s.products.GetByID(ctx, id)
+}
+
+// SetProductCategory — массовое назначение категории (categoryID "" — снять).
+func (s *MatchingService) SetProductCategory(ctx context.Context, ids []string, categoryID string) (int, error) {
+	ids = trimIDs(ids)
+	if len(ids) == 0 {
+		return 0, fmt.Errorf("%w: product_ids is required", domain.ErrValidation)
+	}
+	return s.products.SetCategory(ctx, ids, strings.TrimSpace(categoryID))
 }
 
 // --- фото карточки (галерея) ---

@@ -57,3 +57,42 @@ func (r *PriceRepository) OffersByProduct(ctx context.Context, productID string)
 	}
 	return out, rows.Err()
 }
+
+// MinByProducts — сводка для карточек витрины: по каждому товару минимальная
+// базовая цена среди актуальных предложений (свежайший импорт каждого
+// поставщика — тот же живой джойн, что и в OffersByProduct), число поставщиков
+// и признак наличия. Товары без предложений в результат не попадают.
+func (r *PriceRepository) MinByProducts(ctx context.Context, productIDs []string) ([]*domain.ProductMinPrice, error) {
+	const q = `
+		WITH latest AS (
+			SELECT DISTINCT ON (m.product_id, o.supplier_id)
+			    m.product_id, o.supplier_id, o.price, o.currency, o.in_stock
+			FROM catalog.offer_matches m
+			JOIN importer.supplier_offers o ON o.id = m.offer_id
+			JOIN importer.import_batches  b ON b.id = o.batch_id
+			WHERE m.product_id = ANY($1::uuid[])
+			ORDER BY m.product_id, o.supplier_id, b.created_at DESC
+		)
+		SELECT product_id,
+		       COALESCE(min(price) FILTER (WHERE price > 0), 0),
+		       COALESCE((array_agg(currency ORDER BY price) FILTER (WHERE price > 0))[1], ''),
+		       count(*),
+		       bool_or(in_stock)
+		FROM latest
+		GROUP BY product_id`
+	rows, err := r.db.Querier(ctx).Query(ctx, q, productIDs)
+	if err != nil {
+		return nil, fmt.Errorf("query min prices: %w", err)
+	}
+	defer rows.Close()
+
+	var out []*domain.ProductMinPrice
+	for rows.Next() {
+		var p domain.ProductMinPrice
+		if err := rows.Scan(&p.ProductID, &p.MinPrice, &p.Currency, &p.SupplierCount, &p.InStock); err != nil {
+			return nil, fmt.Errorf("scan min price: %w", err)
+		}
+		out = append(out, &p)
+	}
+	return out, rows.Err()
+}

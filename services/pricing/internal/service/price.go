@@ -55,6 +55,25 @@ func (s *PriceService) CompareByProduct(ctx context.Context, productID string, t
 	return cmp, nil
 }
 
+const maxMinPriceProducts = 200
+
+// MinPricesByProducts — сводки «от X ₽» для карточек витрины.
+func (s *PriceService) MinPricesByProducts(ctx context.Context, productIDs []string) ([]*domain.ProductMinPrice, error) {
+	ids := make([]string, 0, len(productIDs))
+	for _, id := range productIDs {
+		if id = strings.TrimSpace(id); id != "" {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		return nil, fmt.Errorf("%w: product_ids is required", domain.ErrValidation)
+	}
+	if len(ids) > maxMinPriceProducts {
+		return nil, fmt.Errorf("%w: too many product_ids (max %d)", domain.ErrValidation, maxMinPriceProducts)
+	}
+	return s.prices.MinByProducts(ctx, ids)
+}
+
 // betterOffer: предложения в наличии всегда предпочтительнее; при равном
 // статусе наличия — дешевле на выбранном уровне цены.
 func betterOffer(a, b *domain.PriceOffer, tier domain.PriceTier) bool {

@@ -122,8 +122,105 @@ func supplierTypeFromString(s string) catalogv1.SupplierType {
 
 func (h *Handler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.c.Catalog.ListProducts(r.Context(), &catalogv1.ListProductsRequest{
-		Query:    r.URL.Query().Get("q"),
-		PageSize: 100,
+		Query:      r.URL.Query().Get("q"),
+		CategoryId: r.URL.Query().Get("category"),
+		PageSize:   200,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.GetProduct(r.Context(), &catalogv1.GetProductRequest{
+		Id: chi.URLParam(r, "id"),
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// SetProductCategory — массовое назначение категории карточкам
+// (category_id "" — снять категорию).
+func (h *Handler) SetProductCategory(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ProductIDs []string `json:"product_ids"`
+		CategoryID string   `json:"category_id"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.SetProductCategory(r.Context(), &catalogv1.SetProductCategoryRequest{
+		ProductIds: body.ProductIDs,
+		CategoryId: body.CategoryID,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// --- категории витрины ---
+
+func (h *Handler) ListCategories(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.ListCategories(r.Context(), &catalogv1.ListCategoriesRequest{})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Name     string `json:"name"`
+		ParentID string `json:"parent_id"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.CreateCategory(r.Context(), &catalogv1.CreateCategoryRequest{
+		Name:     body.Name,
+		ParentId: body.ParentID,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, resp)
+}
+
+func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Name     string `json:"name"`
+		ParentID string `json:"parent_id"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.UpdateCategory(r.Context(), &catalogv1.UpdateCategoryRequest{
+		Id:       chi.URLParam(r, "id"),
+		Name:     body.Name,
+		ParentId: body.ParentID,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.DeleteCategory(r.Context(), &catalogv1.DeleteCategoryRequest{
+		Id: chi.URLParam(r, "id"),
 	})
 	if err != nil {
 		writeError(w, err)
@@ -351,6 +448,25 @@ func (h *Handler) CompareByProduct(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.c.Pricing.CompareByProduct(r.Context(), &pricingv1.CompareByProductRequest{
 		ProductId: productID,
 		PriceTier: r.URL.Query().Get("tier"), // base (по умолчанию) | opt | bulk
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// MinPrices — сводки «от X ₽» для карточек витрины по списку товаров.
+func (h *Handler) MinPrices(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ProductIDs []string `json:"product_ids"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Pricing.MinPricesByProducts(r.Context(), &pricingv1.MinPricesByProductsRequest{
+		ProductIds: body.ProductIDs,
 	})
 	if err != nil {
 		writeError(w, err)

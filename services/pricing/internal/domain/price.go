@@ -52,7 +52,19 @@ type Comparison struct {
 	CheapestSupplierID string
 }
 
+// ProductMinPrice — сводка по товару для карточки витрины: минимальная базовая
+// цена среди актуальных предложений, число поставщиков и наличие.
+type ProductMinPrice struct {
+	ProductID     string
+	MinPrice      float64 // 0 — базовых цен нет
+	Currency      string
+	SupplierCount int
+	InStock       bool
+}
+
 // PriceRepository — контракт хранилища цен.
 type PriceRepository interface {
 	OffersByProduct(ctx context.Context, productID string) ([]*PriceOffer, error)
+	// MinByProducts — сводки по списку товаров; товары без предложений опускаются.
+	MinByProducts(ctx context.Context, productIDs []string) ([]*ProductMinPrice, error)
 }

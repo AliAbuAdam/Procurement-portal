@@ -15,12 +15,13 @@ import (
 
 type CatalogServer struct {
 	catalogv1.UnimplementedCatalogServiceServer
-	suppliers *service.SupplierService
-	matching  *service.MatchingService
+	suppliers  *service.SupplierService
+	matching   *service.MatchingService
+	categories *service.CategoryService
 }
 
-func NewCatalogServer(suppliers *service.SupplierService, matching *service.MatchingService) *CatalogServer {
-	return &CatalogServer{suppliers: suppliers, matching: matching}
+func NewCatalogServer(suppliers *service.SupplierService, matching *service.MatchingService, categories *service.CategoryService) *CatalogServer {
+	return &CatalogServer{suppliers: suppliers, matching: matching, categories: categories}
 }
 
 func (s *CatalogServer) HealthCheck(context.Context, *catalogv1.HealthCheckRequest) (*catalogv1.HealthCheckResponse, error) {
@@ -82,7 +83,7 @@ func (s *CatalogServer) ListSuppliers(ctx context.Context, req *catalogv1.ListSu
 // --- номенклатура (products) ---
 
 func (s *CatalogServer) CreateProduct(ctx context.Context, req *catalogv1.CreateProductRequest) (*catalogv1.Product, error) {
-	p, err := s.matching.CreateProduct(ctx, req.GetName(), req.GetArticle(), req.GetImageUrl())
+	p, err := s.matching.CreateProduct(ctx, req.GetName(), req.GetArticle(), req.GetImageUrl(), req.GetCategoryId())
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -90,7 +91,7 @@ func (s *CatalogServer) CreateProduct(ctx context.Context, req *catalogv1.Create
 }
 
 func (s *CatalogServer) ListProducts(ctx context.Context, req *catalogv1.ListProductsRequest) (*catalogv1.ListProductsResponse, error) {
-	list, err := s.matching.ListProducts(ctx, req.GetQuery(), int(req.GetPageSize()))
+	list, err := s.matching.ListProducts(ctx, req.GetQuery(), req.GetCategoryId(), int(req.GetPageSize()))
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -99,6 +100,62 @@ func (s *CatalogServer) ListProducts(ctx context.Context, req *catalogv1.ListPro
 		out = append(out, productToProto(p))
 	}
 	return &catalogv1.ListProductsResponse{Products: out}, nil
+}
+
+func (s *CatalogServer) GetProduct(ctx context.Context, req *catalogv1.GetProductRequest) (*catalogv1.Product, error) {
+	p, err := s.matching.GetProduct(ctx, req.GetId())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return productToProto(p), nil
+}
+
+func (s *CatalogServer) SetProductCategory(ctx context.Context, req *catalogv1.SetProductCategoryRequest) (*catalogv1.SetProductCategoryResponse, error) {
+	n, err := s.matching.SetProductCategory(ctx, req.GetProductIds(), req.GetCategoryId())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.SetProductCategoryResponse{Updated: int32(n)}, nil
+}
+
+// --- категории ---
+
+func (s *CatalogServer) ListCategories(ctx context.Context, _ *catalogv1.ListCategoriesRequest) (*catalogv1.ListCategoriesResponse, error) {
+	list, uncategorized, err := s.categories.List(ctx)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	out := make([]*catalogv1.Category, 0, len(list))
+	for _, c := range list {
+		out = append(out, categoryToProto(c))
+	}
+	return &catalogv1.ListCategoriesResponse{
+		Categories:         out,
+		UncategorizedCount: int32(uncategorized),
+	}, nil
+}
+
+func (s *CatalogServer) CreateCategory(ctx context.Context, req *catalogv1.CreateCategoryRequest) (*catalogv1.Category, error) {
+	c, err := s.categories.Create(ctx, req.GetName(), req.GetParentId())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return categoryToProto(c), nil
+}
+
+func (s *CatalogServer) UpdateCategory(ctx context.Context, req *catalogv1.UpdateCategoryRequest) (*catalogv1.Category, error) {
+	c, err := s.categories.Update(ctx, req.GetId(), req.GetName(), req.GetParentId())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return categoryToProto(c), nil
+}
+
+func (s *CatalogServer) DeleteCategory(ctx context.Context, req *catalogv1.DeleteCategoryRequest) (*catalogv1.DeleteCategoryResponse, error) {
+	if err := s.categories.Delete(ctx, req.GetId()); err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.DeleteCategoryResponse{Ok: true}, nil
 }
 
 // --- фото карточки (галерея) ---
@@ -225,7 +282,19 @@ func productToProto(p *domain.Product) *catalogv1.Product {
 		Article:      p.Article,
 		ImageUrl:     p.ImageURL,
 		CoverImageId: p.CoverImageID,
+		CategoryId:   p.CategoryID,
 		CreatedAt:    p.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+func categoryToProto(c *domain.Category) *catalogv1.Category {
+	return &catalogv1.Category{
+		Id:           c.ID,
+		ParentId:     c.ParentID,
+		Name:         c.Name,
+		Position:     int32(c.Position),
+		ProductCount: int32(c.ProductCount),
+		CreatedAt:    c.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
 	}
 }
 
@@ -303,8 +372,11 @@ func toStatus(err error) error {
 	case errors.Is(err, domain.ErrNotFound),
 		errors.Is(err, domain.ErrProductNotFound),
 		errors.Is(err, domain.ErrImageNotFound),
-		errors.Is(err, domain.ErrOfferNotFound):
+		errors.Is(err, domain.ErrOfferNotFound),
+		errors.Is(err, domain.ErrCategoryNotFound):
 		return status.Error(codes.NotFound, err.Error())
+	case errors.Is(err, domain.ErrCategoryCycle):
+		return status.Error(codes.FailedPrecondition, "категорию нельзя перенести в её собственную подкатегорию")
 	case errors.Is(err, domain.ErrSupplierExists):
 		return status.Error(codes.AlreadyExists, err.Error())
 	default:

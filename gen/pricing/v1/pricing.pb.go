@@ -331,6 +331,171 @@ func (x *CompareByProductResponse) GetCheapestSupplierId() string {
 	return ""
 }
 
+// ProductMinPrice — сводка по товару для карточки витрины.
+type ProductMinPrice struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	MinPrice      float64                `protobuf:"fixed64,2,opt,name=min_price,json=minPrice,proto3" json:"min_price,omitempty"`               // минимальная базовая цена среди поставщиков (0 — цен нет)
+	Currency      string                 `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`                                 // валюта минимальной цены
+	SupplierCount int32                  `protobuf:"varint,4,opt,name=supplier_count,json=supplierCount,proto3" json:"supplier_count,omitempty"` // сколько поставщиков дают этот товар
+	InStock       bool                   `protobuf:"varint,5,opt,name=in_stock,json=inStock,proto3" json:"in_stock,omitempty"`                   // есть ли товар в наличии хотя бы у одного поставщика
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProductMinPrice) Reset() {
+	*x = ProductMinPrice{}
+	mi := &file_pricing_v1_pricing_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProductMinPrice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProductMinPrice) ProtoMessage() {}
+
+func (x *ProductMinPrice) ProtoReflect() protoreflect.Message {
+	mi := &file_pricing_v1_pricing_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProductMinPrice.ProtoReflect.Descriptor instead.
+func (*ProductMinPrice) Descriptor() ([]byte, []int) {
+	return file_pricing_v1_pricing_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ProductMinPrice) GetProductId() string {
+	if x != nil {
+		return x.ProductId
+	}
+	return ""
+}
+
+func (x *ProductMinPrice) GetMinPrice() float64 {
+	if x != nil {
+		return x.MinPrice
+	}
+	return 0
+}
+
+func (x *ProductMinPrice) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *ProductMinPrice) GetSupplierCount() int32 {
+	if x != nil {
+		return x.SupplierCount
+	}
+	return 0
+}
+
+func (x *ProductMinPrice) GetInStock() bool {
+	if x != nil {
+		return x.InStock
+	}
+	return false
+}
+
+type MinPricesByProductsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProductIds    []string               `protobuf:"bytes,1,rep,name=product_ids,json=productIds,proto3" json:"product_ids,omitempty"` // до 200 за запрос
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MinPricesByProductsRequest) Reset() {
+	*x = MinPricesByProductsRequest{}
+	mi := &file_pricing_v1_pricing_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MinPricesByProductsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MinPricesByProductsRequest) ProtoMessage() {}
+
+func (x *MinPricesByProductsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pricing_v1_pricing_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MinPricesByProductsRequest.ProtoReflect.Descriptor instead.
+func (*MinPricesByProductsRequest) Descriptor() ([]byte, []int) {
+	return file_pricing_v1_pricing_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *MinPricesByProductsRequest) GetProductIds() []string {
+	if x != nil {
+		return x.ProductIds
+	}
+	return nil
+}
+
+type MinPricesByProductsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Prices        []*ProductMinPrice     `protobuf:"bytes,1,rep,name=prices,proto3" json:"prices,omitempty"` // только товары, у которых есть предложения
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MinPricesByProductsResponse) Reset() {
+	*x = MinPricesByProductsResponse{}
+	mi := &file_pricing_v1_pricing_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MinPricesByProductsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MinPricesByProductsResponse) ProtoMessage() {}
+
+func (x *MinPricesByProductsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pricing_v1_pricing_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MinPricesByProductsResponse.ProtoReflect.Descriptor instead.
+func (*MinPricesByProductsResponse) Descriptor() ([]byte, []int) {
+	return file_pricing_v1_pricing_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MinPricesByProductsResponse) GetPrices() []*ProductMinPrice {
+	if x != nil {
+		return x.Prices
+	}
+	return nil
+}
+
 var File_pricing_v1_pricing_proto protoreflect.FileDescriptor
 
 const file_pricing_v1_pricing_proto_rawDesc = "" +
@@ -364,10 +529,23 @@ const file_pricing_v1_pricing_proto_rawDesc = "" +
 	"\n" +
 	"product_id\x18\x01 \x01(\tR\tproductId\x12.\n" +
 	"\x06offers\x18\x02 \x03(\v2\x16.pricing.v1.PriceOfferR\x06offers\x120\n" +
-	"\x14cheapest_supplier_id\x18\x03 \x01(\tR\x12cheapestSupplierId2\xbf\x01\n" +
+	"\x14cheapest_supplier_id\x18\x03 \x01(\tR\x12cheapestSupplierId\"\xab\x01\n" +
+	"\x0fProductMinPrice\x12\x1d\n" +
+	"\n" +
+	"product_id\x18\x01 \x01(\tR\tproductId\x12\x1b\n" +
+	"\tmin_price\x18\x02 \x01(\x01R\bminPrice\x12\x1a\n" +
+	"\bcurrency\x18\x03 \x01(\tR\bcurrency\x12%\n" +
+	"\x0esupplier_count\x18\x04 \x01(\x05R\rsupplierCount\x12\x19\n" +
+	"\bin_stock\x18\x05 \x01(\bR\ainStock\"=\n" +
+	"\x1aMinPricesByProductsRequest\x12\x1f\n" +
+	"\vproduct_ids\x18\x01 \x03(\tR\n" +
+	"productIds\"R\n" +
+	"\x1bMinPricesByProductsResponse\x123\n" +
+	"\x06prices\x18\x01 \x03(\v2\x1b.pricing.v1.ProductMinPriceR\x06prices2\xa7\x02\n" +
 	"\x0ePricingService\x12N\n" +
 	"\vHealthCheck\x12\x1e.pricing.v1.HealthCheckRequest\x1a\x1f.pricing.v1.HealthCheckResponse\x12]\n" +
-	"\x10CompareByProduct\x12#.pricing.v1.CompareByProductRequest\x1a$.pricing.v1.CompareByProductResponseB5Z3github.com/furnica/backend/gen/pricing/v1;pricingv1b\x06proto3"
+	"\x10CompareByProduct\x12#.pricing.v1.CompareByProductRequest\x1a$.pricing.v1.CompareByProductResponse\x12f\n" +
+	"\x13MinPricesByProducts\x12&.pricing.v1.MinPricesByProductsRequest\x1a'.pricing.v1.MinPricesByProductsResponseB5Z3github.com/furnica/backend/gen/pricing/v1;pricingv1b\x06proto3"
 
 var (
 	file_pricing_v1_pricing_proto_rawDescOnce sync.Once
@@ -381,25 +559,31 @@ func file_pricing_v1_pricing_proto_rawDescGZIP() []byte {
 	return file_pricing_v1_pricing_proto_rawDescData
 }
 
-var file_pricing_v1_pricing_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_pricing_v1_pricing_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_pricing_v1_pricing_proto_goTypes = []any{
-	(*HealthCheckRequest)(nil),       // 0: pricing.v1.HealthCheckRequest
-	(*HealthCheckResponse)(nil),      // 1: pricing.v1.HealthCheckResponse
-	(*PriceOffer)(nil),               // 2: pricing.v1.PriceOffer
-	(*CompareByProductRequest)(nil),  // 3: pricing.v1.CompareByProductRequest
-	(*CompareByProductResponse)(nil), // 4: pricing.v1.CompareByProductResponse
+	(*HealthCheckRequest)(nil),          // 0: pricing.v1.HealthCheckRequest
+	(*HealthCheckResponse)(nil),         // 1: pricing.v1.HealthCheckResponse
+	(*PriceOffer)(nil),                  // 2: pricing.v1.PriceOffer
+	(*CompareByProductRequest)(nil),     // 3: pricing.v1.CompareByProductRequest
+	(*CompareByProductResponse)(nil),    // 4: pricing.v1.CompareByProductResponse
+	(*ProductMinPrice)(nil),             // 5: pricing.v1.ProductMinPrice
+	(*MinPricesByProductsRequest)(nil),  // 6: pricing.v1.MinPricesByProductsRequest
+	(*MinPricesByProductsResponse)(nil), // 7: pricing.v1.MinPricesByProductsResponse
 }
 var file_pricing_v1_pricing_proto_depIdxs = []int32{
 	2, // 0: pricing.v1.CompareByProductResponse.offers:type_name -> pricing.v1.PriceOffer
-	0, // 1: pricing.v1.PricingService.HealthCheck:input_type -> pricing.v1.HealthCheckRequest
-	3, // 2: pricing.v1.PricingService.CompareByProduct:input_type -> pricing.v1.CompareByProductRequest
-	1, // 3: pricing.v1.PricingService.HealthCheck:output_type -> pricing.v1.HealthCheckResponse
-	4, // 4: pricing.v1.PricingService.CompareByProduct:output_type -> pricing.v1.CompareByProductResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 1: pricing.v1.MinPricesByProductsResponse.prices:type_name -> pricing.v1.ProductMinPrice
+	0, // 2: pricing.v1.PricingService.HealthCheck:input_type -> pricing.v1.HealthCheckRequest
+	3, // 3: pricing.v1.PricingService.CompareByProduct:input_type -> pricing.v1.CompareByProductRequest
+	6, // 4: pricing.v1.PricingService.MinPricesByProducts:input_type -> pricing.v1.MinPricesByProductsRequest
+	1, // 5: pricing.v1.PricingService.HealthCheck:output_type -> pricing.v1.HealthCheckResponse
+	4, // 6: pricing.v1.PricingService.CompareByProduct:output_type -> pricing.v1.CompareByProductResponse
+	7, // 7: pricing.v1.PricingService.MinPricesByProducts:output_type -> pricing.v1.MinPricesByProductsResponse
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_pricing_v1_pricing_proto_init() }
@@ -413,7 +597,7 @@ func file_pricing_v1_pricing_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pricing_v1_pricing_proto_rawDesc), len(file_pricing_v1_pricing_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

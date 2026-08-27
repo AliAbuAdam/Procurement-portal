@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, LayoutGrid, List } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
+import { buildCategoryTree, flattenTree, type Category } from "@/lib/catalog";
 import { compressImage } from "@/lib/image";
 import { LoadingState } from "@/components/loading-state";
 import {
@@ -15,9 +16,18 @@ import { ProductsTable, type ProductRow } from "@/components/products-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type ViewMode = "cards" | "table";
+
+const NO_CATEGORY = "none";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<ProductRow[]>([]);
@@ -28,12 +38,25 @@ export default function ProductsPage() {
 
   const [name, setName] = useState("");
   const [article, setArticle] = useState("");
+  const [category, setCategory] = useState(NO_CATEGORY);
   const [files, setFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Карточка, чья галерея открыта в боковой панели.
   const [imagesFor, setImagesFor] = useState<ProductRow | null>(null);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const flatCategories = useMemo(
+    () => flattenTree(buildCategoryTree(categories)),
+    [categories],
+  );
+
+  useEffect(() => {
+    apiFetch<{ categories?: Category[] }>("/api/v1/categories")
+      .then((d) => setCategories(d.categories ?? []))
+      .catch(() => setCategories([]));
+  }, []);
 
   const load = useCallback(async (q: string) => {
     setLoading(true);
@@ -67,7 +90,11 @@ export default function ProductsPage() {
     try {
       const created = await apiFetch<{ id: string }>("/api/v1/products", {
         method: "POST",
-        body: JSON.stringify({ name, article }),
+        body: JSON.stringify({
+          name,
+          article,
+          category_id: category === NO_CATEGORY ? "" : category,
+        }),
       });
       // Фото грузим после создания карточки: сжимаем на клиенте и шлём по одному.
       for (const f of files.slice(0, MAX_IMAGES)) {
@@ -83,6 +110,7 @@ export default function ProductsPage() {
       }
       setName("");
       setArticle("");
+      setCategory(NO_CATEGORY);
       setFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       await load(query);
@@ -124,6 +152,23 @@ export default function ProductsPage() {
             onChange={(e) => setArticle(e.target.value)}
             placeholder="необязательно"
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label>Категория</Label>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="w-52">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_CATEGORY}>Без категории</SelectItem>
+              {flatCategories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {" ".repeat(c.depth * 2)}
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col gap-2">
           <Label>Фото (до {MAX_IMAGES} шт.)</Label>
@@ -199,7 +244,27 @@ export default function ProductsPage() {
       ) : view === "cards" ? (
         <ProductsGrid products={products} onManageImages={setImagesFor} />
       ) : (
-        <ProductsTable products={products} onManageImages={setImagesFor} />
+        <ProductsTable
+          products={products}
+          categories={flatCategories}
+          onManageImages={setImagesFor}
+          onSetCategory={async (p, categoryID) => {
+            try {
+              await apiFetch("/api/v1/products/category", {
+                method: "PUT",
+                body: JSON.stringify({
+                  product_ids: [p.id],
+                  category_id: categoryID,
+                }),
+              });
+              await load(query);
+            } catch (e) {
+              setError(
+                e instanceof Error ? e.message : "Не удалось назначить категорию",
+              );
+            }
+          }}
+        />
       )}
 
       <ProductImagesSheet

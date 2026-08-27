@@ -10,6 +10,10 @@ service PricingService {
 
   // Сравнение: по товару — цены всех поставщиков (фаза 3).
   rpc CompareByProduct(CompareByProductRequest) returns (CompareByProductResponse);
+
+  // Витрина: минимальная базовая цена и число поставщиков по списку товаров
+  // (для бейджа «от X ₽» на карточках каталога).
+  rpc MinPricesByProducts(MinPricesByProductsRequest) returns (MinPricesByProductsResponse);
 }
 
 message HealthCheckRequest {}
@@ -41,4 +45,21 @@ message CompareByProductResponse {
   string product_id = 1;
   repeated PriceOffer offers = 2;
   string cheapest_supplier_id = 3;
+}
+
+// ProductMinPrice — сводка по товару для карточки витрины.
+message ProductMinPrice {
+  string product_id = 1;
+  double min_price = 2;     // минимальная базовая цена среди поставщиков (0 — цен нет)
+  string currency = 3;      // валюта минимальной цены
+  int32 supplier_count = 4; // сколько поставщиков дают этот товар
+  bool in_stock = 5;        // есть ли товар в наличии хотя бы у одного поставщика
+}
+
+message MinPricesByProductsRequest {
+  repeated string product_ids = 1; // до 200 за запрос
+}
+
+message MinPricesByProductsResponse {
+  repeated ProductMinPrice prices = 1; // только товары, у которых есть предложения
 }

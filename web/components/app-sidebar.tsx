@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Database,
   LayoutDashboard,
+  Store,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -54,14 +55,22 @@ const NAV: NavItem[] = [
     roles: ["admin", "manager"],
   },
   {
-    kind: "group",
+    kind: "link",
     title: "Каталог",
+    url: "/catalog",
+    icon: Store,
+    roles: ["admin", "manager"],
+  },
+  {
+    kind: "group",
+    title: "Данные",
     icon: Database,
     roles: ["admin", "manager"],
     items: [
       { title: "Поставщики", url: "/suppliers" },
       { title: "Прайс-листы", url: "/imports" },
       { title: "Номенклатуры", url: "/products" },
+      { title: "Категории", url: "/categories" },
     ],
   },
   {

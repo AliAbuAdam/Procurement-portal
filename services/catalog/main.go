@@ -61,7 +61,10 @@ func run() error {
 	imageRepo := repository.NewProductImageRepository(txm)
 	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo)
 
-	srv := api.NewCatalogServer(supplierSvc, matchingSvc)
+	categoryRepo := repository.NewCategoryRepository(txm)
+	categorySvc := service.NewCategoryService(categoryRepo)
+
+	srv := api.NewCatalogServer(supplierSvc, matchingSvc, categorySvc)
 
 	grpcServer := grpc.NewServer()
 	catalogv1.RegisterCatalogServiceServer(grpcServer, srv)
