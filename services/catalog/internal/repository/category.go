@@ -119,6 +119,90 @@ func (r *CategoryRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+// --- категории поставщиков (привязки) ---
+
+func (r *CategoryRepository) ListSupplierCategories(ctx context.Context) ([]*domain.SupplierCategory, error) {
+	const q = `
+		SELECT o.supplier_id, s.name, o.raw_category, count(*),
+		       COALESCE(cm.category_id::text, '')
+		FROM importer.supplier_offers o
+		JOIN catalog.suppliers s ON s.id = o.supplier_id
+		LEFT JOIN catalog.category_mappings cm
+		  ON cm.supplier_id = o.supplier_id AND cm.raw_category = o.raw_category
+		WHERE o.raw_category <> ''
+		GROUP BY o.supplier_id, s.name, o.raw_category, cm.category_id
+		ORDER BY s.name, o.raw_category`
+	rows, err := r.db.Querier(ctx).Query(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("query supplier categories: %w", err)
+	}
+	defer rows.Close()
+
+	var out []*domain.SupplierCategory
+	for rows.Next() {
+		var sc domain.SupplierCategory
+		if err := rows.Scan(&sc.SupplierID, &sc.SupplierName, &sc.RawCategory, &sc.OffersCount, &sc.CategoryID); err != nil {
+			return nil, fmt.Errorf("scan supplier category: %w", err)
+		}
+		out = append(out, &sc)
+	}
+	return out, rows.Err()
+}
+
+func (r *CategoryRepository) UpsertMapping(ctx context.Context, supplierID, rawCategory, categoryID string) error {
+	const q = `
+		INSERT INTO catalog.category_mappings (supplier_id, raw_category, category_id)
+		VALUES ($1, $2, $3::uuid)
+		ON CONFLICT (supplier_id, raw_category)
+		DO UPDATE SET category_id = EXCLUDED.category_id`
+	if _, err := r.db.Querier(ctx).Exec(ctx, q, supplierID, rawCategory, categoryID); err != nil {
+		return categoryWriteErr("upsert category mapping", err)
+	}
+	return nil
+}
+
+func (r *CategoryRepository) DeleteMapping(ctx context.Context, supplierID, rawCategory string) error {
+	const q = `DELETE FROM catalog.category_mappings WHERE supplier_id = $1 AND raw_category = $2`
+	if _, err := r.db.Querier(ctx).Exec(ctx, q, supplierID, rawCategory); err != nil {
+		return categoryWriteErr("delete category mapping", err)
+	}
+	return nil
+}
+
+func (r *CategoryRepository) MappedCategory(ctx context.Context, supplierID, rawCategory string) (string, error) {
+	const q = `
+		SELECT category_id::text FROM catalog.category_mappings
+		WHERE supplier_id = $1 AND raw_category = $2`
+	var id string
+	err := r.db.Querier(ctx).QueryRow(ctx, q, supplierID, rawCategory).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("get category mapping: %w", err)
+	}
+	return id, nil
+}
+
+func (r *CategoryRepository) ApplyMappings(ctx context.Context) (int, error) {
+	// Только товары без категории: ручную раскладку не перетираем.
+	// При нескольких сопоставленных строках с разными привязками победит
+	// произвольная — на практике это один и тот же товар в близких категориях.
+	const q = `
+		UPDATE catalog.products p
+		SET category_id = cm.category_id, updated_at = now()
+		FROM catalog.offer_matches m
+		JOIN importer.supplier_offers o ON o.id = m.offer_id
+		JOIN catalog.category_mappings cm
+		  ON cm.supplier_id = o.supplier_id AND cm.raw_category = o.raw_category
+		WHERE p.id = m.product_id AND p.category_id IS NULL`
+	tag, err := r.db.Querier(ctx).Exec(ctx, q)
+	if err != nil {
+		return 0, fmt.Errorf("apply category mappings: %w", err)
+	}
+	return int(tag.RowsAffected()), nil
+}
+
 // categoryWriteErr мапит ошибки Postgres в доменные: несуществующий родитель
 // (нарушение FK) и кривой uuid из URL/тела — вина клиента, не 500.
 func categoryWriteErr(op string, err error) error {

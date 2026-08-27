@@ -54,6 +54,7 @@ message ColumnMapping {
   int32 currency_col = 5;
   int32 price_opt_col = 6;  // оптовая цена
   int32 price_bulk_col = 7; // крупный опт
+  int32 category_col = 8;   // категория в терминах поставщика
 }
 
 message PreviewRow {

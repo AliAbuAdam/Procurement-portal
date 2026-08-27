@@ -23,6 +23,15 @@ import {
 } from "@/components/ui/select";
 
 const NO_PARENT = "root";
+const NOT_MAPPED = "none";
+
+interface SupplierCategory {
+  supplier_id: string;
+  supplier_name: string;
+  raw_category: string;
+  offers_count?: number;
+  category_id?: string;
+}
 
 // Управление деревом категорий витрины: создание, переименование, перенос,
 // удаление. Товары к категориям привязываются на странице «Номенклатуры».
@@ -41,6 +50,10 @@ export default function CategoriesPage() {
   const [editName, setEditName] = useState("");
   const [editParent, setEditParent] = useState(NO_PARENT);
 
+  const [supplierCats, setSupplierCats] = useState<SupplierCategory[]>([]);
+  const [applying, setApplying] = useState(false);
+  const [applyNotice, setApplyNotice] = useState("");
+
   const tree = useMemo(() => buildCategoryTree(categories), [categories]);
   const flat = useMemo(() => flattenTree(tree), [tree]);
 
@@ -48,18 +61,64 @@ export default function CategoriesPage() {
     setLoading(true);
     setError("");
     try {
-      const d = await apiFetch<{
-        categories?: Category[];
-        uncategorized_count?: number;
-      }>("/api/v1/categories");
+      const [d, sc] = await Promise.all([
+        apiFetch<{ categories?: Category[]; uncategorized_count?: number }>(
+          "/api/v1/categories",
+        ),
+        apiFetch<{ items?: SupplierCategory[] }>("/api/v1/supplier-categories"),
+      ]);
       setCategories(d.categories ?? []);
       setUncategorized(d.uncategorized_count ?? 0);
+      setSupplierCats(sc.items ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки категорий");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Привязка категории поставщика: categoryID "" — снять, create — создать
+  // одноимённую свою и привязать.
+  const mapSupplierCat = useCallback(
+    async (sc: SupplierCategory, categoryID: string, create = false) => {
+      setError("");
+      try {
+        await apiFetch("/api/v1/supplier-categories", {
+          method: "PUT",
+          body: JSON.stringify({
+            supplier_id: sc.supplier_id,
+            raw_category: sc.raw_category,
+            category_id: categoryID,
+            create_category: create,
+          }),
+        });
+        await load();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Не удалось сохранить привязку");
+      }
+    },
+    [load],
+  );
+
+  async function onApplyMappings() {
+    setApplying(true);
+    setError("");
+    setApplyNotice("");
+    try {
+      const d = await apiFetch<{ updated?: number }>(
+        "/api/v1/supplier-categories/apply",
+        { method: "POST", body: "{}" },
+      );
+      setApplyNotice(
+        `Готово: категория проставлена ${d.updated ?? 0} товарам (товары с уже назначенной категорией не менялись).`,
+      );
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось применить привязки");
+    } finally {
+      setApplying(false);
+    }
+  }
 
   useEffect(() => {
     load();
@@ -279,10 +338,102 @@ export default function CategoriesPage() {
 
       {uncategorized > 0 && (
         <p className="text-sm text-[var(--muted-foreground)]">
-          Товаров без категории: <b>{uncategorized}</b> — разложите их на
-          странице «Номенклатуры» (вид «Таблица», колонка «Категория»).
+          Товаров без категории: <b>{uncategorized}</b> — привяжите категории
+          поставщиков ниже и нажмите «Разложить товары», либо назначьте вручную
+          на странице «Номенклатуры» (вид «Таблица», колонка «Категория»).
         </p>
       )}
+
+      {/* Категории поставщиков: их текст из прайсов -> наши категории */}
+      <div className="mt-2 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Категории поставщиков</h2>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Категории из загруженных прайсов. Привяжите каждую к своей — новые
+              карточки при сопоставлении будут попадать в нужную категорию
+              автоматически.
+            </p>
+          </div>
+          <Button
+            onClick={onApplyMappings}
+            disabled={applying || supplierCats.every((c) => !c.category_id)}
+          >
+            {applying ? "Раскладываем…" : "Разложить товары по привязкам"}
+          </Button>
+        </div>
+
+        {applyNotice && <p className="text-sm text-green-700">{applyNotice}</p>}
+
+        {supplierCats.length === 0 ? (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Пока пусто. Категории появятся после импорта прайса, в котором при
+            загрузке указана колонка «Категория поставщика».
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+            <table className="w-full text-sm">
+              <thead className="bg-[var(--muted)] text-left">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Поставщик</th>
+                  <th className="px-3 py-2 font-medium">Категория поставщика</th>
+                  <th className="px-3 py-2 font-medium">Строк</th>
+                  <th className="px-3 py-2 font-medium">Наша категория</th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {supplierCats.map((sc) => (
+                  <tr
+                    key={`${sc.supplier_id}:${sc.raw_category}`}
+                    className="border-t border-[var(--border)]"
+                  >
+                    <td className="px-3 py-2">{sc.supplier_name}</td>
+                    <td className="px-3 py-2 font-medium">{sc.raw_category}</td>
+                    <td className="px-3 py-2 text-[var(--muted-foreground)]">
+                      {sc.offers_count ?? 0}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Select
+                        value={sc.category_id || NOT_MAPPED}
+                        onValueChange={(v) =>
+                          mapSupplierCat(sc, v === NOT_MAPPED ? "" : v)
+                        }
+                      >
+                        <SelectTrigger size="sm" className="w-52">
+                          <SelectValue placeholder="— не привязана —" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NOT_MAPPED}>
+                            — не привязана —
+                          </SelectItem>
+                          {flat.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {" ".repeat(c.depth * 2)}
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-3 py-2">
+                      {!sc.category_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => mapSupplierCat(sc, "", true)}
+                        >
+                          Создать одноимённую
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

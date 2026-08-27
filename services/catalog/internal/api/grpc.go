@@ -25,6 +25,42 @@ func NewCatalogServer(suppliers *service.SupplierService, matching *service.Matc
 	return &CatalogServer{suppliers: suppliers, matching: matching, categories: categories, admin: admin}
 }
 
+// --- категории поставщиков ---
+
+func (s *CatalogServer) ListSupplierCategories(ctx context.Context, _ *catalogv1.ListSupplierCategoriesRequest) (*catalogv1.ListSupplierCategoriesResponse, error) {
+	list, err := s.categories.ListSupplierCategories(ctx)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	out := make([]*catalogv1.SupplierCategory, 0, len(list))
+	for _, sc := range list {
+		out = append(out, &catalogv1.SupplierCategory{
+			SupplierId:   sc.SupplierID,
+			SupplierName: sc.SupplierName,
+			RawCategory:  sc.RawCategory,
+			OffersCount:  int32(sc.OffersCount),
+			CategoryId:   sc.CategoryID,
+		})
+	}
+	return &catalogv1.ListSupplierCategoriesResponse{Items: out}, nil
+}
+
+func (s *CatalogServer) MapSupplierCategory(ctx context.Context, req *catalogv1.MapSupplierCategoryRequest) (*catalogv1.MapSupplierCategoryResponse, error) {
+	id, err := s.categories.MapSupplierCategory(ctx, req.GetSupplierId(), req.GetRawCategory(), req.GetCategoryId(), req.GetCreateCategory())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.MapSupplierCategoryResponse{CategoryId: id}, nil
+}
+
+func (s *CatalogServer) ApplyCategoryMappings(ctx context.Context, _ *catalogv1.ApplyCategoryMappingsRequest) (*catalogv1.ApplyCategoryMappingsResponse, error) {
+	n, err := s.categories.ApplyMappings(ctx)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.ApplyCategoryMappingsResponse{Updated: int32(n)}, nil
+}
+
 func (s *CatalogServer) WipeData(ctx context.Context, req *catalogv1.WipeDataRequest) (*catalogv1.WipeDataResponse, error) {
 	res, err := s.admin.WipeData(ctx, req.GetIncludeSuppliers())
 	if err != nil {

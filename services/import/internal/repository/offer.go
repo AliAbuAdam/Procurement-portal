@@ -35,12 +35,13 @@ func (r *OfferRepository) InsertOffers(ctx context.Context, offers []*domain.Sup
 		rows = append(rows, []any{
 			o.BatchID, o.SupplierID, o.RowNum, o.RawName, o.RawArticle,
 			o.Price, o.Currency, o.InStock, o.StockQty, o.PriceOpt, o.PriceBulk,
+			o.RawCategory,
 		})
 	}
 	_, err := r.db.Querier(ctx).CopyFrom(
 		ctx,
 		pgx.Identifier{"importer", "supplier_offers"},
-		[]string{"batch_id", "supplier_id", "row_num", "raw_name", "raw_article", "price", "currency", "in_stock", "stock_qty", "price_opt", "price_bulk"},
+		[]string{"batch_id", "supplier_id", "row_num", "raw_name", "raw_article", "price", "currency", "in_stock", "stock_qty", "price_opt", "price_bulk", "raw_category"},
 		pgx.CopyFromRows(rows),
 	)
 	if err != nil {

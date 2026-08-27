@@ -11,6 +11,7 @@ type ColumnMapping struct {
 	Currency  int
 	PriceOpt  int // оптовая цена
 	PriceBulk int // крупный опт
+	Category  int // категория в терминах поставщика
 }
 
 // SupplierOffer — «сырая» строка прайса до сопоставления с карточкой (фаза 2).
@@ -27,6 +28,7 @@ type SupplierOffer struct {
 	StockQty   int64
 	PriceOpt   float64 // 0 = в прайсе не было
 	PriceBulk  float64 // 0 = в прайсе не было
+	RawCategory string // категория из прайса поставщика ("" — не было)
 }
 
 // ParsedSheet — результат разбора файла: заголовки и строки данных.

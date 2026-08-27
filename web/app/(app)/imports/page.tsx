@@ -51,6 +51,7 @@ interface Mapping {
   currency_col: number;
   price_opt_col: number;
   price_bulk_col: number;
+  category_col: number;
 }
 
 interface Preview {
@@ -84,6 +85,7 @@ const FIELDS: { key: keyof Mapping; label: string; required?: boolean }[] = [
   { key: "price_bulk_col", label: "Цена крупный опт" },
   { key: "stock_col", label: "Наличие / остаток" },
   { key: "currency_col", label: "Валюта" },
+  { key: "category_col", label: "Категория поставщика" },
 ];
 
 export default function ImportsPage() {
@@ -140,6 +142,7 @@ export default function ImportsPage() {
         currency_col: col(s.currency_col),
         price_opt_col: col(s.price_opt_col),
         price_bulk_col: col(s.price_bulk_col),
+        category_col: col(s.category_col),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка предпросмотра");

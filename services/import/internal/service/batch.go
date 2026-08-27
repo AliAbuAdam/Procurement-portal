@@ -111,6 +111,7 @@ func (s *ImportService) buildOffers(batch *domain.ImportBatch, supplierID string
 			StockQty:   qty,
 			PriceOpt:   parser.ParsePrice(cell(row, m.PriceOpt)),
 			PriceBulk:  parser.ParsePrice(cell(row, m.PriceBulk)),
+			RawCategory: strings.TrimSpace(cell(row, m.Category)),
 		})
 	}
 	return offers
@@ -166,7 +167,7 @@ func cell(row []string, idx int) string {
 // «крупный опт» проверяем раньше «опт», а «опт» — раньше базовой цены,
 // иначе «Цена опт» уйдёт в базовую цену.
 func suggestMapping(headers []string) domain.ColumnMapping {
-	m := domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1}
+	m := domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1, Category: -1}
 	for i, h := range headers {
 		h = strings.ToLower(strings.TrimSpace(h))
 		switch {
@@ -174,6 +175,8 @@ func suggestMapping(headers []string) domain.ColumnMapping {
 			m.Name = i
 		case m.Article < 0 && containsAny(h, "артикул", "код", "sku", "art", "article"):
 			m.Article = i
+		case m.Category < 0 && containsAny(h, "категор", "раздел", "групп", "category"):
+			m.Category = i
 		case m.PriceBulk < 0 && strings.Contains(h, "опт") && containsAny(h, "круп", "bulk"):
 			m.PriceBulk = i
 		case m.PriceOpt < 0 && containsAny(h, "опт", "wholesale"):

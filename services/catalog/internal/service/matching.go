@@ -12,14 +12,15 @@ import (
 
 // MatchingService — карточки номенклатуры, их фото и сопоставление строк прайсов.
 type MatchingService struct {
-	txm      *postgres.TxManager
-	products domain.ProductRepository
-	matches  domain.MatchRepository
-	images   domain.ProductImageRepository
+	txm        *postgres.TxManager
+	products   domain.ProductRepository
+	matches    domain.MatchRepository
+	images     domain.ProductImageRepository
+	categories domain.CategoryRepository // для автокатегории по привязкам поставщика
 }
 
-func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository) *MatchingService {
-	return &MatchingService{txm: txm, products: products, matches: matches, images: images}
+func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository, categories domain.CategoryRepository) *MatchingService {
+	return &MatchingService{txm: txm, products: products, matches: matches, images: images, categories: categories}
 }
 
 const (
@@ -217,6 +218,15 @@ func (s *MatchingService) CreateProductFromOffer(ctx context.Context, offerID, n
 			article = strings.TrimSpace(offer.RawArticle)
 		}
 		p := &domain.Product{Name: name, Article: article}
+		// Автокатегория: если категория поставщика из этой строки привязана
+		// к категории витрины — новая карточка сразу падает в неё.
+		if offer.RawCategory != "" {
+			catID, err := s.categories.MappedCategory(ctx, offer.SupplierID, offer.RawCategory)
+			if err != nil {
+				return err
+			}
+			p.CategoryID = catID
+		}
 		if err := s.products.Create(ctx, p); err != nil {
 			return err
 		}

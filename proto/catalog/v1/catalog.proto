@@ -29,6 +29,14 @@ service CatalogService {
   rpc UpdateCategory(UpdateCategoryRequest) returns (Category);
   rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
 
+  // --- Категории поставщиков (сырые категории из прайсов -> свои) ---
+  // Уникальные категории из строк прайсов + текущие привязки.
+  rpc ListSupplierCategories(ListSupplierCategoriesRequest) returns (ListSupplierCategoriesResponse);
+  // Привязать категорию поставщика к своей (или создать одноимённую).
+  rpc MapSupplierCategory(MapSupplierCategoryRequest) returns (MapSupplierCategoryResponse);
+  // Массово проставить категории товарам без категории по привязкам.
+  rpc ApplyCategoryMappings(ApplyCategoryMappingsRequest) returns (ApplyCategoryMappingsResponse);
+
   // --- Админ: очистка данных каталога (карточки, фото, сопоставления,
   // категории; опционально поставщики). Необратимо, доступ ограничивает gateway.
   rpc WipeData(WipeDataRequest) returns (WipeDataResponse);
@@ -196,6 +204,43 @@ message DeleteCategoryRequest {
 
 message DeleteCategoryResponse {
   bool ok = 1;
+}
+
+// --- Категории поставщиков ---
+
+// SupplierCategory — категория в терминах поставщика (из строк его прайсов)
+// и её привязка к категории витрины.
+message SupplierCategory {
+  string supplier_id = 1;
+  string supplier_name = 2;
+  string raw_category = 3;
+  int32 offers_count = 4;  // строк прайсов с этой категорией
+  string category_id = 5;  // привязанная своя категория ("" — не привязана)
+}
+
+message ListSupplierCategoriesRequest {}
+
+message ListSupplierCategoriesResponse {
+  repeated SupplierCategory items = 1;
+}
+
+message MapSupplierCategoryRequest {
+  string supplier_id = 1;
+  string raw_category = 2;
+  // Категория витрины; "" при create_category=false — снять привязку.
+  string category_id = 3;
+  // true — создать корневую категорию с именем raw_category и привязать к ней.
+  bool create_category = 4;
+}
+
+message MapSupplierCategoryResponse {
+  string category_id = 1; // итоговая категория ("" — привязка снята)
+}
+
+message ApplyCategoryMappingsRequest {}
+
+message ApplyCategoryMappingsResponse {
+  int32 updated = 1; // скольким товарам проставлена категория
 }
 
 // --- Очистка данных ---

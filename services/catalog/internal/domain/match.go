@@ -37,12 +37,14 @@ type OfferSuggestion struct {
 // RawOffer — сырая строка прайса (read-only проекция importer.supplier_offers).
 // Catalog читает её для сопоставления; писать в importer нельзя.
 type RawOffer struct {
-	ID         string
-	RowNum     int
-	RawName    string
-	RawArticle string
-	Price      float64
-	Currency   string
+	ID          string
+	RowNum      int
+	RawName     string
+	RawArticle  string
+	Price       float64
+	Currency    string
+	SupplierID  string
+	RawCategory string // категория из прайса поставщика ("" — не было)
 }
 
 // MatchRepository — сопоставление. Часть запросов читает схему importer

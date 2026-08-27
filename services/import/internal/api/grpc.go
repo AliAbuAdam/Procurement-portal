@@ -107,7 +107,7 @@ func (s *ImportServer) ListOffers(ctx context.Context, req *importv1.ListOffersR
 
 func mappingFromProto(m *importv1.ColumnMapping) domain.ColumnMapping {
 	if m == nil {
-		return domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1}
+		return domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1, Category: -1}
 	}
 	return domain.ColumnMapping{
 		Name:      int(m.GetNameCol()),
@@ -117,6 +117,7 @@ func mappingFromProto(m *importv1.ColumnMapping) domain.ColumnMapping {
 		Currency:  int(m.GetCurrencyCol()),
 		PriceOpt:  int(m.GetPriceOptCol()),
 		PriceBulk: int(m.GetPriceBulkCol()),
+		Category:  int(m.GetCategoryCol()),
 	}
 }
 
@@ -129,6 +130,7 @@ func mappingToProto(m domain.ColumnMapping) *importv1.ColumnMapping {
 		CurrencyCol:  int32(m.Currency),
 		PriceOptCol:  int32(m.PriceOpt),
 		PriceBulkCol: int32(m.PriceBulk),
+		CategoryCol:  int32(m.Category),
 	}
 }
 

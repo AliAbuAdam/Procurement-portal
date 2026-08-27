@@ -475,6 +475,50 @@ func (h *Handler) MinPrices(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// --- категории поставщиков ---
+
+func (h *Handler) ListSupplierCategories(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.ListSupplierCategories(r.Context(), &catalogv1.ListSupplierCategoriesRequest{})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) MapSupplierCategory(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		SupplierID     string `json:"supplier_id"`
+		RawCategory    string `json:"raw_category"`
+		CategoryID     string `json:"category_id"`
+		CreateCategory bool   `json:"create_category"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.MapSupplierCategory(r.Context(), &catalogv1.MapSupplierCategoryRequest{
+		SupplierId:     body.SupplierID,
+		RawCategory:    body.RawCategory,
+		CategoryId:     body.CategoryID,
+		CreateCategory: body.CreateCategory,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) ApplyCategoryMappings(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.ApplyCategoryMappings(r.Context(), &catalogv1.ApplyCategoryMappingsRequest{})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 // WipeData — полная очистка данных (только admin, маршрут под RequireRole).
 // Сначала импорты, затем каталог; сервисы чистят свои схемы транзакционно.
 func (h *Handler) WipeData(w http.ResponseWriter, r *http.Request) {
@@ -519,6 +563,7 @@ type clientMapping struct {
 	CurrencyCol  int32 `json:"currency_col"`
 	PriceOptCol  int32 `json:"price_opt_col"`
 	PriceBulkCol int32 `json:"price_bulk_col"`
+	CategoryCol  int32 `json:"category_col"`
 }
 
 func (m clientMapping) toProto() *importv1.ColumnMapping {
@@ -530,6 +575,7 @@ func (m clientMapping) toProto() *importv1.ColumnMapping {
 		CurrencyCol:  m.CurrencyCol,
 		PriceOptCol:  m.PriceOptCol,
 		PriceBulkCol: m.PriceBulkCol,
+		CategoryCol:  m.CategoryCol,
 	}
 }
 
@@ -558,7 +604,7 @@ func (h *Handler) CreateImport(w http.ResponseWriter, r *http.Request) {
 	}
 	// Новые опциональные колонки по умолчанию «не заданы» (-1): старый клиент,
 	// не знающий про них, не должен случайно замапить их на колонку 0.
-	m := clientMapping{PriceOptCol: -1, PriceBulkCol: -1}
+	m := clientMapping{PriceOptCol: -1, PriceBulkCol: -1, CategoryCol: -1}
 	if raw := r.FormValue("mapping"); raw != "" {
 		if err := json.Unmarshal([]byte(raw), &m); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid mapping json"})

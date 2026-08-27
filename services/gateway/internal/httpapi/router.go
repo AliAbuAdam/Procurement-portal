@@ -54,6 +54,11 @@ func NewRouter(h *Handler, k *auth.Kratos, allowedOrigins []string) http.Handler
 		r.Put("/categories/{id}", h.UpdateCategory)
 		r.Delete("/categories/{id}", h.DeleteCategory)
 
+		// Категории поставщиков: привязка «их категория -> наша».
+		r.Get("/supplier-categories", h.ListSupplierCategories)
+		r.Put("/supplier-categories", h.MapSupplierCategory)
+		r.Post("/supplier-categories/apply", h.ApplyCategoryMappings)
+
 		// Фото карточек (галерея, до 10 шт.) — тот же доступ, что и карточки.
 		r.Get("/products/{id}/images", h.ListProductImages)
 		r.Post("/products/{id}/images", h.AddProductImage)

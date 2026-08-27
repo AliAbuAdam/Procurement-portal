@@ -59,10 +59,10 @@ func run() error {
 	productRepo := repository.NewProductRepository(txm)
 	matchRepo := repository.NewMatchRepository(txm)
 	imageRepo := repository.NewProductImageRepository(txm)
-	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo)
-
 	categoryRepo := repository.NewCategoryRepository(txm)
-	categorySvc := service.NewCategoryService(categoryRepo)
+	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo, categoryRepo)
+
+	categorySvc := service.NewCategoryService(txm, categoryRepo)
 
 	adminRepo := repository.NewAdminRepository(txm)
 	adminSvc := service.NewAdminService(txm, adminRepo)

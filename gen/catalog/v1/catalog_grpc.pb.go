@@ -32,6 +32,9 @@ const (
 	CatalogService_CreateCategory_FullMethodName         = "/catalog.v1.CatalogService/CreateCategory"
 	CatalogService_UpdateCategory_FullMethodName         = "/catalog.v1.CatalogService/UpdateCategory"
 	CatalogService_DeleteCategory_FullMethodName         = "/catalog.v1.CatalogService/DeleteCategory"
+	CatalogService_ListSupplierCategories_FullMethodName = "/catalog.v1.CatalogService/ListSupplierCategories"
+	CatalogService_MapSupplierCategory_FullMethodName    = "/catalog.v1.CatalogService/MapSupplierCategory"
+	CatalogService_ApplyCategoryMappings_FullMethodName  = "/catalog.v1.CatalogService/ApplyCategoryMappings"
 	CatalogService_WipeData_FullMethodName               = "/catalog.v1.CatalogService/WipeData"
 	CatalogService_ListProductImages_FullMethodName      = "/catalog.v1.CatalogService/ListProductImages"
 	CatalogService_AddProductImage_FullMethodName        = "/catalog.v1.CatalogService/AddProductImage"
@@ -70,6 +73,13 @@ type CatalogServiceClient interface {
 	CreateCategory(ctx context.Context, in *CreateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
 	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*Category, error)
 	DeleteCategory(ctx context.Context, in *DeleteCategoryRequest, opts ...grpc.CallOption) (*DeleteCategoryResponse, error)
+	// --- Категории поставщиков (сырые категории из прайсов -> свои) ---
+	// Уникальные категории из строк прайсов + текущие привязки.
+	ListSupplierCategories(ctx context.Context, in *ListSupplierCategoriesRequest, opts ...grpc.CallOption) (*ListSupplierCategoriesResponse, error)
+	// Привязать категорию поставщика к своей (или создать одноимённую).
+	MapSupplierCategory(ctx context.Context, in *MapSupplierCategoryRequest, opts ...grpc.CallOption) (*MapSupplierCategoryResponse, error)
+	// Массово проставить категории товарам без категории по привязкам.
+	ApplyCategoryMappings(ctx context.Context, in *ApplyCategoryMappingsRequest, opts ...grpc.CallOption) (*ApplyCategoryMappingsResponse, error)
 	// --- Админ: очистка данных каталога (карточки, фото, сопоставления,
 	// категории; опционально поставщики). Необратимо, доступ ограничивает gateway.
 	WipeData(ctx context.Context, in *WipeDataRequest, opts ...grpc.CallOption) (*WipeDataResponse, error)
@@ -232,6 +242,36 @@ func (c *catalogServiceClient) DeleteCategory(ctx context.Context, in *DeleteCat
 	return out, nil
 }
 
+func (c *catalogServiceClient) ListSupplierCategories(ctx context.Context, in *ListSupplierCategoriesRequest, opts ...grpc.CallOption) (*ListSupplierCategoriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSupplierCategoriesResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListSupplierCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) MapSupplierCategory(ctx context.Context, in *MapSupplierCategoryRequest, opts ...grpc.CallOption) (*MapSupplierCategoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MapSupplierCategoryResponse)
+	err := c.cc.Invoke(ctx, CatalogService_MapSupplierCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) ApplyCategoryMappings(ctx context.Context, in *ApplyCategoryMappingsRequest, opts ...grpc.CallOption) (*ApplyCategoryMappingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApplyCategoryMappingsResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ApplyCategoryMappings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *catalogServiceClient) WipeData(ctx context.Context, in *WipeDataRequest, opts ...grpc.CallOption) (*WipeDataResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(WipeDataResponse)
@@ -367,6 +407,13 @@ type CatalogServiceServer interface {
 	CreateCategory(context.Context, *CreateCategoryRequest) (*Category, error)
 	UpdateCategory(context.Context, *UpdateCategoryRequest) (*Category, error)
 	DeleteCategory(context.Context, *DeleteCategoryRequest) (*DeleteCategoryResponse, error)
+	// --- Категории поставщиков (сырые категории из прайсов -> свои) ---
+	// Уникальные категории из строк прайсов + текущие привязки.
+	ListSupplierCategories(context.Context, *ListSupplierCategoriesRequest) (*ListSupplierCategoriesResponse, error)
+	// Привязать категорию поставщика к своей (или создать одноимённую).
+	MapSupplierCategory(context.Context, *MapSupplierCategoryRequest) (*MapSupplierCategoryResponse, error)
+	// Массово проставить категории товарам без категории по привязкам.
+	ApplyCategoryMappings(context.Context, *ApplyCategoryMappingsRequest) (*ApplyCategoryMappingsResponse, error)
 	// --- Админ: очистка данных каталога (карточки, фото, сопоставления,
 	// категории; опционально поставщики). Необратимо, доступ ограничивает gateway.
 	WipeData(context.Context, *WipeDataRequest) (*WipeDataResponse, error)
@@ -437,6 +484,15 @@ func (UnimplementedCatalogServiceServer) UpdateCategory(context.Context, *Update
 }
 func (UnimplementedCatalogServiceServer) DeleteCategory(context.Context, *DeleteCategoryRequest) (*DeleteCategoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteCategory not implemented")
+}
+func (UnimplementedCatalogServiceServer) ListSupplierCategories(context.Context, *ListSupplierCategoriesRequest) (*ListSupplierCategoriesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSupplierCategories not implemented")
+}
+func (UnimplementedCatalogServiceServer) MapSupplierCategory(context.Context, *MapSupplierCategoryRequest) (*MapSupplierCategoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method MapSupplierCategory not implemented")
+}
+func (UnimplementedCatalogServiceServer) ApplyCategoryMappings(context.Context, *ApplyCategoryMappingsRequest) (*ApplyCategoryMappingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ApplyCategoryMappings not implemented")
 }
 func (UnimplementedCatalogServiceServer) WipeData(context.Context, *WipeDataRequest) (*WipeDataResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method WipeData not implemented")
@@ -726,6 +782,60 @@ func _CatalogService_DeleteCategory_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CatalogService_ListSupplierCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSupplierCategoriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ListSupplierCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ListSupplierCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ListSupplierCategories(ctx, req.(*ListSupplierCategoriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_MapSupplierCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MapSupplierCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).MapSupplierCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_MapSupplierCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).MapSupplierCategory(ctx, req.(*MapSupplierCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_ApplyCategoryMappings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApplyCategoryMappingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ApplyCategoryMappings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ApplyCategoryMappings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ApplyCategoryMappings(ctx, req.(*ApplyCategoryMappingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CatalogService_WipeData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(WipeDataRequest)
 	if err := dec(in); err != nil {
@@ -982,6 +1092,18 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCategory",
 			Handler:    _CatalogService_DeleteCategory_Handler,
+		},
+		{
+			MethodName: "ListSupplierCategories",
+			Handler:    _CatalogService_ListSupplierCategories_Handler,
+		},
+		{
+			MethodName: "MapSupplierCategory",
+			Handler:    _CatalogService_MapSupplierCategory_Handler,
+		},
+		{
+			MethodName: "ApplyCategoryMappings",
+			Handler:    _CatalogService_ApplyCategoryMappings_Handler,
 		},
 		{
 			MethodName: "WipeData",

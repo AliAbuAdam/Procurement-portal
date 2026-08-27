@@ -264,6 +264,7 @@ type ColumnMapping struct {
 	CurrencyCol   int32                  `protobuf:"varint,5,opt,name=currency_col,json=currencyCol,proto3" json:"currency_col,omitempty"`
 	PriceOptCol   int32                  `protobuf:"varint,6,opt,name=price_opt_col,json=priceOptCol,proto3" json:"price_opt_col,omitempty"`    // оптовая цена
 	PriceBulkCol  int32                  `protobuf:"varint,7,opt,name=price_bulk_col,json=priceBulkCol,proto3" json:"price_bulk_col,omitempty"` // крупный опт
+	CategoryCol   int32                  `protobuf:"varint,8,opt,name=category_col,json=categoryCol,proto3" json:"category_col,omitempty"`      // категория в терминах поставщика
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -343,6 +344,13 @@ func (x *ColumnMapping) GetPriceOptCol() int32 {
 func (x *ColumnMapping) GetPriceBulkCol() int32 {
 	if x != nil {
 		return x.PriceBulkCol
+	}
+	return 0
+}
+
+func (x *ColumnMapping) GetCategoryCol() int32 {
+	if x != nil {
+		return x.CategoryCol
 	}
 	return 0
 }
@@ -1076,7 +1084,7 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\x12HealthCheckRequest\"G\n" +
 	"\x13HealthCheckResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
-	"\aservice\x18\x02 \x01(\tR\aservice\"\xf2\x01\n" +
+	"\aservice\x18\x02 \x01(\tR\aservice\"\x95\x02\n" +
 	"\rColumnMapping\x12\x19\n" +
 	"\bname_col\x18\x01 \x01(\x05R\anameCol\x12\x1f\n" +
 	"\varticle_col\x18\x02 \x01(\x05R\n" +
@@ -1085,7 +1093,8 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\tstock_col\x18\x04 \x01(\x05R\bstockCol\x12!\n" +
 	"\fcurrency_col\x18\x05 \x01(\x05R\vcurrencyCol\x12\"\n" +
 	"\rprice_opt_col\x18\x06 \x01(\x05R\vpriceOptCol\x12$\n" +
-	"\x0eprice_bulk_col\x18\a \x01(\x05R\fpriceBulkCol\"\"\n" +
+	"\x0eprice_bulk_col\x18\a \x01(\x05R\fpriceBulkCol\x12!\n" +
+	"\fcategory_col\x18\b \x01(\x05R\vcategoryCol\"\"\n" +
 	"\n" +
 	"PreviewRow\x12\x14\n" +
 	"\x05cells\x18\x01 \x03(\tR\x05cells\"\xad\x01\n" +

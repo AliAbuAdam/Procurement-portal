@@ -61,12 +61,12 @@ func (r *MatchRepository) Delete(ctx context.Context, offerID string) error {
 // GetOffer читает сырую строку прайса из схемы importer (read-only).
 func (r *MatchRepository) GetOffer(ctx context.Context, offerID string) (*domain.RawOffer, error) {
 	const q = `
-		SELECT id, row_num, raw_name, raw_article, price, currency
+		SELECT id, row_num, raw_name, raw_article, price, currency, supplier_id, raw_category
 		FROM importer.supplier_offers
 		WHERE id = $1`
 	var o domain.RawOffer
 	err := r.db.Querier(ctx).QueryRow(ctx, q, offerID).
-		Scan(&o.ID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency)
+		Scan(&o.ID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency, &o.SupplierID, &o.RawCategory)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, domain.ErrOfferNotFound
 	}
