@@ -1,11 +1,20 @@
 "use client";
 
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import Link from "next/link";
+import {
+  BarChart3,
+  ChevronsUpDown,
+  Layers,
+  LayoutDashboard,
+  LogOut,
+  Users,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -19,6 +28,21 @@ import {
 } from "@/components/ui/sidebar";
 import type { Role } from "@/lib/session";
 
+// Служебные разделы живут в меню пользователя: основной сайдбар отдан
+// каталогу (категориям), а «кухня» — поставщики, прайсы, сопоставление —
+// спрятана сюда, чтобы не пугать обычных пользователей.
+const DATA_ITEMS = [
+  { title: "Поставщики", url: "/suppliers" },
+  { title: "Прайс-листы", url: "/imports" },
+  { title: "Номенклатуры", url: "/products" },
+  { title: "Категории", url: "/categories" },
+];
+
+const ANALYSIS_ITEMS = [
+  { title: "Сопоставление", url: "/matching" },
+  { title: "Сравнение цен", url: "/compare" },
+];
+
 export function NavUser({
   email,
   role,
@@ -28,9 +52,12 @@ export function NavUser({
   role: Role;
   onLogout: () => void;
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const initials = (email || "?").slice(0, 2).toUpperCase();
   const roleLabel = role === "admin" ? "Администратор" : "Менеджер";
+
+  // На мобильных сайдбар — выезжающая панель; после перехода закрываем её.
+  const closeMobile = () => setOpenMobile(false);
 
   return (
     <SidebarMenu>
@@ -76,6 +103,59 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/" onClick={closeMobile}>
+                  <LayoutDashboard />
+                  Сводные данные
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Layers className="size-3.5" />
+              Данные
+            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              {DATA_ITEMS.map((it) => (
+                <DropdownMenuItem key={it.url} asChild>
+                  <Link href={it.url} onClick={closeMobile}>
+                    {it.title}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground">
+              <BarChart3 className="size-3.5" />
+              Анализ
+            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              {ANALYSIS_ITEMS.map((it) => (
+                <DropdownMenuItem key={it.url} asChild>
+                  <Link href={it.url} onClick={closeMobile}>
+                    {it.title}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+
+            {role === "admin" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/users" onClick={closeMobile}>
+                    <Users />
+                    Пользователи
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>
               <LogOut />

@@ -1,104 +1,36 @@
 "use client";
 
 import * as React from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  Boxes,
-  ChevronRight,
-  Database,
-  LayoutDashboard,
-  Store,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Boxes } from "lucide-react";
 
+import { apiFetch } from "@/lib/api";
+import { buildCategoryTree, type Category } from "@/lib/catalog";
+import { CategoryTree } from "@/components/category-tree";
 import { NavUser } from "@/components/nav-user";
 import { useSession, type Role } from "@/lib/session";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
-type NavItem =
-  | { kind: "link"; title: string; url: string; icon: LucideIcon; roles: Role[] }
-  | {
-      kind: "group";
-      title: string;
-      icon: LucideIcon;
-      roles: Role[];
-      items: { title: string; url: string }[];
-    };
-
-const NAV: NavItem[] = [
-  {
-    kind: "link",
-    title: "Сводные данные",
-    url: "/",
-    icon: LayoutDashboard,
-    roles: ["admin", "manager"],
-  },
-  {
-    kind: "link",
-    title: "Каталог",
-    url: "/catalog",
-    icon: Store,
-    roles: ["admin", "manager"],
-  },
-  {
-    kind: "group",
-    title: "Данные",
-    icon: Database,
-    roles: ["admin", "manager"],
-    items: [
-      { title: "Поставщики", url: "/suppliers" },
-      { title: "Прайс-листы", url: "/imports" },
-      { title: "Номенклатуры", url: "/products" },
-      { title: "Категории", url: "/categories" },
-    ],
-  },
-  {
-    kind: "group",
-    title: "Анализ",
-    icon: BarChart3,
-    roles: ["admin", "manager"],
-    items: [
-      { title: "Сопоставление", url: "/matching" },
-      { title: "Сравнение цен", url: "/compare" },
-    ],
-  },
-  {
-    kind: "link",
-    title: "Пользователи",
-    url: "/users",
-    icon: Users,
-    roles: ["admin"],
-  },
-];
-
+// Основной сайдбар — каталог как в интернет-магазине: дерево категорий со
+// счётчиками. Служебные разделы (данные, анализ, пользователи) — в меню
+// кнопки пользователя внизу (NavUser).
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname();
   const { user, logout } = useSession();
   const role: Role = user?.role ?? "manager";
-
-  const isActive = (url: string) =>
-    url === "/" ? pathname === "/" : pathname.startsWith(url);
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -109,7 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <Link href="/">
+              <Link href="/catalog">
                 <Boxes className="size-5!" />
                 <span className="text-base font-semibold">Furnica</span>
               </Link>
@@ -119,68 +51,76 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel>Каталог</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {NAV.filter((n) => n.roles.includes(role)).map((n) =>
-                n.kind === "link" ? (
-                  <SidebarMenuItem key={n.url}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(n.url)}
-                      tooltip={n.title}
-                    >
-                      <Link href={n.url}>
-                        <n.icon />
-                        <span>{n.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : (
-                  <Collapsible
-                    key={n.title}
-                    asChild
-                    defaultOpen
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={n.title}>
-                          <n.icon />
-                          <span>{n.title}</span>
-                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {n.items.map((s) => (
-                            <SidebarMenuSubItem key={s.url}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={isActive(s.url)}
-                              >
-                                <Link href={s.url}>
-                                  <span>{s.title}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                ),
-              )}
-            </SidebarMenu>
+            {/* useSearchParams внутри — по правилам Next оборачиваем в Suspense */}
+            <Suspense fallback={null}>
+              <SidebarCategories />
+            </Suspense>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         {user && (
-          <NavUser email={user.email} role={user.role} onLogout={logout} />
+          <NavUser email={user.email} role={role} onLogout={logout} />
         )}
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+// Значение selectedId, не совпадающее ни с одной строкой дерева: вне витрины
+// подсветки быть не должно (null подсветил бы «Все товары»).
+const NOTHING_SELECTED = "__off__";
+
+function SidebarCategories() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { setOpenMobile } = useSidebar();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [uncategorized, setUncategorized] = useState(0);
+
+  // Перезагружаем дерево при каждой смене страницы: категории и счётчики
+  // могли измениться (правки на /categories, назначения на /products).
+  // Запрос дешёвый, ответ маленький.
+  useEffect(() => {
+    apiFetch<{ categories?: Category[]; uncategorized_count?: number }>(
+      "/api/v1/categories",
+    )
+      .then((d) => {
+        setCategories(d.categories ?? []);
+        setUncategorized(d.uncategorized_count ?? 0);
+      })
+      .catch(() => {});
+  }, [pathname]);
+
+  const tree = useMemo(() => buildCategoryTree(categories), [categories]);
+  const totalAll = useMemo(
+    () => tree.reduce((acc, n) => acc + n.total_count, 0) + uncategorized,
+    [tree, uncategorized],
+  );
+
+  const onCatalog = pathname === "/catalog";
+  const selectedId = onCatalog
+    ? searchParams.get("category")
+    : NOTHING_SELECTED;
+
+  return (
+    <div className="px-1">
+      <CategoryTree
+        nodes={tree}
+        totalAll={totalAll}
+        uncategorized={uncategorized}
+        selectedId={selectedId}
+        onSelect={(id) => {
+          router.push(id ? `/catalog?category=${id}` : "/catalog");
+          setOpenMobile(false);
+        }}
+      />
+    </div>
   );
 }
