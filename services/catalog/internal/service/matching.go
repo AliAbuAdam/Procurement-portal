@@ -239,6 +239,110 @@ func (s *MatchingService) CreateProductFromOffer(ctx context.Context, offerID, n
 	return match, nil
 }
 
+// Пороги автообработки. Выше autoMatchScore — привязываем к лучшему кандидату
+// сами; ниже createBelowScore (или кандидатов нет) — уверенно новый товар,
+// создаём карточку; между ними — серая зона, оставляем человеку.
+const (
+	autoMatchScore   = 0.7
+	createBelowScore = 0.45
+)
+
+// AutoProcessResult — итог автообработки батча.
+type AutoProcessResult struct {
+	Matched int // автопривязано к существующим карточкам
+	Created int // создано новых карточек
+	Skipped int // серая зона — оставлено на ручной разбор
+}
+
+// AutoProcessBatch обходит несопоставленные строки батча по одной (свежесозданная
+// карточка сразу становится кандидатом для следующих строк — дублей внутри
+// прайса не будет). Каждая строка коммитится отдельно: сбой на середине не
+// откатывает уже сделанное, остаток просто дообработается повторным запуском.
+func (s *MatchingService) AutoProcessBatch(ctx context.Context, batchID, matchedBy string) (*AutoProcessResult, error) {
+	batchID = strings.TrimSpace(batchID)
+	if batchID == "" {
+		return nil, fmt.Errorf("%w: batch_id is required", domain.ErrValidation)
+	}
+
+	res := &AutoProcessResult{}
+	skipped := map[string]bool{} // серая зона: ListUnmatched вернёт их снова — не зацикливаемся
+	for {
+		offers, _, _, err := s.matches.ListUnmatched(ctx, batchID, maxUnmatchedLimit)
+		if err != nil {
+			return nil, err
+		}
+		progress := false
+		for _, o := range offers {
+			if skipped[o.ID] {
+				continue
+			}
+			outcome, err := s.autoProcessOffer(ctx, o, matchedBy)
+			if err != nil {
+				return nil, err
+			}
+			switch outcome {
+			case "matched":
+				res.Matched++
+				progress = true
+			case "created":
+				res.Created++
+				progress = true
+			default:
+				skipped[o.ID] = true
+			}
+		}
+		if !progress {
+			break
+		}
+	}
+	res.Skipped = len(skipped)
+	return res, nil
+}
+
+// autoProcessOffer решает судьбу одной строки: "matched" | "created" | "skipped".
+func (s *MatchingService) autoProcessOffer(ctx context.Context, o *domain.RawOffer, matchedBy string) (string, error) {
+	// 1) Точный артикул — самый надёжный признак, побеждает похожесть имён.
+	if art := strings.TrimSpace(o.RawArticle); art != "" {
+		p, err := s.products.FindByArticle(ctx, art)
+		if err != nil {
+			return "", err
+		}
+		if p != nil {
+			if _, err := s.matches.Upsert(ctx, o.ID, p.ID, matchedBy); err != nil {
+				return "", err
+			}
+			return "matched", nil
+		}
+	}
+
+	// 2) Похожесть названия: смотрим только лучшего кандидата.
+	suggestions, err := s.matches.Suggest(ctx, []string{o.ID}, 1)
+	if err != nil {
+		return "", err
+	}
+	var best *domain.Candidate
+	if len(suggestions) > 0 && len(suggestions[0].Candidates) > 0 {
+		best = suggestions[0].Candidates[0]
+	}
+
+	switch {
+	case best != nil && best.Score >= autoMatchScore:
+		if _, err := s.matches.Upsert(ctx, o.ID, best.ProductID, matchedBy); err != nil {
+			return "", err
+		}
+		return "matched", nil
+	case best == nil || best.Score < createBelowScore:
+		// Явно новый товар: карточка из строки (внутри — автокатегория по
+		// привязкам поставщика) + подтверждение, той же транзакцией.
+		if _, err := s.CreateProductFromOffer(ctx, o.ID, "", "", matchedBy); err != nil {
+			return "", err
+		}
+		return "created", nil
+	default:
+		return "skipped", nil
+	}
+}
+
 func (s *MatchingService) Unmatch(ctx context.Context, offerID string) error {
 	offerID = strings.TrimSpace(offerID)
 	if offerID == "" {

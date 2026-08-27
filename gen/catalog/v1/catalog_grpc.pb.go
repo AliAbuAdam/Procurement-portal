@@ -46,6 +46,7 @@ const (
 	CatalogService_ConfirmMatch_FullMethodName           = "/catalog.v1.CatalogService/ConfirmMatch"
 	CatalogService_CreateProductFromOffer_FullMethodName = "/catalog.v1.CatalogService/CreateProductFromOffer"
 	CatalogService_Unmatch_FullMethodName                = "/catalog.v1.CatalogService/Unmatch"
+	CatalogService_AutoProcessBatch_FullMethodName       = "/catalog.v1.CatalogService/AutoProcessBatch"
 )
 
 // CatalogServiceClient is the client API for CatalogService service.
@@ -102,6 +103,9 @@ type CatalogServiceClient interface {
 	CreateProductFromOffer(ctx context.Context, in *CreateProductFromOfferRequest, opts ...grpc.CallOption) (*Match, error)
 	// Снять сопоставление.
 	Unmatch(ctx context.Context, in *UnmatchRequest, opts ...grpc.CallOption) (*UnmatchResponse, error)
+	// Автообработка батча: точный артикул или высокая похожесть -> автопривязка,
+	// явно новые строки -> автосоздание карточек, серая зона -> на ручной разбор.
+	AutoProcessBatch(ctx context.Context, in *AutoProcessBatchRequest, opts ...grpc.CallOption) (*AutoProcessBatchResponse, error)
 }
 
 type catalogServiceClient struct {
@@ -382,6 +386,16 @@ func (c *catalogServiceClient) Unmatch(ctx context.Context, in *UnmatchRequest, 
 	return out, nil
 }
 
+func (c *catalogServiceClient) AutoProcessBatch(ctx context.Context, in *AutoProcessBatchRequest, opts ...grpc.CallOption) (*AutoProcessBatchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AutoProcessBatchResponse)
+	err := c.cc.Invoke(ctx, CatalogService_AutoProcessBatch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CatalogServiceServer is the server API for CatalogService service.
 // All implementations must embed UnimplementedCatalogServiceServer
 // for forward compatibility.
@@ -436,6 +450,9 @@ type CatalogServiceServer interface {
 	CreateProductFromOffer(context.Context, *CreateProductFromOfferRequest) (*Match, error)
 	// Снять сопоставление.
 	Unmatch(context.Context, *UnmatchRequest) (*UnmatchResponse, error)
+	// Автообработка батча: точный артикул или высокая похожесть -> автопривязка,
+	// явно новые строки -> автосоздание карточек, серая зона -> на ручной разбор.
+	AutoProcessBatch(context.Context, *AutoProcessBatchRequest) (*AutoProcessBatchResponse, error)
 	mustEmbedUnimplementedCatalogServiceServer()
 }
 
@@ -526,6 +543,9 @@ func (UnimplementedCatalogServiceServer) CreateProductFromOffer(context.Context,
 }
 func (UnimplementedCatalogServiceServer) Unmatch(context.Context, *UnmatchRequest) (*UnmatchResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Unmatch not implemented")
+}
+func (UnimplementedCatalogServiceServer) AutoProcessBatch(context.Context, *AutoProcessBatchRequest) (*AutoProcessBatchResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AutoProcessBatch not implemented")
 }
 func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}
 func (UnimplementedCatalogServiceServer) testEmbeddedByValue()                        {}
@@ -1034,6 +1054,24 @@ func _CatalogService_Unmatch_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CatalogService_AutoProcessBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AutoProcessBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).AutoProcessBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_AutoProcessBatch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).AutoProcessBatch(ctx, req.(*AutoProcessBatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CatalogService_ServiceDesc is the grpc.ServiceDesc for CatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1148,6 +1186,10 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Unmatch",
 			Handler:    _CatalogService_Unmatch_Handler,
+		},
+		{
+			MethodName: "AutoProcessBatch",
+			Handler:    _CatalogService_AutoProcessBatch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

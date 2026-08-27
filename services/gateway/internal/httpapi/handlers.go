@@ -433,6 +433,26 @@ func (h *Handler) Unmatch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// AutoProcessBatch — автообработка несопоставленных строк батча.
+func (h *Handler) AutoProcessBatch(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		BatchID string `json:"batch_id"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	resp, err := h.c.Catalog.AutoProcessBatch(r.Context(), &catalogv1.AutoProcessBatchRequest{
+		BatchId:   body.BatchID,
+		MatchedBy: "авто: " + actorEmail(r),
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 // actorEmail — email текущего пользователя из сессии (для matched_by и т.п.).
 func actorEmail(r *http.Request) string {
 	if p, ok := auth.FromContext(r.Context()); ok {

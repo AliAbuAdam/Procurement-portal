@@ -29,6 +29,10 @@ type ProductRepository interface {
 	// Search — триграммный поиск по имени (pg_trgm), от самых похожих.
 	Search(ctx context.Context, query, categoryID string, limit int) ([]*Product, error)
 	GetByID(ctx context.Context, id string) (*Product, error)
+	// FindByArticle — карточка с точно таким артикулом (без учёта регистра);
+	// (nil, nil) — не найдена. Для автосопоставления: артикул — самый
+	// надёжный признак совпадения товара у разных поставщиков.
+	FindByArticle(ctx context.Context, article string) (*Product, error)
 	// SetCategory назначает категорию карточкам (categoryID "" — снять).
 	// Возвращает число обновлённых строк.
 	SetCategory(ctx context.Context, ids []string, categoryID string) (int, error)

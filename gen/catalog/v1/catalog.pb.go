@@ -3082,6 +3082,118 @@ func (x *UnmatchResponse) GetOk() bool {
 	return false
 }
 
+type AutoProcessBatchRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BatchId       string                 `protobuf:"bytes,1,opt,name=batch_id,json=batchId,proto3" json:"batch_id,omitempty"`
+	MatchedBy     string                 `protobuf:"bytes,2,opt,name=matched_by,json=matchedBy,proto3" json:"matched_by,omitempty"` // подпись автопривязок, напр. "авто: admin@..." (ставит gateway)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AutoProcessBatchRequest) Reset() {
+	*x = AutoProcessBatchRequest{}
+	mi := &file_catalog_v1_catalog_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AutoProcessBatchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AutoProcessBatchRequest) ProtoMessage() {}
+
+func (x *AutoProcessBatchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_catalog_v1_catalog_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AutoProcessBatchRequest.ProtoReflect.Descriptor instead.
+func (*AutoProcessBatchRequest) Descriptor() ([]byte, []int) {
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *AutoProcessBatchRequest) GetBatchId() string {
+	if x != nil {
+		return x.BatchId
+	}
+	return ""
+}
+
+func (x *AutoProcessBatchRequest) GetMatchedBy() string {
+	if x != nil {
+		return x.MatchedBy
+	}
+	return ""
+}
+
+type AutoProcessBatchResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Matched       int32                  `protobuf:"varint,1,opt,name=matched,proto3" json:"matched,omitempty"` // автопривязано к существующим карточкам
+	Created       int32                  `protobuf:"varint,2,opt,name=created,proto3" json:"created,omitempty"` // создано новых карточек
+	Skipped       int32                  `protobuf:"varint,3,opt,name=skipped,proto3" json:"skipped,omitempty"` // серая зона — оставлено на ручной разбор
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AutoProcessBatchResponse) Reset() {
+	*x = AutoProcessBatchResponse{}
+	mi := &file_catalog_v1_catalog_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AutoProcessBatchResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AutoProcessBatchResponse) ProtoMessage() {}
+
+func (x *AutoProcessBatchResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_catalog_v1_catalog_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AutoProcessBatchResponse.ProtoReflect.Descriptor instead.
+func (*AutoProcessBatchResponse) Descriptor() ([]byte, []int) {
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *AutoProcessBatchResponse) GetMatched() int32 {
+	if x != nil {
+		return x.Matched
+	}
+	return 0
+}
+
+func (x *AutoProcessBatchResponse) GetCreated() int32 {
+	if x != nil {
+		return x.Created
+	}
+	return 0
+}
+
+func (x *AutoProcessBatchResponse) GetSkipped() int32 {
+	if x != nil {
+		return x.Skipped
+	}
+	return 0
+}
+
 var File_catalog_v1_catalog_proto protoreflect.FileDescriptor
 
 const file_catalog_v1_catalog_proto_rawDesc = "" +
@@ -3310,12 +3422,20 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"\x0eUnmatchRequest\x12\x19\n" +
 	"\boffer_id\x18\x01 \x01(\tR\aofferId\"!\n" +
 	"\x0fUnmatchResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok*x\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\"S\n" +
+	"\x17AutoProcessBatchRequest\x12\x19\n" +
+	"\bbatch_id\x18\x01 \x01(\tR\abatchId\x12\x1d\n" +
+	"\n" +
+	"matched_by\x18\x02 \x01(\tR\tmatchedBy\"h\n" +
+	"\x18AutoProcessBatchResponse\x12\x18\n" +
+	"\amatched\x18\x01 \x01(\x05R\amatched\x12\x18\n" +
+	"\acreated\x18\x02 \x01(\x05R\acreated\x12\x18\n" +
+	"\askipped\x18\x03 \x01(\x05R\askipped*x\n" +
 	"\fSupplierType\x12\x1d\n" +
 	"\x19SUPPLIER_TYPE_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13SUPPLIER_TYPE_EXCEL\x10\x01\x12\x15\n" +
 	"\x11SUPPLIER_TYPE_API\x10\x02\x12\x19\n" +
-	"\x15SUPPLIER_TYPE_PARSING\x10\x032\xba\x12\n" +
+	"\x15SUPPLIER_TYPE_PARSING\x10\x032\x99\x13\n" +
 	"\x0eCatalogService\x12N\n" +
 	"\vHealthCheck\x12\x1e.catalog.v1.HealthCheckRequest\x1a\x1f.catalog.v1.HealthCheckResponse\x12I\n" +
 	"\x0eCreateSupplier\x12!.catalog.v1.CreateSupplierRequest\x1a\x14.catalog.v1.Supplier\x12I\n" +
@@ -3344,7 +3464,8 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"\x13ListUnmatchedOffers\x12&.catalog.v1.ListUnmatchedOffersRequest\x1a'.catalog.v1.ListUnmatchedOffersResponse\x12B\n" +
 	"\fConfirmMatch\x12\x1f.catalog.v1.ConfirmMatchRequest\x1a\x11.catalog.v1.Match\x12V\n" +
 	"\x16CreateProductFromOffer\x12).catalog.v1.CreateProductFromOfferRequest\x1a\x11.catalog.v1.Match\x12B\n" +
-	"\aUnmatch\x12\x1a.catalog.v1.UnmatchRequest\x1a\x1b.catalog.v1.UnmatchResponseB5Z3github.com/furnica/backend/gen/catalog/v1;catalogv1b\x06proto3"
+	"\aUnmatch\x12\x1a.catalog.v1.UnmatchRequest\x1a\x1b.catalog.v1.UnmatchResponse\x12]\n" +
+	"\x10AutoProcessBatch\x12#.catalog.v1.AutoProcessBatchRequest\x1a$.catalog.v1.AutoProcessBatchResponseB5Z3github.com/furnica/backend/gen/catalog/v1;catalogv1b\x06proto3"
 
 var (
 	file_catalog_v1_catalog_proto_rawDescOnce sync.Once
@@ -3359,7 +3480,7 @@ func file_catalog_v1_catalog_proto_rawDescGZIP() []byte {
 }
 
 var file_catalog_v1_catalog_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_catalog_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 53)
+var file_catalog_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 55)
 var file_catalog_v1_catalog_proto_goTypes = []any{
 	(SupplierType)(0),                      // 0: catalog.v1.SupplierType
 	(*HealthCheckRequest)(nil),             // 1: catalog.v1.HealthCheckRequest
@@ -3415,6 +3536,8 @@ var file_catalog_v1_catalog_proto_goTypes = []any{
 	(*CreateProductFromOfferRequest)(nil),  // 51: catalog.v1.CreateProductFromOfferRequest
 	(*UnmatchRequest)(nil),                 // 52: catalog.v1.UnmatchRequest
 	(*UnmatchResponse)(nil),                // 53: catalog.v1.UnmatchResponse
+	(*AutoProcessBatchRequest)(nil),        // 54: catalog.v1.AutoProcessBatchRequest
+	(*AutoProcessBatchResponse)(nil),       // 55: catalog.v1.AutoProcessBatchResponse
 }
 var file_catalog_v1_catalog_proto_depIdxs = []int32{
 	0,  // 0: catalog.v1.Supplier.type:type_name -> catalog.v1.SupplierType
@@ -3455,35 +3578,37 @@ var file_catalog_v1_catalog_proto_depIdxs = []int32{
 	50, // 35: catalog.v1.CatalogService.ConfirmMatch:input_type -> catalog.v1.ConfirmMatchRequest
 	51, // 36: catalog.v1.CatalogService.CreateProductFromOffer:input_type -> catalog.v1.CreateProductFromOfferRequest
 	52, // 37: catalog.v1.CatalogService.Unmatch:input_type -> catalog.v1.UnmatchRequest
-	2,  // 38: catalog.v1.CatalogService.HealthCheck:output_type -> catalog.v1.HealthCheckResponse
-	3,  // 39: catalog.v1.CatalogService.CreateSupplier:output_type -> catalog.v1.Supplier
-	3,  // 40: catalog.v1.CatalogService.UpdateSupplier:output_type -> catalog.v1.Supplier
-	7,  // 41: catalog.v1.CatalogService.DeleteSupplier:output_type -> catalog.v1.DeleteSupplierResponse
-	9,  // 42: catalog.v1.CatalogService.ListSuppliers:output_type -> catalog.v1.ListSuppliersResponse
-	10, // 43: catalog.v1.CatalogService.CreateProduct:output_type -> catalog.v1.Product
-	13, // 44: catalog.v1.CatalogService.ListProducts:output_type -> catalog.v1.ListProductsResponse
-	10, // 45: catalog.v1.CatalogService.GetProduct:output_type -> catalog.v1.Product
-	16, // 46: catalog.v1.CatalogService.SetProductCategory:output_type -> catalog.v1.SetProductCategoryResponse
-	19, // 47: catalog.v1.CatalogService.ListCategories:output_type -> catalog.v1.ListCategoriesResponse
-	17, // 48: catalog.v1.CatalogService.CreateCategory:output_type -> catalog.v1.Category
-	17, // 49: catalog.v1.CatalogService.UpdateCategory:output_type -> catalog.v1.Category
-	23, // 50: catalog.v1.CatalogService.DeleteCategory:output_type -> catalog.v1.DeleteCategoryResponse
-	26, // 51: catalog.v1.CatalogService.ListSupplierCategories:output_type -> catalog.v1.ListSupplierCategoriesResponse
-	28, // 52: catalog.v1.CatalogService.MapSupplierCategory:output_type -> catalog.v1.MapSupplierCategoryResponse
-	30, // 53: catalog.v1.CatalogService.ApplyCategoryMappings:output_type -> catalog.v1.ApplyCategoryMappingsResponse
-	32, // 54: catalog.v1.CatalogService.WipeData:output_type -> catalog.v1.WipeDataResponse
-	35, // 55: catalog.v1.CatalogService.ListProductImages:output_type -> catalog.v1.ListProductImagesResponse
-	33, // 56: catalog.v1.CatalogService.AddProductImage:output_type -> catalog.v1.ProductImage
-	38, // 57: catalog.v1.CatalogService.DeleteProductImage:output_type -> catalog.v1.DeleteProductImageResponse
-	35, // 58: catalog.v1.CatalogService.ReorderProductImages:output_type -> catalog.v1.ListProductImagesResponse
-	41, // 59: catalog.v1.CatalogService.GetProductImage:output_type -> catalog.v1.GetProductImageResponse
-	45, // 60: catalog.v1.CatalogService.SuggestMatches:output_type -> catalog.v1.SuggestMatchesResponse
-	48, // 61: catalog.v1.CatalogService.ListUnmatchedOffers:output_type -> catalog.v1.ListUnmatchedOffersResponse
-	49, // 62: catalog.v1.CatalogService.ConfirmMatch:output_type -> catalog.v1.Match
-	49, // 63: catalog.v1.CatalogService.CreateProductFromOffer:output_type -> catalog.v1.Match
-	53, // 64: catalog.v1.CatalogService.Unmatch:output_type -> catalog.v1.UnmatchResponse
-	38, // [38:65] is the sub-list for method output_type
-	11, // [11:38] is the sub-list for method input_type
+	54, // 38: catalog.v1.CatalogService.AutoProcessBatch:input_type -> catalog.v1.AutoProcessBatchRequest
+	2,  // 39: catalog.v1.CatalogService.HealthCheck:output_type -> catalog.v1.HealthCheckResponse
+	3,  // 40: catalog.v1.CatalogService.CreateSupplier:output_type -> catalog.v1.Supplier
+	3,  // 41: catalog.v1.CatalogService.UpdateSupplier:output_type -> catalog.v1.Supplier
+	7,  // 42: catalog.v1.CatalogService.DeleteSupplier:output_type -> catalog.v1.DeleteSupplierResponse
+	9,  // 43: catalog.v1.CatalogService.ListSuppliers:output_type -> catalog.v1.ListSuppliersResponse
+	10, // 44: catalog.v1.CatalogService.CreateProduct:output_type -> catalog.v1.Product
+	13, // 45: catalog.v1.CatalogService.ListProducts:output_type -> catalog.v1.ListProductsResponse
+	10, // 46: catalog.v1.CatalogService.GetProduct:output_type -> catalog.v1.Product
+	16, // 47: catalog.v1.CatalogService.SetProductCategory:output_type -> catalog.v1.SetProductCategoryResponse
+	19, // 48: catalog.v1.CatalogService.ListCategories:output_type -> catalog.v1.ListCategoriesResponse
+	17, // 49: catalog.v1.CatalogService.CreateCategory:output_type -> catalog.v1.Category
+	17, // 50: catalog.v1.CatalogService.UpdateCategory:output_type -> catalog.v1.Category
+	23, // 51: catalog.v1.CatalogService.DeleteCategory:output_type -> catalog.v1.DeleteCategoryResponse
+	26, // 52: catalog.v1.CatalogService.ListSupplierCategories:output_type -> catalog.v1.ListSupplierCategoriesResponse
+	28, // 53: catalog.v1.CatalogService.MapSupplierCategory:output_type -> catalog.v1.MapSupplierCategoryResponse
+	30, // 54: catalog.v1.CatalogService.ApplyCategoryMappings:output_type -> catalog.v1.ApplyCategoryMappingsResponse
+	32, // 55: catalog.v1.CatalogService.WipeData:output_type -> catalog.v1.WipeDataResponse
+	35, // 56: catalog.v1.CatalogService.ListProductImages:output_type -> catalog.v1.ListProductImagesResponse
+	33, // 57: catalog.v1.CatalogService.AddProductImage:output_type -> catalog.v1.ProductImage
+	38, // 58: catalog.v1.CatalogService.DeleteProductImage:output_type -> catalog.v1.DeleteProductImageResponse
+	35, // 59: catalog.v1.CatalogService.ReorderProductImages:output_type -> catalog.v1.ListProductImagesResponse
+	41, // 60: catalog.v1.CatalogService.GetProductImage:output_type -> catalog.v1.GetProductImageResponse
+	45, // 61: catalog.v1.CatalogService.SuggestMatches:output_type -> catalog.v1.SuggestMatchesResponse
+	48, // 62: catalog.v1.CatalogService.ListUnmatchedOffers:output_type -> catalog.v1.ListUnmatchedOffersResponse
+	49, // 63: catalog.v1.CatalogService.ConfirmMatch:output_type -> catalog.v1.Match
+	49, // 64: catalog.v1.CatalogService.CreateProductFromOffer:output_type -> catalog.v1.Match
+	53, // 65: catalog.v1.CatalogService.Unmatch:output_type -> catalog.v1.UnmatchResponse
+	55, // 66: catalog.v1.CatalogService.AutoProcessBatch:output_type -> catalog.v1.AutoProcessBatchResponse
+	39, // [39:67] is the sub-list for method output_type
+	11, // [11:39] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name
@@ -3500,7 +3625,7 @@ func file_catalog_v1_catalog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_catalog_v1_catalog_proto_rawDesc), len(file_catalog_v1_catalog_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   53,
+			NumMessages:   55,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

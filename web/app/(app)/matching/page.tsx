@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Wand2 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import { LoadingState } from "@/components/loading-state";
@@ -43,6 +44,8 @@ export default function MatchingPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [autoBusy, setAutoBusy] = useState(false);
+  const [autoNotice, setAutoNotice] = useState("");
 
   useEffect(() => {
     apiFetch<{ batches?: Batch[] }>("/api/v1/imports")
@@ -95,7 +98,35 @@ export default function MatchingPage() {
 
   function selectBatch(id: string) {
     setBatchId(id);
+    setAutoNotice("");
     loadBatch(id);
+  }
+
+  // Автообработка: точный артикул или высокая похожесть -> автопривязка,
+  // явно новые строки -> автосоздание карточек, серая зона остаётся в списке.
+  async function onAutoProcess() {
+    if (!batchId) return;
+    setAutoBusy(true);
+    setError("");
+    setAutoNotice("");
+    try {
+      const d = await apiFetch<{
+        matched?: number;
+        created?: number;
+        skipped?: number;
+      }>("/api/v1/matches/auto", {
+        method: "POST",
+        body: JSON.stringify({ batch_id: batchId }),
+      });
+      setAutoNotice(
+        `Автообработка: привязано к существующим — ${d.matched ?? 0}, создано новых карточек — ${d.created ?? 0}, оставлено на ручной разбор — ${d.skipped ?? 0}.`,
+      );
+      await loadBatch(batchId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка автообработки");
+    } finally {
+      setAutoBusy(false);
+    }
   }
 
   // Переход из «Прайс-листов» по иконке сопоставления: ?batch=<id> — сразу
@@ -142,22 +173,37 @@ export default function MatchingPage() {
       </div>
 
       {batchId && (
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between text-sm">
-            <span>
-              Сопоставлено {matched} из {total}
-            </span>
-            <span className="text-[var(--muted-foreground)]">{progress}%</span>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between text-sm">
+              <span>
+                Сопоставлено {matched} из {total}
+              </span>
+              <span className="text-[var(--muted-foreground)]">{progress}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded bg-[var(--secondary)]">
+              <div
+                className="h-full bg-green-600 transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded bg-[var(--secondary)]">
-            <div
-              className="h-full bg-green-600 transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          {offers.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={onAutoProcess} disabled={autoBusy}>
+                <Wand2 className="size-4" />
+                {autoBusy ? "Обрабатываем…" : "Обработать автоматически"}
+              </Button>
+              <span className="text-xs text-[var(--muted-foreground)]">
+                Точный артикул или высокая похожесть — привяжем сами, явно новые
+                — создадим карточки, спорные оставим вам.
+              </span>
+            </div>
+          )}
         </div>
       )}
 
+      {autoNotice && <p className="text-sm text-green-700">{autoNotice}</p>}
       {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
 
       {loading ? (

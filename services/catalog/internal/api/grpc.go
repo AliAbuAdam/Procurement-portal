@@ -317,6 +317,18 @@ func (s *CatalogServer) CreateProductFromOffer(ctx context.Context, req *catalog
 	return matchToProto(m), nil
 }
 
+func (s *CatalogServer) AutoProcessBatch(ctx context.Context, req *catalogv1.AutoProcessBatchRequest) (*catalogv1.AutoProcessBatchResponse, error) {
+	res, err := s.matching.AutoProcessBatch(ctx, req.GetBatchId(), req.GetMatchedBy())
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.AutoProcessBatchResponse{
+		Matched: int32(res.Matched),
+		Created: int32(res.Created),
+		Skipped: int32(res.Skipped),
+	}, nil
+}
+
 func (s *CatalogServer) Unmatch(ctx context.Context, req *catalogv1.UnmatchRequest) (*catalogv1.UnmatchResponse, error) {
 	if err := s.matching.Unmatch(ctx, req.GetOfferId()); err != nil {
 		return nil, toStatus(err)

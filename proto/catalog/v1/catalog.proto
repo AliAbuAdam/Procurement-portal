@@ -61,6 +61,9 @@ service CatalogService {
   rpc CreateProductFromOffer(CreateProductFromOfferRequest) returns (Match);
   // Снять сопоставление.
   rpc Unmatch(UnmatchRequest) returns (UnmatchResponse);
+  // Автообработка батча: точный артикул или высокая похожесть -> автопривязка,
+  // явно новые строки -> автосоздание карточек, серая зона -> на ручной разбор.
+  rpc AutoProcessBatch(AutoProcessBatchRequest) returns (AutoProcessBatchResponse);
 }
 
 message HealthCheckRequest {}
@@ -383,4 +386,15 @@ message UnmatchRequest {
 
 message UnmatchResponse {
   bool ok = 1;
+}
+
+message AutoProcessBatchRequest {
+  string batch_id = 1;
+  string matched_by = 2; // подпись автопривязок, напр. "авто: admin@..." (ставит gateway)
+}
+
+message AutoProcessBatchResponse {
+  int32 matched = 1; // автопривязано к существующим карточкам
+  int32 created = 2; // создано новых карточек
+  int32 skipped = 3; // серая зона — оставлено на ручной разбор
 }

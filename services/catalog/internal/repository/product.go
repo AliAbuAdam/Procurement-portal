@@ -112,6 +112,26 @@ func (r *ProductRepository) GetByID(ctx context.Context, id string) (*domain.Pro
 	return &p, nil
 }
 
+func (r *ProductRepository) FindByArticle(ctx context.Context, article string) (*domain.Product, error) {
+	// lower(article) попадает в частичный индекс products_article_idx.
+	const q = `
+		SELECT p.id, p.name, p.article, p.image_url, COALESCE(p.category_id::text, ''), p.created_at, ` + coverSelect + `
+		FROM catalog.products p` + coverJoin + `
+		WHERE p.article <> '' AND lower(p.article) = lower($1)
+		ORDER BY p.created_at, p.id
+		LIMIT 1`
+	var p domain.Product
+	err := r.db.Querier(ctx).QueryRow(ctx, q, article).
+		Scan(&p.ID, &p.Name, &p.Article, &p.ImageURL, &p.CategoryID, &p.CreatedAt, &p.CoverImageID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find product by article: %w", err)
+	}
+	return &p, nil
+}
+
 func (r *ProductRepository) SetCategory(ctx context.Context, ids []string, categoryID string) (int, error) {
 	const q = `
 		UPDATE catalog.products

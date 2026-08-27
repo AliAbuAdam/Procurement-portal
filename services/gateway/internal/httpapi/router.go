@@ -69,6 +69,7 @@ func NewRouter(h *Handler, k *auth.Kratos, allowedOrigins []string) http.Handler
 		r.Post("/matches/suggest", h.SuggestMatches)
 		r.Post("/matches", h.ConfirmMatch)
 		r.Post("/matches/from-offer", h.CreateProductFromOffer)
+		r.Post("/matches/auto", h.AutoProcessBatch)
 		r.Delete("/matches/{offerID}", h.Unmatch)
 
 		// Сравнение цен по товару — чтение всем ролям.
