@@ -43,10 +43,25 @@ func NewS3FromEnv(ctx context.Context) (*S3Store, error) {
 		return nil, fmt.Errorf("s3: некорректный S3_ENDPOINT %q (нужен вида https://s3.ru-1.storage.selcloud.ru)", endpoint)
 	}
 
+	// Стиль адресации: vHosted-бакеты Selectel требуют DNS-стиль
+	// (bucket.s3...), локальный MinIO — path-стиль. По умолчанию выбираем по
+	// хосту, S3_ADDRESSING=vhost|path переопределяет вручную.
+	lookup := minio.BucketLookupAuto
+	if strings.HasSuffix(u.Hostname(), ".selcloud.ru") {
+		lookup = minio.BucketLookupDNS
+	}
+	switch env.Get("S3_ADDRESSING", "") {
+	case "vhost":
+		lookup = minio.BucketLookupDNS
+	case "path":
+		lookup = minio.BucketLookupPath
+	}
+
 	mc, err := minio.New(u.Host, &minio.Options{
-		Creds:  credentials.NewStaticV4(access, secret, ""),
-		Secure: u.Scheme != "http",
-		Region: env.Get("S3_REGION", ""),
+		Creds:        credentials.NewStaticV4(access, secret, ""),
+		Secure:       u.Scheme != "http",
+		Region:       env.Get("S3_REGION", ""),
+		BucketLookup: lookup,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("s3: init client: %w", err)
