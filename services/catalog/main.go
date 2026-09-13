@@ -14,8 +14,10 @@ import (
 	"github.com/furnica/backend/internal/env"
 	"github.com/furnica/backend/internal/postgres"
 	"github.com/furnica/backend/services/catalog/internal/api"
+	"github.com/furnica/backend/services/catalog/internal/domain"
 	"github.com/furnica/backend/services/catalog/internal/repository"
 	"github.com/furnica/backend/services/catalog/internal/service"
+	"github.com/furnica/backend/services/catalog/internal/storage"
 	"github.com/furnica/backend/services/catalog/migrations"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -56,16 +58,44 @@ func run() error {
 	supplierRepo := repository.NewSupplierRepository(txm)
 	supplierSvc := service.NewSupplierService(txm, supplierRepo)
 
+	// S3 для байтов фото; nil (S3_ENDPOINT пуст) — байты остаются в Postgres.
+	s3, err := storage.NewS3FromEnv(ctx)
+	if err != nil {
+		return err
+	}
+	// Интерфейс через typed-nil указатель был бы != nil — поэтому явно.
+	var store domain.ImageStore
+	if s3 != nil {
+		store = s3
+		log.Printf("catalog: фото — в S3")
+	} else {
+		log.Printf("catalog: S3 не настроен, фото — в Postgres")
+	}
+
 	productRepo := repository.NewProductRepository(txm)
 	matchRepo := repository.NewMatchRepository(txm)
 	imageRepo := repository.NewProductImageRepository(txm)
 	categoryRepo := repository.NewCategoryRepository(txm)
-	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo, categoryRepo)
+	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo, categoryRepo, store)
 
 	categorySvc := service.NewCategoryService(txm, categoryRepo)
 
 	adminRepo := repository.NewAdminRepository(txm)
-	adminSvc := service.NewAdminService(txm, adminRepo)
+	adminSvc := service.NewAdminService(txm, adminRepo, store)
+
+	// Фоновая миграция старых фото из Postgres в S3 (идемпотентна, батчами).
+	if store != nil {
+		go func() {
+			n, err := matchingSvc.MigrateImagesToS3(ctx)
+			if err != nil {
+				log.Printf("catalog: миграция фото в S3 прервана (перенесено %d): %v", n, err)
+				return
+			}
+			if n > 0 {
+				log.Printf("catalog: перенесено фото в S3: %d", n)
+			}
+		}()
+	}
 
 	srv := api.NewCatalogServer(supplierSvc, matchingSvc, categorySvc, adminSvc)
 

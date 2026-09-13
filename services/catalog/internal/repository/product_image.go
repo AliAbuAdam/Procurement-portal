@@ -71,34 +71,78 @@ func (r *ProductImageRepository) Insert(ctx context.Context, img *domain.Product
 	return nil
 }
 
-func (r *ProductImageRepository) GetData(ctx context.Context, id string, thumb bool) (string, []byte, error) {
-	// Миниатюры может не быть (пустая) — тогда отдаём оригинал.
+func (r *ProductImageRepository) GetData(ctx context.Context, id string, thumb bool) (string, []byte, string, error) {
+	// Миниатюры может не быть — тогда отдаём оригинал. Фото либо в Postgres
+	// (байты), либо в S3 (ключ) — непустым будет ровно одно из двух.
 	const q = `
 		SELECT content_type,
-		       CASE WHEN $2 AND length(thumb) > 0 THEN thumb ELSE data END
+		       CASE WHEN $2 AND thumb IS NOT NULL AND length(thumb) > 0 THEN thumb ELSE data END,
+		       CASE WHEN $2 AND s3_thumb_key <> '' THEN s3_thumb_key ELSE s3_key END
 		FROM catalog.product_images
 		WHERE id = $1`
-	var contentType string
+	var contentType, s3Key string
 	var data []byte
-	err := r.db.Querier(ctx).QueryRow(ctx, q, id, thumb).Scan(&contentType, &data)
+	err := r.db.Querier(ctx).QueryRow(ctx, q, id, thumb).Scan(&contentType, &data, &s3Key)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return "", nil, domain.ErrImageNotFound
+		return "", nil, "", domain.ErrImageNotFound
 	}
 	if err != nil {
-		return "", nil, fmt.Errorf("get image: %w", err)
+		return "", nil, "", fmt.Errorf("get image: %w", err)
 	}
-	return contentType, data, nil
+	return contentType, data, s3Key, nil
 }
 
-func (r *ProductImageRepository) Delete(ctx context.Context, id string) error {
-	tag, err := r.db.Querier(ctx).Exec(ctx, `DELETE FROM catalog.product_images WHERE id = $1`, id)
+func (r *ProductImageRepository) SetS3Keys(ctx context.Context, id, key, thumbKey string) error {
+	const q = `
+		UPDATE catalog.product_images
+		SET s3_key = $2, s3_thumb_key = $3, data = NULL, thumb = NULL
+		WHERE id = $1`
+	tag, err := r.db.Querier(ctx).Exec(ctx, q, id, key, thumbKey)
 	if err != nil {
-		return fmt.Errorf("delete image: %w", err)
+		return fmt.Errorf("set image s3 keys: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
 		return domain.ErrImageNotFound
 	}
 	return nil
+}
+
+func (r *ProductImageRepository) Delete(ctx context.Context, id string) (string, string, error) {
+	const q = `DELETE FROM catalog.product_images WHERE id = $1 RETURNING s3_key, s3_thumb_key`
+	var key, thumbKey string
+	err := r.db.Querier(ctx).QueryRow(ctx, q, id).Scan(&key, &thumbKey)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", domain.ErrImageNotFound
+	}
+	if err != nil {
+		return "", "", fmt.Errorf("delete image: %w", err)
+	}
+	return key, thumbKey, nil
+}
+
+// ListUnmigrated — фото, чьи байты ещё в Postgres (кандидаты на перенос в S3).
+func (r *ProductImageRepository) ListUnmigrated(ctx context.Context, limit int) ([]*domain.ProductImage, error) {
+	const q = `
+		SELECT id, product_id, content_type, data, COALESCE(thumb, ''::bytea)
+		FROM catalog.product_images
+		WHERE s3_key = '' AND data IS NOT NULL
+		ORDER BY created_at
+		LIMIT $1`
+	rows, err := r.db.Querier(ctx).Query(ctx, q, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query unmigrated images: %w", err)
+	}
+	defer rows.Close()
+
+	var out []*domain.ProductImage
+	for rows.Next() {
+		var img domain.ProductImage
+		if err := rows.Scan(&img.ID, &img.ProductID, &img.ContentType, &img.Data, &img.Thumb); err != nil {
+			return nil, fmt.Errorf("scan unmigrated image: %w", err)
+		}
+		out = append(out, &img)
+	}
+	return out, rows.Err()
 }
 
 // Reorder выставляет position по порядку ids. Чужие id (не этой карточки)

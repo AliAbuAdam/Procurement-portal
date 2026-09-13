@@ -17,10 +17,21 @@ type MatchingService struct {
 	matches    domain.MatchRepository
 	images     domain.ProductImageRepository
 	categories domain.CategoryRepository // для автокатегории по привязкам поставщика
+	store      domain.ImageStore         // S3 для байтов фото (nil — байты в Postgres)
 }
 
-func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository, categories domain.CategoryRepository) *MatchingService {
-	return &MatchingService{txm: txm, products: products, matches: matches, images: images, categories: categories}
+func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository, categories domain.CategoryRepository, store domain.ImageStore) *MatchingService {
+	return &MatchingService{txm: txm, products: products, matches: matches, images: images, categories: categories, store: store}
+}
+
+// imageKeys — ключи объекта фото в S3. Плоская схема под общий префикс
+// products/ (его целиком чистит админ-очистка данных).
+func imageKeys(imageID string, hasThumb bool) (key, thumbKey string) {
+	key = "products/" + imageID
+	if hasThumb {
+		thumbKey = key + "-thumb"
+	}
+	return key, thumbKey
 }
 
 const (
@@ -114,7 +125,10 @@ func (s *MatchingService) AddProductImage(ctx context.Context, productID, conten
 
 	img := &domain.ProductImage{ProductID: productID, ContentType: contentType, Data: data, Thumb: thumb}
 	// Проверка лимита и вставка в одной транзакции, чтобы параллельные загрузки
-	// не перепрыгнули лимит.
+	// не перепрыгнули лимит. С настроенным S3 байты в Postgres не пишем:
+	// строка вставляется пустой, объекты грузятся в S3, затем в строку
+	// записываются ключи; сбой любой из стадий откатывает транзакцию целиком
+	// (возможный объект-сирота в S3 перезапишется при повторной загрузке).
 	err := s.txm.WithinTx(ctx, func(ctx context.Context) error {
 		if _, err := s.products.GetByID(ctx, productID); err != nil {
 			return err
@@ -126,7 +140,26 @@ func (s *MatchingService) AddProductImage(ctx context.Context, productID, conten
 		if n >= domain.MaxImagesPerProduct {
 			return fmt.Errorf("%w: у карточки уже %d фото (максимум)", domain.ErrValidation, domain.MaxImagesPerProduct)
 		}
-		return s.images.Insert(ctx, img)
+		if s.store == nil {
+			return s.images.Insert(ctx, img)
+		}
+		dbImg := *img
+		dbImg.Data, dbImg.Thumb = nil, nil
+		if err := s.images.Insert(ctx, &dbImg); err != nil {
+			return err
+		}
+		img.ID, img.Position, img.CreatedAt = dbImg.ID, dbImg.Position, dbImg.CreatedAt
+		key, thumbKey := imageKeys(dbImg.ID, len(thumb) > 0)
+		if err := s.store.Put(ctx, key, data, contentType); err != nil {
+			return err
+		}
+		if thumbKey != "" {
+			if err := s.store.Put(ctx, thumbKey, thumb, contentType); err != nil {
+				return err
+			}
+		}
+		img.S3Key, img.S3ThumbKey = key, thumbKey
+		return s.images.SetS3Keys(ctx, dbImg.ID, key, thumbKey)
 	})
 	if err != nil {
 		return nil, err
@@ -139,7 +172,15 @@ func (s *MatchingService) DeleteProductImage(ctx context.Context, id string) err
 	if id == "" {
 		return fmt.Errorf("%w: id is required", domain.ErrValidation)
 	}
-	return s.images.Delete(ctx, id)
+	key, thumbKey, err := s.images.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	// Объекты в S3 чистим после удаления строки, best-effort.
+	if s.store != nil && key != "" {
+		_ = s.store.Delete(ctx, key, thumbKey)
+	}
+	return nil
 }
 
 func (s *MatchingService) ReorderProductImages(ctx context.Context, productID string, ids []string) ([]*domain.ProductImage, error) {
@@ -159,7 +200,54 @@ func (s *MatchingService) GetProductImage(ctx context.Context, id string, thumb 
 	if id == "" {
 		return "", nil, fmt.Errorf("%w: id is required", domain.ErrValidation)
 	}
-	return s.images.GetData(ctx, id, thumb)
+	contentType, data, s3Key, err := s.images.GetData(ctx, id, thumb)
+	if err != nil {
+		return "", nil, err
+	}
+	if len(data) > 0 || s3Key == "" {
+		return contentType, data, nil
+	}
+	if s.store == nil {
+		return "", nil, fmt.Errorf("фото хранится в S3, но S3 не настроен (S3_ENDPOINT)")
+	}
+	data, err = s.store.Get(ctx, s3Key)
+	if err != nil {
+		return "", nil, err
+	}
+	return contentType, data, nil
+}
+
+// MigrateImagesToS3 переносит байты фото из Postgres в S3 (фоново на старте).
+// Каждое фото — отдельная транзакция: сбой не откатывает уже перенесённое.
+func (s *MatchingService) MigrateImagesToS3(ctx context.Context) (int, error) {
+	if s.store == nil {
+		return 0, nil
+	}
+	total := 0
+	for {
+		batch, err := s.images.ListUnmigrated(ctx, 20)
+		if err != nil {
+			return total, err
+		}
+		if len(batch) == 0 {
+			return total, nil
+		}
+		for _, img := range batch {
+			key, thumbKey := imageKeys(img.ID, len(img.Thumb) > 0)
+			if err := s.store.Put(ctx, key, img.Data, img.ContentType); err != nil {
+				return total, err
+			}
+			if thumbKey != "" {
+				if err := s.store.Put(ctx, thumbKey, img.Thumb, img.ContentType); err != nil {
+					return total, err
+				}
+			}
+			if err := s.images.SetS3Keys(ctx, img.ID, key, thumbKey); err != nil {
+				return total, err
+			}
+			total++
+		}
+	}
 }
 
 func (s *MatchingService) Suggest(ctx context.Context, offerIDs []string, limit int) ([]*domain.OfferSuggestion, error) {
