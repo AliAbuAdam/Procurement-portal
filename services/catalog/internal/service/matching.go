@@ -58,16 +58,107 @@ func (s *MatchingService) CreateProduct(ctx context.Context, name, article, imag
 	return p, nil
 }
 
-// ListProducts: с непустым query — триграммный поиск, иначе последние карточки.
-// Непустой categoryID сужает выборку категорией и её подкатегориями.
-func (s *MatchingService) ListProducts(ctx context.Context, query, categoryID string, limit int) ([]*domain.Product, error) {
-	limit = clamp(limit, defaultProductLimit, maxProductLimit)
-	query = strings.TrimSpace(query)
-	categoryID = strings.TrimSpace(categoryID)
-	if query != "" {
-		return s.products.Search(ctx, query, categoryID, limit)
+// ListProducts: с непустым Query — триграммный поиск по имени и артикулу,
+// иначе — сортировка из фильтра. Возвращает страницу и total для пагинации.
+func (s *MatchingService) ListProducts(ctx context.Context, f domain.ProductFilter) ([]*domain.Product, int, error) {
+	f.Limit = clamp(f.Limit, defaultProductLimit, maxProductLimit)
+	if f.Offset < 0 {
+		f.Offset = 0
 	}
-	return s.products.List(ctx, categoryID, limit)
+	f.Query = strings.TrimSpace(f.Query)
+	f.CategoryID = strings.TrimSpace(f.CategoryID)
+	f.SupplierID = strings.TrimSpace(f.SupplierID)
+	switch f.Sort {
+	case domain.SortNew, domain.SortName, domain.SortPriceAsc, domain.SortPriceDesc:
+	case "new":
+		f.Sort = domain.SortNew
+	default:
+		return nil, 0, fmt.Errorf("%w: unknown sort %q", domain.ErrValidation, f.Sort)
+	}
+	return s.products.List(ctx, f)
+}
+
+// Ограничения характеристик карточки — защита от случайной простыни из UI.
+const (
+	maxProductAttrs     = 50
+	maxAttrLen          = 500
+	maxDescriptionChars = 10000
+)
+
+// sanitizeAttrs чистит характеристики: трим, пустые имена — вон, лимиты.
+func sanitizeAttrs(attrs []domain.ProductAttr) ([]domain.ProductAttr, error) {
+	out := make([]domain.ProductAttr, 0, len(attrs))
+	for _, a := range attrs {
+		a.Name = strings.TrimSpace(a.Name)
+		a.Value = strings.TrimSpace(a.Value)
+		if a.Name == "" && a.Value == "" {
+			continue
+		}
+		if a.Name == "" {
+			return nil, fmt.Errorf("%w: у характеристики со значением %q нет названия", domain.ErrValidation, a.Value)
+		}
+		if len([]rune(a.Name)) > maxAttrLen || len([]rune(a.Value)) > maxAttrLen {
+			return nil, fmt.Errorf("%w: характеристика слишком длинная (максимум %d символов)", domain.ErrValidation, maxAttrLen)
+		}
+		out = append(out, a)
+	}
+	if len(out) > maxProductAttrs {
+		return nil, fmt.Errorf("%w: слишком много характеристик (максимум %d)", domain.ErrValidation, maxProductAttrs)
+	}
+	return out, nil
+}
+
+// UpdateProduct — полная замена редактируемых полей карточки.
+func (s *MatchingService) UpdateProduct(ctx context.Context, p *domain.Product) (*domain.Product, error) {
+	p.ID = strings.TrimSpace(p.ID)
+	p.Name = strings.TrimSpace(p.Name)
+	p.Article = strings.TrimSpace(p.Article)
+	p.Description = strings.TrimSpace(p.Description)
+	p.CategoryID = strings.TrimSpace(p.CategoryID)
+	if p.ID == "" {
+		return nil, fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	if p.Name == "" {
+		return nil, fmt.Errorf("%w: name is required", domain.ErrValidation)
+	}
+	if len([]rune(p.Description)) > maxDescriptionChars {
+		return nil, fmt.Errorf("%w: описание слишком длинное (максимум %d символов)", domain.ErrValidation, maxDescriptionChars)
+	}
+	attrs, err := sanitizeAttrs(p.Attrs)
+	if err != nil {
+		return nil, err
+	}
+	p.Attrs = attrs
+	if err := s.products.Update(ctx, p); err != nil {
+		return nil, err
+	}
+	// Перечитываем: created_at и cover_image_id знает только БД.
+	return s.products.GetByID(ctx, p.ID)
+}
+
+// DeleteProduct удаляет карточку. Сопоставления и строки фото уходят каскадом
+// в той же транзакции; объекты в S3 чистим после коммита, best-effort
+// (сирота в хранилище безопасен, строка с ключом на удалённый объект — нет).
+func (s *MatchingService) DeleteProduct(ctx context.Context, id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return fmt.Errorf("%w: id is required", domain.ErrValidation)
+	}
+	var keys []string
+	err := s.txm.WithinTx(ctx, func(ctx context.Context) error {
+		var err error
+		if keys, err = s.images.S3KeysByProduct(ctx, id); err != nil {
+			return err
+		}
+		return s.products.Delete(ctx, id)
+	})
+	if err != nil {
+		return err
+	}
+	if s.store != nil && len(keys) > 0 {
+		_ = s.store.Delete(ctx, keys...)
+	}
+	return nil
 }
 
 func (s *MatchingService) GetProduct(ctx context.Context, id string) (*domain.Product, error) {

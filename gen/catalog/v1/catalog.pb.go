@@ -629,6 +629,59 @@ func (x *ListSuppliersResponse) GetNextPageToken() string {
 	return ""
 }
 
+// ProductAttr — одна характеристика карточки («Материал» → «Сталь»).
+type ProductAttr struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProductAttr) Reset() {
+	*x = ProductAttr{}
+	mi := &file_catalog_v1_catalog_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProductAttr) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProductAttr) ProtoMessage() {}
+
+func (x *ProductAttr) ProtoReflect() protoreflect.Message {
+	mi := &file_catalog_v1_catalog_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProductAttr.ProtoReflect.Descriptor instead.
+func (*ProductAttr) Descriptor() ([]byte, []int) {
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ProductAttr) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ProductAttr) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
 type Product struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -638,13 +691,16 @@ type Product struct {
 	ImageUrl      string                 `protobuf:"bytes,5,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`               // легаси: внешний URL фото (для старых карточек)
 	CoverImageId  string                 `protobuf:"bytes,6,opt,name=cover_image_id,json=coverImageId,proto3" json:"cover_image_id,omitempty"` // id первого фото галереи (пусто, если фото нет)
 	CategoryId    string                 `protobuf:"bytes,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`         // категория витрины (пусто — без категории)
+	Description   string                 `protobuf:"bytes,8,opt,name=description,proto3" json:"description,omitempty"`                         // описание товара (может быть пустым)
+	Attrs         []*ProductAttr         `protobuf:"bytes,9,rep,name=attrs,proto3" json:"attrs,omitempty"`                                     // характеристики (порядок задаёт пользователь)
+	Archived      bool                   `protobuf:"varint,10,opt,name=archived,proto3" json:"archived,omitempty"`                             // скрыт с витрины (не выдаётся без include_archived)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Product) Reset() {
 	*x = Product{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[9]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -656,7 +712,7 @@ func (x *Product) String() string {
 func (*Product) ProtoMessage() {}
 
 func (x *Product) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[9]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -669,7 +725,7 @@ func (x *Product) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Product.ProtoReflect.Descriptor instead.
 func (*Product) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{9}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Product) GetId() string {
@@ -721,6 +777,27 @@ func (x *Product) GetCategoryId() string {
 	return ""
 }
 
+func (x *Product) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Product) GetAttrs() []*ProductAttr {
+	if x != nil {
+		return x.Attrs
+	}
+	return nil
+}
+
+func (x *Product) GetArchived() bool {
+	if x != nil {
+		return x.Archived
+	}
+	return false
+}
+
 type CreateProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -733,7 +810,7 @@ type CreateProductRequest struct {
 
 func (x *CreateProductRequest) Reset() {
 	*x = CreateProductRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[10]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -745,7 +822,7 @@ func (x *CreateProductRequest) String() string {
 func (*CreateProductRequest) ProtoMessage() {}
 
 func (x *CreateProductRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[10]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -758,7 +835,7 @@ func (x *CreateProductRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProductRequest.ProtoReflect.Descriptor instead.
 func (*CreateProductRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{10}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateProductRequest) GetName() string {
@@ -789,20 +866,209 @@ func (x *CreateProductRequest) GetCategoryId() string {
 	return ""
 }
 
+type UpdateProductRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // обязательно (полная замена полей)
+	Article       string                 `protobuf:"bytes,3,opt,name=article,proto3" json:"article,omitempty"`
+	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	Attrs         []*ProductAttr         `protobuf:"bytes,5,rep,name=attrs,proto3" json:"attrs,omitempty"`
+	Archived      bool                   `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // пусто — снять категорию
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProductRequest) Reset() {
+	*x = UpdateProductRequest{}
+	mi := &file_catalog_v1_catalog_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProductRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProductRequest) ProtoMessage() {}
+
+func (x *UpdateProductRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_catalog_v1_catalog_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProductRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProductRequest) Descriptor() ([]byte, []int) {
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UpdateProductRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateProductRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdateProductRequest) GetArticle() string {
+	if x != nil {
+		return x.Article
+	}
+	return ""
+}
+
+func (x *UpdateProductRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *UpdateProductRequest) GetAttrs() []*ProductAttr {
+	if x != nil {
+		return x.Attrs
+	}
+	return nil
+}
+
+func (x *UpdateProductRequest) GetArchived() bool {
+	if x != nil {
+		return x.Archived
+	}
+	return false
+}
+
+func (x *UpdateProductRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
+	}
+	return ""
+}
+
+type DeleteProductRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProductRequest) Reset() {
+	*x = DeleteProductRequest{}
+	mi := &file_catalog_v1_catalog_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProductRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProductRequest) ProtoMessage() {}
+
+func (x *DeleteProductRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_catalog_v1_catalog_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProductRequest.ProtoReflect.Descriptor instead.
+func (*DeleteProductRequest) Descriptor() ([]byte, []int) {
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeleteProductRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteProductResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProductResponse) Reset() {
+	*x = DeleteProductResponse{}
+	mi := &file_catalog_v1_catalog_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProductResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProductResponse) ProtoMessage() {}
+
+func (x *DeleteProductResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_catalog_v1_catalog_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProductResponse.ProtoReflect.Descriptor instead.
+func (*DeleteProductResponse) Descriptor() ([]byte, []int) {
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *DeleteProductResponse) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
 type ListProductsRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
-	Query    string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"` // непустой -> триграммный поиск по имени
+	Query    string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"` // непустой -> триграммный поиск по имени и артикулу
 	PageSize int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Непустой -> только эта категория и её подкатегории.
 	// Спец-значение "none" -> только товары без категории.
-	CategoryId    string `protobuf:"bytes,3,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId      string `protobuf:"bytes,3,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	Offset          int32  `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`                                          // пагинация (LIMIT page_size OFFSET offset)
+	IncludeArchived bool   `protobuf:"varint,5,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"` // true — включая скрытые (админ-экраны)
+	// "" | "new" — новые сверху; "name" — по алфавиту;
+	// "price_asc" | "price_desc" — по минимальной актуальной цене.
+	Sort          string  `protobuf:"bytes,6,opt,name=sort,proto3" json:"sort,omitempty"`
+	InStock       bool    `protobuf:"varint,7,opt,name=in_stock,json=inStock,proto3" json:"in_stock,omitempty"`     // true — только товары с наличием у поставщиков
+	PriceMin      float64 `protobuf:"fixed64,8,opt,name=price_min,json=priceMin,proto3" json:"price_min,omitempty"` // фильтр по минимальной цене (0 — без ограничения)
+	PriceMax      float64 `protobuf:"fixed64,9,opt,name=price_max,json=priceMax,proto3" json:"price_max,omitempty"`
+	SupplierId    string  `protobuf:"bytes,10,opt,name=supplier_id,json=supplierId,proto3" json:"supplier_id,omitempty"` // непустой — только товары с предложением поставщика
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListProductsRequest) Reset() {
 	*x = ListProductsRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[11]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -814,7 +1080,7 @@ func (x *ListProductsRequest) String() string {
 func (*ListProductsRequest) ProtoMessage() {}
 
 func (x *ListProductsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[11]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -827,7 +1093,7 @@ func (x *ListProductsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProductsRequest.ProtoReflect.Descriptor instead.
 func (*ListProductsRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{11}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListProductsRequest) GetQuery() string {
@@ -851,16 +1117,66 @@ func (x *ListProductsRequest) GetCategoryId() string {
 	return ""
 }
 
+func (x *ListProductsRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *ListProductsRequest) GetIncludeArchived() bool {
+	if x != nil {
+		return x.IncludeArchived
+	}
+	return false
+}
+
+func (x *ListProductsRequest) GetSort() string {
+	if x != nil {
+		return x.Sort
+	}
+	return ""
+}
+
+func (x *ListProductsRequest) GetInStock() bool {
+	if x != nil {
+		return x.InStock
+	}
+	return false
+}
+
+func (x *ListProductsRequest) GetPriceMin() float64 {
+	if x != nil {
+		return x.PriceMin
+	}
+	return 0
+}
+
+func (x *ListProductsRequest) GetPriceMax() float64 {
+	if x != nil {
+		return x.PriceMax
+	}
+	return 0
+}
+
+func (x *ListProductsRequest) GetSupplierId() string {
+	if x != nil {
+		return x.SupplierId
+	}
+	return ""
+}
+
 type ListProductsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Products      []*Product             `protobuf:"bytes,1,rep,name=products,proto3" json:"products,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"` // всего карточек под фильтрами (для пагинации)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListProductsResponse) Reset() {
 	*x = ListProductsResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[12]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -872,7 +1188,7 @@ func (x *ListProductsResponse) String() string {
 func (*ListProductsResponse) ProtoMessage() {}
 
 func (x *ListProductsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[12]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -885,7 +1201,7 @@ func (x *ListProductsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProductsResponse.ProtoReflect.Descriptor instead.
 func (*ListProductsResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{12}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListProductsResponse) GetProducts() []*Product {
@@ -893,6 +1209,13 @@ func (x *ListProductsResponse) GetProducts() []*Product {
 		return x.Products
 	}
 	return nil
+}
+
+func (x *ListProductsResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
 }
 
 type GetProductRequest struct {
@@ -904,7 +1227,7 @@ type GetProductRequest struct {
 
 func (x *GetProductRequest) Reset() {
 	*x = GetProductRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[13]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -916,7 +1239,7 @@ func (x *GetProductRequest) String() string {
 func (*GetProductRequest) ProtoMessage() {}
 
 func (x *GetProductRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[13]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -929,7 +1252,7 @@ func (x *GetProductRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProductRequest.ProtoReflect.Descriptor instead.
 func (*GetProductRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{13}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetProductRequest) GetId() string {
@@ -949,7 +1272,7 @@ type SetProductCategoryRequest struct {
 
 func (x *SetProductCategoryRequest) Reset() {
 	*x = SetProductCategoryRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[14]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -961,7 +1284,7 @@ func (x *SetProductCategoryRequest) String() string {
 func (*SetProductCategoryRequest) ProtoMessage() {}
 
 func (x *SetProductCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[14]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -974,7 +1297,7 @@ func (x *SetProductCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetProductCategoryRequest.ProtoReflect.Descriptor instead.
 func (*SetProductCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{14}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *SetProductCategoryRequest) GetProductIds() []string {
@@ -1000,7 +1323,7 @@ type SetProductCategoryResponse struct {
 
 func (x *SetProductCategoryResponse) Reset() {
 	*x = SetProductCategoryResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[15]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1012,7 +1335,7 @@ func (x *SetProductCategoryResponse) String() string {
 func (*SetProductCategoryResponse) ProtoMessage() {}
 
 func (x *SetProductCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[15]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1025,7 +1348,7 @@ func (x *SetProductCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetProductCategoryResponse.ProtoReflect.Descriptor instead.
 func (*SetProductCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{15}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SetProductCategoryResponse) GetUpdated() int32 {
@@ -1050,7 +1373,7 @@ type Category struct {
 
 func (x *Category) Reset() {
 	*x = Category{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[16]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1062,7 +1385,7 @@ func (x *Category) String() string {
 func (*Category) ProtoMessage() {}
 
 func (x *Category) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[16]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1075,7 +1398,7 @@ func (x *Category) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Category.ProtoReflect.Descriptor instead.
 func (*Category) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{16}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *Category) GetId() string {
@@ -1128,7 +1451,7 @@ type ListCategoriesRequest struct {
 
 func (x *ListCategoriesRequest) Reset() {
 	*x = ListCategoriesRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[17]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1140,7 +1463,7 @@ func (x *ListCategoriesRequest) String() string {
 func (*ListCategoriesRequest) ProtoMessage() {}
 
 func (x *ListCategoriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[17]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1153,7 +1476,7 @@ func (x *ListCategoriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCategoriesRequest.ProtoReflect.Descriptor instead.
 func (*ListCategoriesRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{17}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{21}
 }
 
 type ListCategoriesResponse struct {
@@ -1166,7 +1489,7 @@ type ListCategoriesResponse struct {
 
 func (x *ListCategoriesResponse) Reset() {
 	*x = ListCategoriesResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[18]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1178,7 +1501,7 @@ func (x *ListCategoriesResponse) String() string {
 func (*ListCategoriesResponse) ProtoMessage() {}
 
 func (x *ListCategoriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[18]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1191,7 +1514,7 @@ func (x *ListCategoriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCategoriesResponse.ProtoReflect.Descriptor instead.
 func (*ListCategoriesResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{18}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListCategoriesResponse) GetCategories() []*Category {
@@ -1218,7 +1541,7 @@ type CreateCategoryRequest struct {
 
 func (x *CreateCategoryRequest) Reset() {
 	*x = CreateCategoryRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[19]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1230,7 +1553,7 @@ func (x *CreateCategoryRequest) String() string {
 func (*CreateCategoryRequest) ProtoMessage() {}
 
 func (x *CreateCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[19]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1243,7 +1566,7 @@ func (x *CreateCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCategoryRequest.ProtoReflect.Descriptor instead.
 func (*CreateCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{19}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateCategoryRequest) GetName() string {
@@ -1271,7 +1594,7 @@ type UpdateCategoryRequest struct {
 
 func (x *UpdateCategoryRequest) Reset() {
 	*x = UpdateCategoryRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[20]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1283,7 +1606,7 @@ func (x *UpdateCategoryRequest) String() string {
 func (*UpdateCategoryRequest) ProtoMessage() {}
 
 func (x *UpdateCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[20]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1296,7 +1619,7 @@ func (x *UpdateCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCategoryRequest.ProtoReflect.Descriptor instead.
 func (*UpdateCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{20}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *UpdateCategoryRequest) GetId() string {
@@ -1329,7 +1652,7 @@ type DeleteCategoryRequest struct {
 
 func (x *DeleteCategoryRequest) Reset() {
 	*x = DeleteCategoryRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[21]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1341,7 +1664,7 @@ func (x *DeleteCategoryRequest) String() string {
 func (*DeleteCategoryRequest) ProtoMessage() {}
 
 func (x *DeleteCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[21]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1354,7 +1677,7 @@ func (x *DeleteCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCategoryRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{21}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *DeleteCategoryRequest) GetId() string {
@@ -1373,7 +1696,7 @@ type DeleteCategoryResponse struct {
 
 func (x *DeleteCategoryResponse) Reset() {
 	*x = DeleteCategoryResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[22]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1385,7 +1708,7 @@ func (x *DeleteCategoryResponse) String() string {
 func (*DeleteCategoryResponse) ProtoMessage() {}
 
 func (x *DeleteCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[22]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1398,7 +1721,7 @@ func (x *DeleteCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCategoryResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{22}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DeleteCategoryResponse) GetOk() bool {
@@ -1423,7 +1746,7 @@ type SupplierCategory struct {
 
 func (x *SupplierCategory) Reset() {
 	*x = SupplierCategory{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[23]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1435,7 +1758,7 @@ func (x *SupplierCategory) String() string {
 func (*SupplierCategory) ProtoMessage() {}
 
 func (x *SupplierCategory) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[23]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1448,7 +1771,7 @@ func (x *SupplierCategory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SupplierCategory.ProtoReflect.Descriptor instead.
 func (*SupplierCategory) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{23}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *SupplierCategory) GetSupplierId() string {
@@ -1494,7 +1817,7 @@ type ListSupplierCategoriesRequest struct {
 
 func (x *ListSupplierCategoriesRequest) Reset() {
 	*x = ListSupplierCategoriesRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[24]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1506,7 +1829,7 @@ func (x *ListSupplierCategoriesRequest) String() string {
 func (*ListSupplierCategoriesRequest) ProtoMessage() {}
 
 func (x *ListSupplierCategoriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[24]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1519,7 +1842,7 @@ func (x *ListSupplierCategoriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSupplierCategoriesRequest.ProtoReflect.Descriptor instead.
 func (*ListSupplierCategoriesRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{24}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{28}
 }
 
 type ListSupplierCategoriesResponse struct {
@@ -1531,7 +1854,7 @@ type ListSupplierCategoriesResponse struct {
 
 func (x *ListSupplierCategoriesResponse) Reset() {
 	*x = ListSupplierCategoriesResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[25]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1543,7 +1866,7 @@ func (x *ListSupplierCategoriesResponse) String() string {
 func (*ListSupplierCategoriesResponse) ProtoMessage() {}
 
 func (x *ListSupplierCategoriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[25]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1556,7 +1879,7 @@ func (x *ListSupplierCategoriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSupplierCategoriesResponse.ProtoReflect.Descriptor instead.
 func (*ListSupplierCategoriesResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{25}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ListSupplierCategoriesResponse) GetItems() []*SupplierCategory {
@@ -1580,7 +1903,7 @@ type MapSupplierCategoryRequest struct {
 
 func (x *MapSupplierCategoryRequest) Reset() {
 	*x = MapSupplierCategoryRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[26]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1592,7 +1915,7 @@ func (x *MapSupplierCategoryRequest) String() string {
 func (*MapSupplierCategoryRequest) ProtoMessage() {}
 
 func (x *MapSupplierCategoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[26]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1605,7 +1928,7 @@ func (x *MapSupplierCategoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MapSupplierCategoryRequest.ProtoReflect.Descriptor instead.
 func (*MapSupplierCategoryRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{26}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *MapSupplierCategoryRequest) GetSupplierId() string {
@@ -1645,7 +1968,7 @@ type MapSupplierCategoryResponse struct {
 
 func (x *MapSupplierCategoryResponse) Reset() {
 	*x = MapSupplierCategoryResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[27]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1657,7 +1980,7 @@ func (x *MapSupplierCategoryResponse) String() string {
 func (*MapSupplierCategoryResponse) ProtoMessage() {}
 
 func (x *MapSupplierCategoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[27]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1670,7 +1993,7 @@ func (x *MapSupplierCategoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MapSupplierCategoryResponse.ProtoReflect.Descriptor instead.
 func (*MapSupplierCategoryResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{27}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *MapSupplierCategoryResponse) GetCategoryId() string {
@@ -1688,7 +2011,7 @@ type ApplyCategoryMappingsRequest struct {
 
 func (x *ApplyCategoryMappingsRequest) Reset() {
 	*x = ApplyCategoryMappingsRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[28]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1700,7 +2023,7 @@ func (x *ApplyCategoryMappingsRequest) String() string {
 func (*ApplyCategoryMappingsRequest) ProtoMessage() {}
 
 func (x *ApplyCategoryMappingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[28]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1713,7 +2036,7 @@ func (x *ApplyCategoryMappingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyCategoryMappingsRequest.ProtoReflect.Descriptor instead.
 func (*ApplyCategoryMappingsRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{28}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{32}
 }
 
 type ApplyCategoryMappingsResponse struct {
@@ -1725,7 +2048,7 @@ type ApplyCategoryMappingsResponse struct {
 
 func (x *ApplyCategoryMappingsResponse) Reset() {
 	*x = ApplyCategoryMappingsResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[29]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1737,7 +2060,7 @@ func (x *ApplyCategoryMappingsResponse) String() string {
 func (*ApplyCategoryMappingsResponse) ProtoMessage() {}
 
 func (x *ApplyCategoryMappingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[29]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1750,7 +2073,7 @@ func (x *ApplyCategoryMappingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyCategoryMappingsResponse.ProtoReflect.Descriptor instead.
 func (*ApplyCategoryMappingsResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{29}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ApplyCategoryMappingsResponse) GetUpdated() int32 {
@@ -1769,7 +2092,7 @@ type WipeDataRequest struct {
 
 func (x *WipeDataRequest) Reset() {
 	*x = WipeDataRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[30]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1781,7 +2104,7 @@ func (x *WipeDataRequest) String() string {
 func (*WipeDataRequest) ProtoMessage() {}
 
 func (x *WipeDataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[30]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1794,7 +2117,7 @@ func (x *WipeDataRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WipeDataRequest.ProtoReflect.Descriptor instead.
 func (*WipeDataRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{30}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *WipeDataRequest) GetIncludeSuppliers() bool {
@@ -1818,7 +2141,7 @@ type WipeDataResponse struct {
 
 func (x *WipeDataResponse) Reset() {
 	*x = WipeDataResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[31]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1830,7 +2153,7 @@ func (x *WipeDataResponse) String() string {
 func (*WipeDataResponse) ProtoMessage() {}
 
 func (x *WipeDataResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[31]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1843,7 +2166,7 @@ func (x *WipeDataResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WipeDataResponse.ProtoReflect.Descriptor instead.
 func (*WipeDataResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{31}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *WipeDataResponse) GetProducts() int64 {
@@ -1895,7 +2218,7 @@ type ProductImage struct {
 
 func (x *ProductImage) Reset() {
 	*x = ProductImage{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[32]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1907,7 +2230,7 @@ func (x *ProductImage) String() string {
 func (*ProductImage) ProtoMessage() {}
 
 func (x *ProductImage) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[32]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1920,7 +2243,7 @@ func (x *ProductImage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProductImage.ProtoReflect.Descriptor instead.
 func (*ProductImage) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{32}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ProductImage) GetId() string {
@@ -1967,7 +2290,7 @@ type ListProductImagesRequest struct {
 
 func (x *ListProductImagesRequest) Reset() {
 	*x = ListProductImagesRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[33]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1979,7 +2302,7 @@ func (x *ListProductImagesRequest) String() string {
 func (*ListProductImagesRequest) ProtoMessage() {}
 
 func (x *ListProductImagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[33]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1992,7 +2315,7 @@ func (x *ListProductImagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProductImagesRequest.ProtoReflect.Descriptor instead.
 func (*ListProductImagesRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{33}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ListProductImagesRequest) GetProductId() string {
@@ -2011,7 +2334,7 @@ type ListProductImagesResponse struct {
 
 func (x *ListProductImagesResponse) Reset() {
 	*x = ListProductImagesResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[34]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2023,7 +2346,7 @@ func (x *ListProductImagesResponse) String() string {
 func (*ListProductImagesResponse) ProtoMessage() {}
 
 func (x *ListProductImagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[34]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2036,7 +2359,7 @@ func (x *ListProductImagesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProductImagesResponse.ProtoReflect.Descriptor instead.
 func (*ListProductImagesResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{34}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ListProductImagesResponse) GetImages() []*ProductImage {
@@ -2058,7 +2381,7 @@ type AddProductImageRequest struct {
 
 func (x *AddProductImageRequest) Reset() {
 	*x = AddProductImageRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[35]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2070,7 +2393,7 @@ func (x *AddProductImageRequest) String() string {
 func (*AddProductImageRequest) ProtoMessage() {}
 
 func (x *AddProductImageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[35]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2083,7 +2406,7 @@ func (x *AddProductImageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddProductImageRequest.ProtoReflect.Descriptor instead.
 func (*AddProductImageRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{35}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *AddProductImageRequest) GetProductId() string {
@@ -2123,7 +2446,7 @@ type DeleteProductImageRequest struct {
 
 func (x *DeleteProductImageRequest) Reset() {
 	*x = DeleteProductImageRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[36]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2135,7 +2458,7 @@ func (x *DeleteProductImageRequest) String() string {
 func (*DeleteProductImageRequest) ProtoMessage() {}
 
 func (x *DeleteProductImageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[36]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2148,7 +2471,7 @@ func (x *DeleteProductImageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProductImageRequest.ProtoReflect.Descriptor instead.
 func (*DeleteProductImageRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{36}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *DeleteProductImageRequest) GetId() string {
@@ -2167,7 +2490,7 @@ type DeleteProductImageResponse struct {
 
 func (x *DeleteProductImageResponse) Reset() {
 	*x = DeleteProductImageResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[37]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2179,7 +2502,7 @@ func (x *DeleteProductImageResponse) String() string {
 func (*DeleteProductImageResponse) ProtoMessage() {}
 
 func (x *DeleteProductImageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[37]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2192,7 +2515,7 @@ func (x *DeleteProductImageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProductImageResponse.ProtoReflect.Descriptor instead.
 func (*DeleteProductImageResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{37}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *DeleteProductImageResponse) GetOk() bool {
@@ -2212,7 +2535,7 @@ type ReorderProductImagesRequest struct {
 
 func (x *ReorderProductImagesRequest) Reset() {
 	*x = ReorderProductImagesRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[38]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2224,7 +2547,7 @@ func (x *ReorderProductImagesRequest) String() string {
 func (*ReorderProductImagesRequest) ProtoMessage() {}
 
 func (x *ReorderProductImagesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[38]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2237,7 +2560,7 @@ func (x *ReorderProductImagesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReorderProductImagesRequest.ProtoReflect.Descriptor instead.
 func (*ReorderProductImagesRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{38}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ReorderProductImagesRequest) GetProductId() string {
@@ -2264,7 +2587,7 @@ type GetProductImageRequest struct {
 
 func (x *GetProductImageRequest) Reset() {
 	*x = GetProductImageRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[39]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2276,7 +2599,7 @@ func (x *GetProductImageRequest) String() string {
 func (*GetProductImageRequest) ProtoMessage() {}
 
 func (x *GetProductImageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[39]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2289,7 +2612,7 @@ func (x *GetProductImageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProductImageRequest.ProtoReflect.Descriptor instead.
 func (*GetProductImageRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{39}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *GetProductImageRequest) GetId() string {
@@ -2316,7 +2639,7 @@ type GetProductImageResponse struct {
 
 func (x *GetProductImageResponse) Reset() {
 	*x = GetProductImageResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[40]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2328,7 +2651,7 @@ func (x *GetProductImageResponse) String() string {
 func (*GetProductImageResponse) ProtoMessage() {}
 
 func (x *GetProductImageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[40]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2341,7 +2664,7 @@ func (x *GetProductImageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProductImageResponse.ProtoReflect.Descriptor instead.
 func (*GetProductImageResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{40}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GetProductImageResponse) GetContentType() string {
@@ -2371,7 +2694,7 @@ type Candidate struct {
 
 func (x *Candidate) Reset() {
 	*x = Candidate{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[41]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2383,7 +2706,7 @@ func (x *Candidate) String() string {
 func (*Candidate) ProtoMessage() {}
 
 func (x *Candidate) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[41]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2396,7 +2719,7 @@ func (x *Candidate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Candidate.ProtoReflect.Descriptor instead.
 func (*Candidate) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{41}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *Candidate) GetProductId() string {
@@ -2440,7 +2763,7 @@ type OfferSuggestion struct {
 
 func (x *OfferSuggestion) Reset() {
 	*x = OfferSuggestion{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[42]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2452,7 +2775,7 @@ func (x *OfferSuggestion) String() string {
 func (*OfferSuggestion) ProtoMessage() {}
 
 func (x *OfferSuggestion) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[42]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2465,7 +2788,7 @@ func (x *OfferSuggestion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OfferSuggestion.ProtoReflect.Descriptor instead.
 func (*OfferSuggestion) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{42}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *OfferSuggestion) GetOfferId() string {
@@ -2506,7 +2829,7 @@ type SuggestMatchesRequest struct {
 
 func (x *SuggestMatchesRequest) Reset() {
 	*x = SuggestMatchesRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[43]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2518,7 +2841,7 @@ func (x *SuggestMatchesRequest) String() string {
 func (*SuggestMatchesRequest) ProtoMessage() {}
 
 func (x *SuggestMatchesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[43]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2531,7 +2854,7 @@ func (x *SuggestMatchesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuggestMatchesRequest.ProtoReflect.Descriptor instead.
 func (*SuggestMatchesRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{43}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *SuggestMatchesRequest) GetOfferIds() []string {
@@ -2557,7 +2880,7 @@ type SuggestMatchesResponse struct {
 
 func (x *SuggestMatchesResponse) Reset() {
 	*x = SuggestMatchesResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[44]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2569,7 +2892,7 @@ func (x *SuggestMatchesResponse) String() string {
 func (*SuggestMatchesResponse) ProtoMessage() {}
 
 func (x *SuggestMatchesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[44]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2582,7 +2905,7 @@ func (x *SuggestMatchesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuggestMatchesResponse.ProtoReflect.Descriptor instead.
 func (*SuggestMatchesResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{44}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *SuggestMatchesResponse) GetSuggestions() []*OfferSuggestion {
@@ -2607,7 +2930,7 @@ type UnmatchedOffer struct {
 
 func (x *UnmatchedOffer) Reset() {
 	*x = UnmatchedOffer{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[45]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2619,7 +2942,7 @@ func (x *UnmatchedOffer) String() string {
 func (*UnmatchedOffer) ProtoMessage() {}
 
 func (x *UnmatchedOffer) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[45]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2632,7 +2955,7 @@ func (x *UnmatchedOffer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnmatchedOffer.ProtoReflect.Descriptor instead.
 func (*UnmatchedOffer) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{45}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *UnmatchedOffer) GetOfferId() string {
@@ -2687,7 +3010,7 @@ type ListUnmatchedOffersRequest struct {
 
 func (x *ListUnmatchedOffersRequest) Reset() {
 	*x = ListUnmatchedOffersRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[46]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2699,7 +3022,7 @@ func (x *ListUnmatchedOffersRequest) String() string {
 func (*ListUnmatchedOffersRequest) ProtoMessage() {}
 
 func (x *ListUnmatchedOffersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[46]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2712,7 +3035,7 @@ func (x *ListUnmatchedOffersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUnmatchedOffersRequest.ProtoReflect.Descriptor instead.
 func (*ListUnmatchedOffersRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{46}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *ListUnmatchedOffersRequest) GetBatchId() string {
@@ -2740,7 +3063,7 @@ type ListUnmatchedOffersResponse struct {
 
 func (x *ListUnmatchedOffersResponse) Reset() {
 	*x = ListUnmatchedOffersResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[47]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2752,7 +3075,7 @@ func (x *ListUnmatchedOffersResponse) String() string {
 func (*ListUnmatchedOffersResponse) ProtoMessage() {}
 
 func (x *ListUnmatchedOffersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[47]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2765,7 +3088,7 @@ func (x *ListUnmatchedOffersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUnmatchedOffersResponse.ProtoReflect.Descriptor instead.
 func (*ListUnmatchedOffersResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{47}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *ListUnmatchedOffersResponse) GetOffers() []*UnmatchedOffer {
@@ -2803,7 +3126,7 @@ type Match struct {
 
 func (x *Match) Reset() {
 	*x = Match{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[48]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2815,7 +3138,7 @@ func (x *Match) String() string {
 func (*Match) ProtoMessage() {}
 
 func (x *Match) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[48]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2828,7 +3151,7 @@ func (x *Match) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Match.ProtoReflect.Descriptor instead.
 func (*Match) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{48}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *Match) GetOfferId() string {
@@ -2877,7 +3200,7 @@ type ConfirmMatchRequest struct {
 
 func (x *ConfirmMatchRequest) Reset() {
 	*x = ConfirmMatchRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[49]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2889,7 +3212,7 @@ func (x *ConfirmMatchRequest) String() string {
 func (*ConfirmMatchRequest) ProtoMessage() {}
 
 func (x *ConfirmMatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[49]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2902,7 +3225,7 @@ func (x *ConfirmMatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmMatchRequest.ProtoReflect.Descriptor instead.
 func (*ConfirmMatchRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{49}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *ConfirmMatchRequest) GetOfferId() string {
@@ -2938,7 +3261,7 @@ type CreateProductFromOfferRequest struct {
 
 func (x *CreateProductFromOfferRequest) Reset() {
 	*x = CreateProductFromOfferRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[50]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2950,7 +3273,7 @@ func (x *CreateProductFromOfferRequest) String() string {
 func (*CreateProductFromOfferRequest) ProtoMessage() {}
 
 func (x *CreateProductFromOfferRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[50]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2963,7 +3286,7 @@ func (x *CreateProductFromOfferRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProductFromOfferRequest.ProtoReflect.Descriptor instead.
 func (*CreateProductFromOfferRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{50}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *CreateProductFromOfferRequest) GetOfferId() string {
@@ -3003,7 +3326,7 @@ type UnmatchRequest struct {
 
 func (x *UnmatchRequest) Reset() {
 	*x = UnmatchRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[51]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3015,7 +3338,7 @@ func (x *UnmatchRequest) String() string {
 func (*UnmatchRequest) ProtoMessage() {}
 
 func (x *UnmatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[51]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3028,7 +3351,7 @@ func (x *UnmatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnmatchRequest.ProtoReflect.Descriptor instead.
 func (*UnmatchRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{51}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *UnmatchRequest) GetOfferId() string {
@@ -3047,7 +3370,7 @@ type UnmatchResponse struct {
 
 func (x *UnmatchResponse) Reset() {
 	*x = UnmatchResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[52]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3059,7 +3382,7 @@ func (x *UnmatchResponse) String() string {
 func (*UnmatchResponse) ProtoMessage() {}
 
 func (x *UnmatchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[52]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3072,7 +3395,7 @@ func (x *UnmatchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnmatchResponse.ProtoReflect.Descriptor instead.
 func (*UnmatchResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{52}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *UnmatchResponse) GetOk() bool {
@@ -3092,7 +3415,7 @@ type AutoProcessBatchRequest struct {
 
 func (x *AutoProcessBatchRequest) Reset() {
 	*x = AutoProcessBatchRequest{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[53]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3104,7 +3427,7 @@ func (x *AutoProcessBatchRequest) String() string {
 func (*AutoProcessBatchRequest) ProtoMessage() {}
 
 func (x *AutoProcessBatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[53]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3117,7 +3440,7 @@ func (x *AutoProcessBatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AutoProcessBatchRequest.ProtoReflect.Descriptor instead.
 func (*AutoProcessBatchRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{53}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *AutoProcessBatchRequest) GetBatchId() string {
@@ -3145,7 +3468,7 @@ type AutoProcessBatchResponse struct {
 
 func (x *AutoProcessBatchResponse) Reset() {
 	*x = AutoProcessBatchResponse{}
-	mi := &file_catalog_v1_catalog_proto_msgTypes[54]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3157,7 +3480,7 @@ func (x *AutoProcessBatchResponse) String() string {
 func (*AutoProcessBatchResponse) ProtoMessage() {}
 
 func (x *AutoProcessBatchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_v1_catalog_proto_msgTypes[54]
+	mi := &file_catalog_v1_catalog_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3170,7 +3493,7 @@ func (x *AutoProcessBatchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AutoProcessBatchResponse.ProtoReflect.Descriptor instead.
 func (*AutoProcessBatchResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{54}
+	return file_catalog_v1_catalog_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *AutoProcessBatchResponse) GetMatched() int32 {
@@ -3239,7 +3562,10 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"page_token\x18\x02 \x01(\tR\tpageToken\"s\n" +
 	"\x15ListSuppliersResponse\x122\n" +
 	"\tsuppliers\x18\x01 \x03(\v2\x14.catalog.v1.SupplierR\tsuppliers\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xca\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"7\n" +
+	"\vProductAttr\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\"\xb7\x02\n" +
 	"\aProduct\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -3249,20 +3575,47 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"\timage_url\x18\x05 \x01(\tR\bimageUrl\x12$\n" +
 	"\x0ecover_image_id\x18\x06 \x01(\tR\fcoverImageId\x12\x1f\n" +
 	"\vcategory_id\x18\a \x01(\tR\n" +
-	"categoryId\"\x82\x01\n" +
+	"categoryId\x12 \n" +
+	"\vdescription\x18\b \x01(\tR\vdescription\x12-\n" +
+	"\x05attrs\x18\t \x03(\v2\x17.catalog.v1.ProductAttrR\x05attrs\x12\x1a\n" +
+	"\barchived\x18\n" +
+	" \x01(\bR\barchived\"\x82\x01\n" +
 	"\x14CreateProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aarticle\x18\x02 \x01(\tR\aarticle\x12\x1b\n" +
 	"\timage_url\x18\x03 \x01(\tR\bimageUrl\x12\x1f\n" +
 	"\vcategory_id\x18\x04 \x01(\tR\n" +
-	"categoryId\"i\n" +
+	"categoryId\"\xe2\x01\n" +
+	"\x14UpdateProductRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
+	"\aarticle\x18\x03 \x01(\tR\aarticle\x12 \n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription\x12-\n" +
+	"\x05attrs\x18\x05 \x03(\v2\x17.catalog.v1.ProductAttrR\x05attrs\x12\x1a\n" +
+	"\barchived\x18\x06 \x01(\bR\barchived\x12\x1f\n" +
+	"\vcategory_id\x18\a \x01(\tR\n" +
+	"categoryId\"&\n" +
+	"\x14DeleteProductRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"'\n" +
+	"\x15DeleteProductResponse\x12\x0e\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\"\xb6\x02\n" +
 	"\x13ListProductsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1f\n" +
 	"\vcategory_id\x18\x03 \x01(\tR\n" +
-	"categoryId\"G\n" +
+	"categoryId\x12\x16\n" +
+	"\x06offset\x18\x04 \x01(\x05R\x06offset\x12)\n" +
+	"\x10include_archived\x18\x05 \x01(\bR\x0fincludeArchived\x12\x12\n" +
+	"\x04sort\x18\x06 \x01(\tR\x04sort\x12\x19\n" +
+	"\bin_stock\x18\a \x01(\bR\ainStock\x12\x1b\n" +
+	"\tprice_min\x18\b \x01(\x01R\bpriceMin\x12\x1b\n" +
+	"\tprice_max\x18\t \x01(\x01R\bpriceMax\x12\x1f\n" +
+	"\vsupplier_id\x18\n" +
+	" \x01(\tR\n" +
+	"supplierId\"]\n" +
 	"\x14ListProductsResponse\x12/\n" +
-	"\bproducts\x18\x01 \x03(\v2\x13.catalog.v1.ProductR\bproducts\"#\n" +
+	"\bproducts\x18\x01 \x03(\v2\x13.catalog.v1.ProductR\bproducts\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"#\n" +
 	"\x11GetProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"]\n" +
 	"\x19SetProductCategoryRequest\x12\x1f\n" +
@@ -3435,7 +3788,7 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"\x19SUPPLIER_TYPE_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13SUPPLIER_TYPE_EXCEL\x10\x01\x12\x15\n" +
 	"\x11SUPPLIER_TYPE_API\x10\x02\x12\x19\n" +
-	"\x15SUPPLIER_TYPE_PARSING\x10\x032\x99\x13\n" +
+	"\x15SUPPLIER_TYPE_PARSING\x10\x032\xb7\x14\n" +
 	"\x0eCatalogService\x12N\n" +
 	"\vHealthCheck\x12\x1e.catalog.v1.HealthCheckRequest\x1a\x1f.catalog.v1.HealthCheckResponse\x12I\n" +
 	"\x0eCreateSupplier\x12!.catalog.v1.CreateSupplierRequest\x1a\x14.catalog.v1.Supplier\x12I\n" +
@@ -3445,7 +3798,9 @@ const file_catalog_v1_catalog_proto_rawDesc = "" +
 	"\rCreateProduct\x12 .catalog.v1.CreateProductRequest\x1a\x13.catalog.v1.Product\x12Q\n" +
 	"\fListProducts\x12\x1f.catalog.v1.ListProductsRequest\x1a .catalog.v1.ListProductsResponse\x12@\n" +
 	"\n" +
-	"GetProduct\x12\x1d.catalog.v1.GetProductRequest\x1a\x13.catalog.v1.Product\x12c\n" +
+	"GetProduct\x12\x1d.catalog.v1.GetProductRequest\x1a\x13.catalog.v1.Product\x12F\n" +
+	"\rUpdateProduct\x12 .catalog.v1.UpdateProductRequest\x1a\x13.catalog.v1.Product\x12T\n" +
+	"\rDeleteProduct\x12 .catalog.v1.DeleteProductRequest\x1a!.catalog.v1.DeleteProductResponse\x12c\n" +
 	"\x12SetProductCategory\x12%.catalog.v1.SetProductCategoryRequest\x1a&.catalog.v1.SetProductCategoryResponse\x12W\n" +
 	"\x0eListCategories\x12!.catalog.v1.ListCategoriesRequest\x1a\".catalog.v1.ListCategoriesResponse\x12I\n" +
 	"\x0eCreateCategory\x12!.catalog.v1.CreateCategoryRequest\x1a\x14.catalog.v1.Category\x12I\n" +
@@ -3480,7 +3835,7 @@ func file_catalog_v1_catalog_proto_rawDescGZIP() []byte {
 }
 
 var file_catalog_v1_catalog_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_catalog_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 55)
+var file_catalog_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 59)
 var file_catalog_v1_catalog_proto_goTypes = []any{
 	(SupplierType)(0),                      // 0: catalog.v1.SupplierType
 	(*HealthCheckRequest)(nil),             // 1: catalog.v1.HealthCheckRequest
@@ -3492,126 +3847,136 @@ var file_catalog_v1_catalog_proto_goTypes = []any{
 	(*DeleteSupplierResponse)(nil),         // 7: catalog.v1.DeleteSupplierResponse
 	(*ListSuppliersRequest)(nil),           // 8: catalog.v1.ListSuppliersRequest
 	(*ListSuppliersResponse)(nil),          // 9: catalog.v1.ListSuppliersResponse
-	(*Product)(nil),                        // 10: catalog.v1.Product
-	(*CreateProductRequest)(nil),           // 11: catalog.v1.CreateProductRequest
-	(*ListProductsRequest)(nil),            // 12: catalog.v1.ListProductsRequest
-	(*ListProductsResponse)(nil),           // 13: catalog.v1.ListProductsResponse
-	(*GetProductRequest)(nil),              // 14: catalog.v1.GetProductRequest
-	(*SetProductCategoryRequest)(nil),      // 15: catalog.v1.SetProductCategoryRequest
-	(*SetProductCategoryResponse)(nil),     // 16: catalog.v1.SetProductCategoryResponse
-	(*Category)(nil),                       // 17: catalog.v1.Category
-	(*ListCategoriesRequest)(nil),          // 18: catalog.v1.ListCategoriesRequest
-	(*ListCategoriesResponse)(nil),         // 19: catalog.v1.ListCategoriesResponse
-	(*CreateCategoryRequest)(nil),          // 20: catalog.v1.CreateCategoryRequest
-	(*UpdateCategoryRequest)(nil),          // 21: catalog.v1.UpdateCategoryRequest
-	(*DeleteCategoryRequest)(nil),          // 22: catalog.v1.DeleteCategoryRequest
-	(*DeleteCategoryResponse)(nil),         // 23: catalog.v1.DeleteCategoryResponse
-	(*SupplierCategory)(nil),               // 24: catalog.v1.SupplierCategory
-	(*ListSupplierCategoriesRequest)(nil),  // 25: catalog.v1.ListSupplierCategoriesRequest
-	(*ListSupplierCategoriesResponse)(nil), // 26: catalog.v1.ListSupplierCategoriesResponse
-	(*MapSupplierCategoryRequest)(nil),     // 27: catalog.v1.MapSupplierCategoryRequest
-	(*MapSupplierCategoryResponse)(nil),    // 28: catalog.v1.MapSupplierCategoryResponse
-	(*ApplyCategoryMappingsRequest)(nil),   // 29: catalog.v1.ApplyCategoryMappingsRequest
-	(*ApplyCategoryMappingsResponse)(nil),  // 30: catalog.v1.ApplyCategoryMappingsResponse
-	(*WipeDataRequest)(nil),                // 31: catalog.v1.WipeDataRequest
-	(*WipeDataResponse)(nil),               // 32: catalog.v1.WipeDataResponse
-	(*ProductImage)(nil),                   // 33: catalog.v1.ProductImage
-	(*ListProductImagesRequest)(nil),       // 34: catalog.v1.ListProductImagesRequest
-	(*ListProductImagesResponse)(nil),      // 35: catalog.v1.ListProductImagesResponse
-	(*AddProductImageRequest)(nil),         // 36: catalog.v1.AddProductImageRequest
-	(*DeleteProductImageRequest)(nil),      // 37: catalog.v1.DeleteProductImageRequest
-	(*DeleteProductImageResponse)(nil),     // 38: catalog.v1.DeleteProductImageResponse
-	(*ReorderProductImagesRequest)(nil),    // 39: catalog.v1.ReorderProductImagesRequest
-	(*GetProductImageRequest)(nil),         // 40: catalog.v1.GetProductImageRequest
-	(*GetProductImageResponse)(nil),        // 41: catalog.v1.GetProductImageResponse
-	(*Candidate)(nil),                      // 42: catalog.v1.Candidate
-	(*OfferSuggestion)(nil),                // 43: catalog.v1.OfferSuggestion
-	(*SuggestMatchesRequest)(nil),          // 44: catalog.v1.SuggestMatchesRequest
-	(*SuggestMatchesResponse)(nil),         // 45: catalog.v1.SuggestMatchesResponse
-	(*UnmatchedOffer)(nil),                 // 46: catalog.v1.UnmatchedOffer
-	(*ListUnmatchedOffersRequest)(nil),     // 47: catalog.v1.ListUnmatchedOffersRequest
-	(*ListUnmatchedOffersResponse)(nil),    // 48: catalog.v1.ListUnmatchedOffersResponse
-	(*Match)(nil),                          // 49: catalog.v1.Match
-	(*ConfirmMatchRequest)(nil),            // 50: catalog.v1.ConfirmMatchRequest
-	(*CreateProductFromOfferRequest)(nil),  // 51: catalog.v1.CreateProductFromOfferRequest
-	(*UnmatchRequest)(nil),                 // 52: catalog.v1.UnmatchRequest
-	(*UnmatchResponse)(nil),                // 53: catalog.v1.UnmatchResponse
-	(*AutoProcessBatchRequest)(nil),        // 54: catalog.v1.AutoProcessBatchRequest
-	(*AutoProcessBatchResponse)(nil),       // 55: catalog.v1.AutoProcessBatchResponse
+	(*ProductAttr)(nil),                    // 10: catalog.v1.ProductAttr
+	(*Product)(nil),                        // 11: catalog.v1.Product
+	(*CreateProductRequest)(nil),           // 12: catalog.v1.CreateProductRequest
+	(*UpdateProductRequest)(nil),           // 13: catalog.v1.UpdateProductRequest
+	(*DeleteProductRequest)(nil),           // 14: catalog.v1.DeleteProductRequest
+	(*DeleteProductResponse)(nil),          // 15: catalog.v1.DeleteProductResponse
+	(*ListProductsRequest)(nil),            // 16: catalog.v1.ListProductsRequest
+	(*ListProductsResponse)(nil),           // 17: catalog.v1.ListProductsResponse
+	(*GetProductRequest)(nil),              // 18: catalog.v1.GetProductRequest
+	(*SetProductCategoryRequest)(nil),      // 19: catalog.v1.SetProductCategoryRequest
+	(*SetProductCategoryResponse)(nil),     // 20: catalog.v1.SetProductCategoryResponse
+	(*Category)(nil),                       // 21: catalog.v1.Category
+	(*ListCategoriesRequest)(nil),          // 22: catalog.v1.ListCategoriesRequest
+	(*ListCategoriesResponse)(nil),         // 23: catalog.v1.ListCategoriesResponse
+	(*CreateCategoryRequest)(nil),          // 24: catalog.v1.CreateCategoryRequest
+	(*UpdateCategoryRequest)(nil),          // 25: catalog.v1.UpdateCategoryRequest
+	(*DeleteCategoryRequest)(nil),          // 26: catalog.v1.DeleteCategoryRequest
+	(*DeleteCategoryResponse)(nil),         // 27: catalog.v1.DeleteCategoryResponse
+	(*SupplierCategory)(nil),               // 28: catalog.v1.SupplierCategory
+	(*ListSupplierCategoriesRequest)(nil),  // 29: catalog.v1.ListSupplierCategoriesRequest
+	(*ListSupplierCategoriesResponse)(nil), // 30: catalog.v1.ListSupplierCategoriesResponse
+	(*MapSupplierCategoryRequest)(nil),     // 31: catalog.v1.MapSupplierCategoryRequest
+	(*MapSupplierCategoryResponse)(nil),    // 32: catalog.v1.MapSupplierCategoryResponse
+	(*ApplyCategoryMappingsRequest)(nil),   // 33: catalog.v1.ApplyCategoryMappingsRequest
+	(*ApplyCategoryMappingsResponse)(nil),  // 34: catalog.v1.ApplyCategoryMappingsResponse
+	(*WipeDataRequest)(nil),                // 35: catalog.v1.WipeDataRequest
+	(*WipeDataResponse)(nil),               // 36: catalog.v1.WipeDataResponse
+	(*ProductImage)(nil),                   // 37: catalog.v1.ProductImage
+	(*ListProductImagesRequest)(nil),       // 38: catalog.v1.ListProductImagesRequest
+	(*ListProductImagesResponse)(nil),      // 39: catalog.v1.ListProductImagesResponse
+	(*AddProductImageRequest)(nil),         // 40: catalog.v1.AddProductImageRequest
+	(*DeleteProductImageRequest)(nil),      // 41: catalog.v1.DeleteProductImageRequest
+	(*DeleteProductImageResponse)(nil),     // 42: catalog.v1.DeleteProductImageResponse
+	(*ReorderProductImagesRequest)(nil),    // 43: catalog.v1.ReorderProductImagesRequest
+	(*GetProductImageRequest)(nil),         // 44: catalog.v1.GetProductImageRequest
+	(*GetProductImageResponse)(nil),        // 45: catalog.v1.GetProductImageResponse
+	(*Candidate)(nil),                      // 46: catalog.v1.Candidate
+	(*OfferSuggestion)(nil),                // 47: catalog.v1.OfferSuggestion
+	(*SuggestMatchesRequest)(nil),          // 48: catalog.v1.SuggestMatchesRequest
+	(*SuggestMatchesResponse)(nil),         // 49: catalog.v1.SuggestMatchesResponse
+	(*UnmatchedOffer)(nil),                 // 50: catalog.v1.UnmatchedOffer
+	(*ListUnmatchedOffersRequest)(nil),     // 51: catalog.v1.ListUnmatchedOffersRequest
+	(*ListUnmatchedOffersResponse)(nil),    // 52: catalog.v1.ListUnmatchedOffersResponse
+	(*Match)(nil),                          // 53: catalog.v1.Match
+	(*ConfirmMatchRequest)(nil),            // 54: catalog.v1.ConfirmMatchRequest
+	(*CreateProductFromOfferRequest)(nil),  // 55: catalog.v1.CreateProductFromOfferRequest
+	(*UnmatchRequest)(nil),                 // 56: catalog.v1.UnmatchRequest
+	(*UnmatchResponse)(nil),                // 57: catalog.v1.UnmatchResponse
+	(*AutoProcessBatchRequest)(nil),        // 58: catalog.v1.AutoProcessBatchRequest
+	(*AutoProcessBatchResponse)(nil),       // 59: catalog.v1.AutoProcessBatchResponse
 }
 var file_catalog_v1_catalog_proto_depIdxs = []int32{
 	0,  // 0: catalog.v1.Supplier.type:type_name -> catalog.v1.SupplierType
 	0,  // 1: catalog.v1.CreateSupplierRequest.type:type_name -> catalog.v1.SupplierType
 	0,  // 2: catalog.v1.UpdateSupplierRequest.type:type_name -> catalog.v1.SupplierType
 	3,  // 3: catalog.v1.ListSuppliersResponse.suppliers:type_name -> catalog.v1.Supplier
-	10, // 4: catalog.v1.ListProductsResponse.products:type_name -> catalog.v1.Product
-	17, // 5: catalog.v1.ListCategoriesResponse.categories:type_name -> catalog.v1.Category
-	24, // 6: catalog.v1.ListSupplierCategoriesResponse.items:type_name -> catalog.v1.SupplierCategory
-	33, // 7: catalog.v1.ListProductImagesResponse.images:type_name -> catalog.v1.ProductImage
-	42, // 8: catalog.v1.OfferSuggestion.candidates:type_name -> catalog.v1.Candidate
-	43, // 9: catalog.v1.SuggestMatchesResponse.suggestions:type_name -> catalog.v1.OfferSuggestion
-	46, // 10: catalog.v1.ListUnmatchedOffersResponse.offers:type_name -> catalog.v1.UnmatchedOffer
-	1,  // 11: catalog.v1.CatalogService.HealthCheck:input_type -> catalog.v1.HealthCheckRequest
-	4,  // 12: catalog.v1.CatalogService.CreateSupplier:input_type -> catalog.v1.CreateSupplierRequest
-	5,  // 13: catalog.v1.CatalogService.UpdateSupplier:input_type -> catalog.v1.UpdateSupplierRequest
-	6,  // 14: catalog.v1.CatalogService.DeleteSupplier:input_type -> catalog.v1.DeleteSupplierRequest
-	8,  // 15: catalog.v1.CatalogService.ListSuppliers:input_type -> catalog.v1.ListSuppliersRequest
-	11, // 16: catalog.v1.CatalogService.CreateProduct:input_type -> catalog.v1.CreateProductRequest
-	12, // 17: catalog.v1.CatalogService.ListProducts:input_type -> catalog.v1.ListProductsRequest
-	14, // 18: catalog.v1.CatalogService.GetProduct:input_type -> catalog.v1.GetProductRequest
-	15, // 19: catalog.v1.CatalogService.SetProductCategory:input_type -> catalog.v1.SetProductCategoryRequest
-	18, // 20: catalog.v1.CatalogService.ListCategories:input_type -> catalog.v1.ListCategoriesRequest
-	20, // 21: catalog.v1.CatalogService.CreateCategory:input_type -> catalog.v1.CreateCategoryRequest
-	21, // 22: catalog.v1.CatalogService.UpdateCategory:input_type -> catalog.v1.UpdateCategoryRequest
-	22, // 23: catalog.v1.CatalogService.DeleteCategory:input_type -> catalog.v1.DeleteCategoryRequest
-	25, // 24: catalog.v1.CatalogService.ListSupplierCategories:input_type -> catalog.v1.ListSupplierCategoriesRequest
-	27, // 25: catalog.v1.CatalogService.MapSupplierCategory:input_type -> catalog.v1.MapSupplierCategoryRequest
-	29, // 26: catalog.v1.CatalogService.ApplyCategoryMappings:input_type -> catalog.v1.ApplyCategoryMappingsRequest
-	31, // 27: catalog.v1.CatalogService.WipeData:input_type -> catalog.v1.WipeDataRequest
-	34, // 28: catalog.v1.CatalogService.ListProductImages:input_type -> catalog.v1.ListProductImagesRequest
-	36, // 29: catalog.v1.CatalogService.AddProductImage:input_type -> catalog.v1.AddProductImageRequest
-	37, // 30: catalog.v1.CatalogService.DeleteProductImage:input_type -> catalog.v1.DeleteProductImageRequest
-	39, // 31: catalog.v1.CatalogService.ReorderProductImages:input_type -> catalog.v1.ReorderProductImagesRequest
-	40, // 32: catalog.v1.CatalogService.GetProductImage:input_type -> catalog.v1.GetProductImageRequest
-	44, // 33: catalog.v1.CatalogService.SuggestMatches:input_type -> catalog.v1.SuggestMatchesRequest
-	47, // 34: catalog.v1.CatalogService.ListUnmatchedOffers:input_type -> catalog.v1.ListUnmatchedOffersRequest
-	50, // 35: catalog.v1.CatalogService.ConfirmMatch:input_type -> catalog.v1.ConfirmMatchRequest
-	51, // 36: catalog.v1.CatalogService.CreateProductFromOffer:input_type -> catalog.v1.CreateProductFromOfferRequest
-	52, // 37: catalog.v1.CatalogService.Unmatch:input_type -> catalog.v1.UnmatchRequest
-	54, // 38: catalog.v1.CatalogService.AutoProcessBatch:input_type -> catalog.v1.AutoProcessBatchRequest
-	2,  // 39: catalog.v1.CatalogService.HealthCheck:output_type -> catalog.v1.HealthCheckResponse
-	3,  // 40: catalog.v1.CatalogService.CreateSupplier:output_type -> catalog.v1.Supplier
-	3,  // 41: catalog.v1.CatalogService.UpdateSupplier:output_type -> catalog.v1.Supplier
-	7,  // 42: catalog.v1.CatalogService.DeleteSupplier:output_type -> catalog.v1.DeleteSupplierResponse
-	9,  // 43: catalog.v1.CatalogService.ListSuppliers:output_type -> catalog.v1.ListSuppliersResponse
-	10, // 44: catalog.v1.CatalogService.CreateProduct:output_type -> catalog.v1.Product
-	13, // 45: catalog.v1.CatalogService.ListProducts:output_type -> catalog.v1.ListProductsResponse
-	10, // 46: catalog.v1.CatalogService.GetProduct:output_type -> catalog.v1.Product
-	16, // 47: catalog.v1.CatalogService.SetProductCategory:output_type -> catalog.v1.SetProductCategoryResponse
-	19, // 48: catalog.v1.CatalogService.ListCategories:output_type -> catalog.v1.ListCategoriesResponse
-	17, // 49: catalog.v1.CatalogService.CreateCategory:output_type -> catalog.v1.Category
-	17, // 50: catalog.v1.CatalogService.UpdateCategory:output_type -> catalog.v1.Category
-	23, // 51: catalog.v1.CatalogService.DeleteCategory:output_type -> catalog.v1.DeleteCategoryResponse
-	26, // 52: catalog.v1.CatalogService.ListSupplierCategories:output_type -> catalog.v1.ListSupplierCategoriesResponse
-	28, // 53: catalog.v1.CatalogService.MapSupplierCategory:output_type -> catalog.v1.MapSupplierCategoryResponse
-	30, // 54: catalog.v1.CatalogService.ApplyCategoryMappings:output_type -> catalog.v1.ApplyCategoryMappingsResponse
-	32, // 55: catalog.v1.CatalogService.WipeData:output_type -> catalog.v1.WipeDataResponse
-	35, // 56: catalog.v1.CatalogService.ListProductImages:output_type -> catalog.v1.ListProductImagesResponse
-	33, // 57: catalog.v1.CatalogService.AddProductImage:output_type -> catalog.v1.ProductImage
-	38, // 58: catalog.v1.CatalogService.DeleteProductImage:output_type -> catalog.v1.DeleteProductImageResponse
-	35, // 59: catalog.v1.CatalogService.ReorderProductImages:output_type -> catalog.v1.ListProductImagesResponse
-	41, // 60: catalog.v1.CatalogService.GetProductImage:output_type -> catalog.v1.GetProductImageResponse
-	45, // 61: catalog.v1.CatalogService.SuggestMatches:output_type -> catalog.v1.SuggestMatchesResponse
-	48, // 62: catalog.v1.CatalogService.ListUnmatchedOffers:output_type -> catalog.v1.ListUnmatchedOffersResponse
-	49, // 63: catalog.v1.CatalogService.ConfirmMatch:output_type -> catalog.v1.Match
-	49, // 64: catalog.v1.CatalogService.CreateProductFromOffer:output_type -> catalog.v1.Match
-	53, // 65: catalog.v1.CatalogService.Unmatch:output_type -> catalog.v1.UnmatchResponse
-	55, // 66: catalog.v1.CatalogService.AutoProcessBatch:output_type -> catalog.v1.AutoProcessBatchResponse
-	39, // [39:67] is the sub-list for method output_type
-	11, // [11:39] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	10, // 4: catalog.v1.Product.attrs:type_name -> catalog.v1.ProductAttr
+	10, // 5: catalog.v1.UpdateProductRequest.attrs:type_name -> catalog.v1.ProductAttr
+	11, // 6: catalog.v1.ListProductsResponse.products:type_name -> catalog.v1.Product
+	21, // 7: catalog.v1.ListCategoriesResponse.categories:type_name -> catalog.v1.Category
+	28, // 8: catalog.v1.ListSupplierCategoriesResponse.items:type_name -> catalog.v1.SupplierCategory
+	37, // 9: catalog.v1.ListProductImagesResponse.images:type_name -> catalog.v1.ProductImage
+	46, // 10: catalog.v1.OfferSuggestion.candidates:type_name -> catalog.v1.Candidate
+	47, // 11: catalog.v1.SuggestMatchesResponse.suggestions:type_name -> catalog.v1.OfferSuggestion
+	50, // 12: catalog.v1.ListUnmatchedOffersResponse.offers:type_name -> catalog.v1.UnmatchedOffer
+	1,  // 13: catalog.v1.CatalogService.HealthCheck:input_type -> catalog.v1.HealthCheckRequest
+	4,  // 14: catalog.v1.CatalogService.CreateSupplier:input_type -> catalog.v1.CreateSupplierRequest
+	5,  // 15: catalog.v1.CatalogService.UpdateSupplier:input_type -> catalog.v1.UpdateSupplierRequest
+	6,  // 16: catalog.v1.CatalogService.DeleteSupplier:input_type -> catalog.v1.DeleteSupplierRequest
+	8,  // 17: catalog.v1.CatalogService.ListSuppliers:input_type -> catalog.v1.ListSuppliersRequest
+	12, // 18: catalog.v1.CatalogService.CreateProduct:input_type -> catalog.v1.CreateProductRequest
+	16, // 19: catalog.v1.CatalogService.ListProducts:input_type -> catalog.v1.ListProductsRequest
+	18, // 20: catalog.v1.CatalogService.GetProduct:input_type -> catalog.v1.GetProductRequest
+	13, // 21: catalog.v1.CatalogService.UpdateProduct:input_type -> catalog.v1.UpdateProductRequest
+	14, // 22: catalog.v1.CatalogService.DeleteProduct:input_type -> catalog.v1.DeleteProductRequest
+	19, // 23: catalog.v1.CatalogService.SetProductCategory:input_type -> catalog.v1.SetProductCategoryRequest
+	22, // 24: catalog.v1.CatalogService.ListCategories:input_type -> catalog.v1.ListCategoriesRequest
+	24, // 25: catalog.v1.CatalogService.CreateCategory:input_type -> catalog.v1.CreateCategoryRequest
+	25, // 26: catalog.v1.CatalogService.UpdateCategory:input_type -> catalog.v1.UpdateCategoryRequest
+	26, // 27: catalog.v1.CatalogService.DeleteCategory:input_type -> catalog.v1.DeleteCategoryRequest
+	29, // 28: catalog.v1.CatalogService.ListSupplierCategories:input_type -> catalog.v1.ListSupplierCategoriesRequest
+	31, // 29: catalog.v1.CatalogService.MapSupplierCategory:input_type -> catalog.v1.MapSupplierCategoryRequest
+	33, // 30: catalog.v1.CatalogService.ApplyCategoryMappings:input_type -> catalog.v1.ApplyCategoryMappingsRequest
+	35, // 31: catalog.v1.CatalogService.WipeData:input_type -> catalog.v1.WipeDataRequest
+	38, // 32: catalog.v1.CatalogService.ListProductImages:input_type -> catalog.v1.ListProductImagesRequest
+	40, // 33: catalog.v1.CatalogService.AddProductImage:input_type -> catalog.v1.AddProductImageRequest
+	41, // 34: catalog.v1.CatalogService.DeleteProductImage:input_type -> catalog.v1.DeleteProductImageRequest
+	43, // 35: catalog.v1.CatalogService.ReorderProductImages:input_type -> catalog.v1.ReorderProductImagesRequest
+	44, // 36: catalog.v1.CatalogService.GetProductImage:input_type -> catalog.v1.GetProductImageRequest
+	48, // 37: catalog.v1.CatalogService.SuggestMatches:input_type -> catalog.v1.SuggestMatchesRequest
+	51, // 38: catalog.v1.CatalogService.ListUnmatchedOffers:input_type -> catalog.v1.ListUnmatchedOffersRequest
+	54, // 39: catalog.v1.CatalogService.ConfirmMatch:input_type -> catalog.v1.ConfirmMatchRequest
+	55, // 40: catalog.v1.CatalogService.CreateProductFromOffer:input_type -> catalog.v1.CreateProductFromOfferRequest
+	56, // 41: catalog.v1.CatalogService.Unmatch:input_type -> catalog.v1.UnmatchRequest
+	58, // 42: catalog.v1.CatalogService.AutoProcessBatch:input_type -> catalog.v1.AutoProcessBatchRequest
+	2,  // 43: catalog.v1.CatalogService.HealthCheck:output_type -> catalog.v1.HealthCheckResponse
+	3,  // 44: catalog.v1.CatalogService.CreateSupplier:output_type -> catalog.v1.Supplier
+	3,  // 45: catalog.v1.CatalogService.UpdateSupplier:output_type -> catalog.v1.Supplier
+	7,  // 46: catalog.v1.CatalogService.DeleteSupplier:output_type -> catalog.v1.DeleteSupplierResponse
+	9,  // 47: catalog.v1.CatalogService.ListSuppliers:output_type -> catalog.v1.ListSuppliersResponse
+	11, // 48: catalog.v1.CatalogService.CreateProduct:output_type -> catalog.v1.Product
+	17, // 49: catalog.v1.CatalogService.ListProducts:output_type -> catalog.v1.ListProductsResponse
+	11, // 50: catalog.v1.CatalogService.GetProduct:output_type -> catalog.v1.Product
+	11, // 51: catalog.v1.CatalogService.UpdateProduct:output_type -> catalog.v1.Product
+	15, // 52: catalog.v1.CatalogService.DeleteProduct:output_type -> catalog.v1.DeleteProductResponse
+	20, // 53: catalog.v1.CatalogService.SetProductCategory:output_type -> catalog.v1.SetProductCategoryResponse
+	23, // 54: catalog.v1.CatalogService.ListCategories:output_type -> catalog.v1.ListCategoriesResponse
+	21, // 55: catalog.v1.CatalogService.CreateCategory:output_type -> catalog.v1.Category
+	21, // 56: catalog.v1.CatalogService.UpdateCategory:output_type -> catalog.v1.Category
+	27, // 57: catalog.v1.CatalogService.DeleteCategory:output_type -> catalog.v1.DeleteCategoryResponse
+	30, // 58: catalog.v1.CatalogService.ListSupplierCategories:output_type -> catalog.v1.ListSupplierCategoriesResponse
+	32, // 59: catalog.v1.CatalogService.MapSupplierCategory:output_type -> catalog.v1.MapSupplierCategoryResponse
+	34, // 60: catalog.v1.CatalogService.ApplyCategoryMappings:output_type -> catalog.v1.ApplyCategoryMappingsResponse
+	36, // 61: catalog.v1.CatalogService.WipeData:output_type -> catalog.v1.WipeDataResponse
+	39, // 62: catalog.v1.CatalogService.ListProductImages:output_type -> catalog.v1.ListProductImagesResponse
+	37, // 63: catalog.v1.CatalogService.AddProductImage:output_type -> catalog.v1.ProductImage
+	42, // 64: catalog.v1.CatalogService.DeleteProductImage:output_type -> catalog.v1.DeleteProductImageResponse
+	39, // 65: catalog.v1.CatalogService.ReorderProductImages:output_type -> catalog.v1.ListProductImagesResponse
+	45, // 66: catalog.v1.CatalogService.GetProductImage:output_type -> catalog.v1.GetProductImageResponse
+	49, // 67: catalog.v1.CatalogService.SuggestMatches:output_type -> catalog.v1.SuggestMatchesResponse
+	52, // 68: catalog.v1.CatalogService.ListUnmatchedOffers:output_type -> catalog.v1.ListUnmatchedOffersResponse
+	53, // 69: catalog.v1.CatalogService.ConfirmMatch:output_type -> catalog.v1.Match
+	53, // 70: catalog.v1.CatalogService.CreateProductFromOffer:output_type -> catalog.v1.Match
+	57, // 71: catalog.v1.CatalogService.Unmatch:output_type -> catalog.v1.UnmatchResponse
+	59, // 72: catalog.v1.CatalogService.AutoProcessBatch:output_type -> catalog.v1.AutoProcessBatchResponse
+	43, // [43:73] is the sub-list for method output_type
+	13, // [13:43] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_catalog_v1_catalog_proto_init() }
@@ -3625,7 +3990,7 @@ func file_catalog_v1_catalog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_catalog_v1_catalog_proto_rawDesc), len(file_catalog_v1_catalog_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   55,
+			NumMessages:   59,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

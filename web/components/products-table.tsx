@@ -9,6 +9,7 @@ import {
   ChevronsRight,
   Columns3,
   Package,
+  Pencil,
 } from "lucide-react";
 
 import { imageUrl } from "@/lib/api";
@@ -24,6 +25,7 @@ import {
 } from "@tanstack/react-table";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -55,6 +57,9 @@ export interface ProductRow {
   image_url?: string;
   cover_image_id?: string;
   category_id?: string;
+  description?: string;
+  attrs?: { name: string; value: string }[];
+  archived?: boolean;
   created_at: string;
 }
 
@@ -87,6 +92,7 @@ const makeColumns = (
   onManageImages: (p: ProductRow) => void,
   categories: CategoryOption[],
   onSetCategory: (p: ProductRow, categoryID: string) => void,
+  onEdit: (p: ProductRow) => void,
 ): ColumnDef<ProductRow>[] => [
   {
     id: "image",
@@ -109,7 +115,19 @@ const makeColumns = (
   {
     accessorKey: "name",
     header: "Название",
-    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    cell: ({ row }) => (
+      <span className="flex items-center gap-2">
+        <span className="font-medium">{row.original.name}</span>
+        {row.original.archived && (
+          <Badge
+            variant="outline"
+            className="shrink-0 border-amber-200 bg-amber-50 text-amber-700"
+          >
+            скрыта
+          </Badge>
+        )}
+      </span>
+    ),
   },
   {
     accessorKey: "article",
@@ -155,16 +173,28 @@ const makeColumns = (
     id: "actions",
     header: "",
     cell: ({ row }) => (
-      <Button
-        size="icon"
-        variant="ghost"
-        className="size-8"
-        aria-label="Фото карточки"
-        title="Фото карточки"
-        onClick={() => onManageImages(row.original)}
-      >
-        <Camera className="size-4" />
-      </Button>
+      <span className="flex items-center gap-1">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-8"
+          aria-label="Фото карточки"
+          title="Фото карточки"
+          onClick={() => onManageImages(row.original)}
+        >
+          <Camera className="size-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-8"
+          aria-label="Редактировать карточку"
+          title="Редактировать карточку"
+          onClick={() => onEdit(row.original)}
+        >
+          <Pencil className="size-4" />
+        </Button>
+      </span>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -176,19 +206,21 @@ export function ProductsTable({
   categories = [],
   onManageImages,
   onSetCategory = () => {},
+  onEdit = () => {},
 }: {
   products: ProductRow[];
   categories?: CategoryOption[];
   onManageImages: (p: ProductRow) => void;
   onSetCategory?: (p: ProductRow, categoryID: string) => void;
+  onEdit?: (p: ProductRow) => void;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
   const columns = React.useMemo(
-    () => makeColumns(onManageImages, categories, onSetCategory),
-    [onManageImages, categories, onSetCategory],
+    () => makeColumns(onManageImages, categories, onSetCategory, onEdit),
+    [onManageImages, categories, onSetCategory, onEdit],
   );
 
   const table = useReactTable({

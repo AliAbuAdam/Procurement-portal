@@ -41,6 +41,35 @@ func (r *ProductImageRepository) ListByProduct(ctx context.Context, productID st
 	return out, rows.Err()
 }
 
+// S3KeysByProduct — непустые S3-ключи всех фото карточки (оригиналы и
+// миниатюры) для очистки хранилища при удалении карточки.
+func (r *ProductImageRepository) S3KeysByProduct(ctx context.Context, productID string) ([]string, error) {
+	const q = `
+		SELECT s3_key, s3_thumb_key
+		FROM catalog.product_images
+		WHERE product_id = $1`
+	rows, err := r.db.Querier(ctx).Query(ctx, q, productID)
+	if err != nil {
+		return nil, fmt.Errorf("query image s3 keys: %w", err)
+	}
+	defer rows.Close()
+
+	var keys []string
+	for rows.Next() {
+		var key, thumbKey string
+		if err := rows.Scan(&key, &thumbKey); err != nil {
+			return nil, fmt.Errorf("scan image s3 keys: %w", err)
+		}
+		if key != "" {
+			keys = append(keys, key)
+		}
+		if thumbKey != "" {
+			keys = append(keys, thumbKey)
+		}
+	}
+	return keys, rows.Err()
+}
+
 func (r *ProductImageRepository) CountByProduct(ctx context.Context, productID string) (int, error) {
 	var n int
 	err := r.db.Querier(ctx).

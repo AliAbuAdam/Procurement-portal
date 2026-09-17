@@ -26,6 +26,9 @@ interface Product {
   image_url?: string;
   cover_image_id?: string;
   category_id?: string;
+  description?: string;
+  attrs?: { name: string; value: string }[];
+  archived?: boolean;
 }
 
 interface ProductImage {
@@ -183,7 +186,19 @@ export default function ProductPage() {
 
         {/* Информация и цены */}
         <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-semibold">{product.name}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold">{product.name}</h1>
+            {product.archived && (
+              <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                скрыта с витрины
+              </span>
+            )}
+          </div>
+          {product.description && (
+            <p className="text-sm whitespace-pre-line text-[var(--muted-foreground)]">
+              {product.description}
+            </p>
+          )}
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
             <dt className="text-[var(--muted-foreground)]">Артикул</dt>
             <dd>{product.article || "—"}</dd>
@@ -191,6 +206,12 @@ export default function ProductPage() {
             <dd>
               {path.length ? path.map((c) => c.name).join(" / ") : "без категории"}
             </dd>
+            {(product.attrs ?? []).map((a, i) => (
+              <span key={i} className="contents">
+                <dt className="text-[var(--muted-foreground)]">{a.name}</dt>
+                <dd>{a.value || "—"}</dd>
+              </span>
+            ))}
           </dl>
 
           <div className="rounded-lg border border-[var(--border)] p-4">

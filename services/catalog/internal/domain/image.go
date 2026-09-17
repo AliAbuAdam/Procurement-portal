@@ -40,6 +40,9 @@ type ImageStore interface {
 type ProductImageRepository interface {
 	// ListByProduct — метаданные фото карточки по порядку (без байтов).
 	ListByProduct(ctx context.Context, productID string) ([]*ProductImage, error)
+	// S3KeysByProduct — непустые S3-ключи всех фото карточки (для очистки
+	// хранилища при удалении карточки).
+	S3KeysByProduct(ctx context.Context, productID string) ([]string, error)
 	CountByProduct(ctx context.Context, productID string) (int, error)
 	Insert(ctx context.Context, img *ProductImage) error
 	// GetData — content_type, байты (если фото в Postgres) и ключ S3

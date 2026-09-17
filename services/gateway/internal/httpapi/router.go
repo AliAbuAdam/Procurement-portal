@@ -45,6 +45,8 @@ func NewRouter(h *Handler, k *auth.Kratos, allowedOrigins []string) http.Handler
 		r.Get("/products", h.ListProducts)
 		r.Post("/products", h.CreateProduct)
 		r.Get("/products/{id}", h.GetProduct)
+		r.Put("/products/{id}", h.UpdateProduct)
+		r.Delete("/products/{id}", h.DeleteProduct)
 		r.Put("/products/category", h.SetProductCategory)
 		r.Post("/products/min-prices", h.MinPrices)
 

@@ -288,7 +288,7 @@ function OfferRow({
     try {
       const d = await apiFetch<{
         products?: { id: string; name: string; article?: string }[];
-      }>(`/api/v1/products?q=${encodeURIComponent(q.trim())}`);
+      }>(`/api/v1/products?include_archived=1&q=${encodeURIComponent(q.trim())}`);
       setResults(
         (d.products ?? []).map((p) => ({
           product_id: p.id,

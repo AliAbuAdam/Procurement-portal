@@ -142,7 +142,18 @@ func (s *CatalogServer) CreateProduct(ctx context.Context, req *catalogv1.Create
 }
 
 func (s *CatalogServer) ListProducts(ctx context.Context, req *catalogv1.ListProductsRequest) (*catalogv1.ListProductsResponse, error) {
-	list, err := s.matching.ListProducts(ctx, req.GetQuery(), req.GetCategoryId(), int(req.GetPageSize()))
+	list, total, err := s.matching.ListProducts(ctx, domain.ProductFilter{
+		Query:           req.GetQuery(),
+		CategoryID:      req.GetCategoryId(),
+		IncludeArchived: req.GetIncludeArchived(),
+		Sort:            req.GetSort(),
+		InStock:         req.GetInStock(),
+		PriceMin:        req.GetPriceMin(),
+		PriceMax:        req.GetPriceMax(),
+		SupplierID:      req.GetSupplierId(),
+		Limit:           int(req.GetPageSize()),
+		Offset:          int(req.GetOffset()),
+	})
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -150,7 +161,34 @@ func (s *CatalogServer) ListProducts(ctx context.Context, req *catalogv1.ListPro
 	for _, p := range list {
 		out = append(out, productToProto(p))
 	}
-	return &catalogv1.ListProductsResponse{Products: out}, nil
+	return &catalogv1.ListProductsResponse{Products: out, Total: int32(total)}, nil
+}
+
+func (s *CatalogServer) UpdateProduct(ctx context.Context, req *catalogv1.UpdateProductRequest) (*catalogv1.Product, error) {
+	attrs := make([]domain.ProductAttr, 0, len(req.GetAttrs()))
+	for _, a := range req.GetAttrs() {
+		attrs = append(attrs, domain.ProductAttr{Name: a.GetName(), Value: a.GetValue()})
+	}
+	p, err := s.matching.UpdateProduct(ctx, &domain.Product{
+		ID:          req.GetId(),
+		Name:        req.GetName(),
+		Article:     req.GetArticle(),
+		Description: req.GetDescription(),
+		Attrs:       attrs,
+		Archived:    req.GetArchived(),
+		CategoryID:  req.GetCategoryId(),
+	})
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return productToProto(p), nil
+}
+
+func (s *CatalogServer) DeleteProduct(ctx context.Context, req *catalogv1.DeleteProductRequest) (*catalogv1.DeleteProductResponse, error) {
+	if err := s.matching.DeleteProduct(ctx, req.GetId()); err != nil {
+		return nil, toStatus(err)
+	}
+	return &catalogv1.DeleteProductResponse{Ok: true}, nil
 }
 
 func (s *CatalogServer) GetProduct(ctx context.Context, req *catalogv1.GetProductRequest) (*catalogv1.Product, error) {
@@ -339,6 +377,10 @@ func (s *CatalogServer) Unmatch(ctx context.Context, req *catalogv1.UnmatchReque
 // --- маппинг ---
 
 func productToProto(p *domain.Product) *catalogv1.Product {
+	attrs := make([]*catalogv1.ProductAttr, 0, len(p.Attrs))
+	for _, a := range p.Attrs {
+		attrs = append(attrs, &catalogv1.ProductAttr{Name: a.Name, Value: a.Value})
+	}
 	return &catalogv1.Product{
 		Id:           p.ID,
 		Name:         p.Name,
@@ -346,6 +388,9 @@ func productToProto(p *domain.Product) *catalogv1.Product {
 		ImageUrl:     p.ImageURL,
 		CoverImageId: p.CoverImageID,
 		CategoryId:   p.CategoryID,
+		Description:  p.Description,
+		Attrs:        attrs,
+		Archived:     p.Archived,
 		CreatedAt:    p.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
 	}
 }

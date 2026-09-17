@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { buildCategoryTree, flattenTree, type Category } from "@/lib/catalog";
 import { compressImage } from "@/lib/image";
 import { LoadingState } from "@/components/loading-state";
+import { ProductEditSheet } from "@/components/product-edit-sheet";
 import {
   MAX_IMAGES,
   ProductImagesSheet,
@@ -29,10 +30,15 @@ type ViewMode = "cards" | "table";
 
 const NO_CATEGORY = "none";
 
+// Размер страницы = максимум бэкенда; «Показать ещё» дозагружает следующую.
+const PAGE_SIZE = 200;
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<ProductRow[]>([]);
+  const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [view, setView] = useState<ViewMode>("cards");
 
@@ -45,6 +51,8 @@ export default function ProductsPage() {
 
   // Карточка, чья галерея открыта в боковой панели.
   const [imagesFor, setImagesFor] = useState<ProductRow | null>(null);
+  // Карточка, открытая в панели редактирования.
+  const [editFor, setEditFor] = useState<ProductRow | null>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const flatCategories = useMemo(
@@ -58,19 +66,30 @@ export default function ProductsPage() {
       .catch(() => setCategories([]));
   }, []);
 
-  const load = useCallback(async (q: string) => {
-    setLoading(true);
+  // Админ-список видит и скрытые карточки (include_archived).
+  // offset > 0 — дозагрузка следующей страницы («Показать ещё»).
+  const load = useCallback(async (q: string, offset = 0) => {
+    if (offset === 0) setLoading(true);
+    else setLoadingMore(true);
     setError("");
     try {
-      const path = q.trim()
-        ? `/api/v1/products?q=${encodeURIComponent(q.trim())}`
-        : "/api/v1/products";
-      const data = await apiFetch<{ products?: ProductRow[] }>(path);
-      setProducts(data.products ?? []);
+      const params = new URLSearchParams({
+        include_archived: "1",
+        page_size: String(PAGE_SIZE),
+      });
+      if (q.trim()) params.set("q", q.trim());
+      if (offset > 0) params.set("offset", String(offset));
+      const data = await apiFetch<{ products?: ProductRow[]; total?: number }>(
+        `/api/v1/products?${params}`,
+      );
+      const page = data.products ?? [];
+      setProducts((prev) => (offset === 0 ? page : [...prev, ...page]));
+      setTotal(data.total ?? page.length);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
@@ -199,12 +218,12 @@ export default function ProductsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-1 items-end gap-2">
           <div className="flex flex-1 flex-col gap-2">
-            <Label htmlFor="search">Поиск по названию</Label>
+            <Label htmlFor="search">Поиск по названию или артикулу</Label>
             <Input
               id="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="начните вводить название…"
+              placeholder="начните вводить название или артикул…"
             />
           </div>
           {query && (
@@ -242,12 +261,17 @@ export default function ProductsPage() {
           {query ? "Ничего не найдено." : "Карточек пока нет."}
         </p>
       ) : view === "cards" ? (
-        <ProductsGrid products={products} onManageImages={setImagesFor} />
+        <ProductsGrid
+          products={products}
+          onManageImages={setImagesFor}
+          onEdit={setEditFor}
+        />
       ) : (
         <ProductsTable
           products={products}
           categories={flatCategories}
           onManageImages={setImagesFor}
+          onEdit={setEditFor}
           onSetCategory={async (p, categoryID) => {
             try {
               await apiFetch("/api/v1/products/category", {
@@ -267,9 +291,30 @@ export default function ProductsPage() {
         />
       )}
 
+      {!loading && products.length < total && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            disabled={loadingMore}
+            onClick={() => load(query, products.length)}
+          >
+            {loadingMore
+              ? "Загрузка…"
+              : `Показать ещё (${products.length} из ${total})`}
+          </Button>
+        </div>
+      )}
+
       <ProductImagesSheet
         product={imagesFor}
         onClose={() => setImagesFor(null)}
+        onChanged={() => load(query)}
+      />
+
+      <ProductEditSheet
+        product={editFor}
+        categories={flatCategories}
+        onClose={() => setEditFor(null)}
         onChanged={() => load(query)}
       />
     </div>

@@ -16,10 +16,15 @@ service CatalogService {
 
   // --- Номенклатура (products) ---
   rpc CreateProduct(CreateProductRequest) returns (Product);
-  // ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
-  // category_id дополнительно сужает выборку категорией и всеми её подкатегориями.
+  // ListProducts: без query — последние карточки; с query — триграммный поиск
+  // по имени и артикулу. category_id сужает выборку категорией и подкатегориями;
+  // остальные фильтры/сортировка/пагинация — в полях запроса.
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
   rpc GetProduct(GetProductRequest) returns (Product);
+  // Обновить карточку (полная замена редактируемых полей).
+  rpc UpdateProduct(UpdateProductRequest) returns (Product);
+  // Удалить карточку: сопоставления и фото удаляются каскадом (S3 чистится).
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
   // Назначить категорию нескольким карточкам (пустой category_id — снять).
   rpc SetProductCategory(SetProductCategoryRequest) returns (SetProductCategoryResponse);
 
@@ -129,6 +134,12 @@ message ListSuppliersResponse {
 
 // --- Номенклатура (products) ---
 
+// ProductAttr — одна характеристика карточки («Материал» → «Сталь»).
+message ProductAttr {
+  string name = 1;
+  string value = 2;
+}
+
 message Product {
   string id = 1;
   string name = 2;
@@ -137,6 +148,9 @@ message Product {
   string image_url = 5;          // легаси: внешний URL фото (для старых карточек)
   string cover_image_id = 6;     // id первого фото галереи (пусто, если фото нет)
   string category_id = 7;        // категория витрины (пусто — без категории)
+  string description = 8;        // описание товара (может быть пустым)
+  repeated ProductAttr attrs = 9; // характеристики (порядок задаёт пользователь)
+  bool archived = 10;            // скрыт с витрины (не выдаётся без include_archived)
 }
 
 message CreateProductRequest {
@@ -146,16 +160,44 @@ message CreateProductRequest {
   string category_id = 4;        // опц.: сразу положить в категорию
 }
 
+message UpdateProductRequest {
+  string id = 1;
+  string name = 2;               // обязательно (полная замена полей)
+  string article = 3;
+  string description = 4;
+  repeated ProductAttr attrs = 5;
+  bool archived = 6;
+  string category_id = 7;        // пусто — снять категорию
+}
+
+message DeleteProductRequest {
+  string id = 1;
+}
+
+message DeleteProductResponse {
+  bool ok = 1;
+}
+
 message ListProductsRequest {
-  string query = 1;       // непустой -> триграммный поиск по имени
+  string query = 1;       // непустой -> триграммный поиск по имени и артикулу
   int32 page_size = 2;
   // Непустой -> только эта категория и её подкатегории.
   // Спец-значение "none" -> только товары без категории.
   string category_id = 3;
+  int32 offset = 4;             // пагинация (LIMIT page_size OFFSET offset)
+  bool include_archived = 5;    // true — включая скрытые (админ-экраны)
+  // "" | "new" — новые сверху; "name" — по алфавиту;
+  // "price_asc" | "price_desc" — по минимальной актуальной цене.
+  string sort = 6;
+  bool in_stock = 7;            // true — только товары с наличием у поставщиков
+  double price_min = 8;         // фильтр по минимальной цене (0 — без ограничения)
+  double price_max = 9;
+  string supplier_id = 10;      // непустой — только товары с предложением поставщика
 }
 
 message ListProductsResponse {
   repeated Product products = 1;
+  int32 total = 2;        // всего карточек под фильтрами (для пагинации)
 }
 
 message GetProductRequest {

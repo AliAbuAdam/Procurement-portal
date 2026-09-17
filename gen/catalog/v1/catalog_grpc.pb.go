@@ -27,6 +27,8 @@ const (
 	CatalogService_CreateProduct_FullMethodName          = "/catalog.v1.CatalogService/CreateProduct"
 	CatalogService_ListProducts_FullMethodName           = "/catalog.v1.CatalogService/ListProducts"
 	CatalogService_GetProduct_FullMethodName             = "/catalog.v1.CatalogService/GetProduct"
+	CatalogService_UpdateProduct_FullMethodName          = "/catalog.v1.CatalogService/UpdateProduct"
+	CatalogService_DeleteProduct_FullMethodName          = "/catalog.v1.CatalogService/DeleteProduct"
 	CatalogService_SetProductCategory_FullMethodName     = "/catalog.v1.CatalogService/SetProductCategory"
 	CatalogService_ListCategories_FullMethodName         = "/catalog.v1.CatalogService/ListCategories"
 	CatalogService_CreateCategory_FullMethodName         = "/catalog.v1.CatalogService/CreateCategory"
@@ -63,10 +65,15 @@ type CatalogServiceClient interface {
 	ListSuppliers(ctx context.Context, in *ListSuppliersRequest, opts ...grpc.CallOption) (*ListSuppliersResponse, error)
 	// --- Номенклатура (products) ---
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
-	// ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
-	// category_id дополнительно сужает выборку категорией и всеми её подкатегориями.
+	// ListProducts: без query — последние карточки; с query — триграммный поиск
+	// по имени и артикулу. category_id сужает выборку категорией и подкатегориями;
+	// остальные фильтры/сортировка/пагинация — в полях запроса.
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
+	// Обновить карточку (полная замена редактируемых полей).
+	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error)
+	// Удалить карточку: сопоставления и фото удаляются каскадом (S3 чистится).
+	DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error)
 	// Назначить категорию нескольким карточкам (пустой category_id — снять).
 	SetProductCategory(ctx context.Context, in *SetProductCategoryRequest, opts ...grpc.CallOption) (*SetProductCategoryResponse, error)
 	// --- Категории (дерево витрины) ---
@@ -190,6 +197,26 @@ func (c *catalogServiceClient) GetProduct(ctx context.Context, in *GetProductReq
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Product)
 	err := c.cc.Invoke(ctx, CatalogService_GetProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Product)
+	err := c.cc.Invoke(ctx, CatalogService_UpdateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProductResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DeleteProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -410,10 +437,15 @@ type CatalogServiceServer interface {
 	ListSuppliers(context.Context, *ListSuppliersRequest) (*ListSuppliersResponse, error)
 	// --- Номенклатура (products) ---
 	CreateProduct(context.Context, *CreateProductRequest) (*Product, error)
-	// ListProducts: без query — последние карточки; с query — триграммный поиск по имени.
-	// category_id дополнительно сужает выборку категорией и всеми её подкатегориями.
+	// ListProducts: без query — последние карточки; с query — триграммный поиск
+	// по имени и артикулу. category_id сужает выборку категорией и подкатегориями;
+	// остальные фильтры/сортировка/пагинация — в полях запроса.
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
+	// Обновить карточку (полная замена редактируемых полей).
+	UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error)
+	// Удалить карточку: сопоставления и фото удаляются каскадом (S3 чистится).
+	DeleteProduct(context.Context, *DeleteProductRequest) (*DeleteProductResponse, error)
 	// Назначить категорию нескольким карточкам (пустой category_id — снять).
 	SetProductCategory(context.Context, *SetProductCategoryRequest) (*SetProductCategoryResponse, error)
 	// --- Категории (дерево витрины) ---
@@ -486,6 +518,12 @@ func (UnimplementedCatalogServiceServer) ListProducts(context.Context, *ListProd
 }
 func (UnimplementedCatalogServiceServer) GetProduct(context.Context, *GetProductRequest) (*Product, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProduct not implemented")
+}
+func (UnimplementedCatalogServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*Product, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateProduct not implemented")
+}
+func (UnimplementedCatalogServiceServer) DeleteProduct(context.Context, *DeleteProductRequest) (*DeleteProductResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteProduct not implemented")
 }
 func (UnimplementedCatalogServiceServer) SetProductCategory(context.Context, *SetProductCategoryRequest) (*SetProductCategoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetProductCategory not implemented")
@@ -708,6 +746,42 @@ func _CatalogService_GetProduct_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CatalogServiceServer).GetProduct(ctx, req.(*GetProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).UpdateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_UpdateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).DeleteProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_DeleteProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).DeleteProduct(ctx, req.(*DeleteProductRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1110,6 +1184,14 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProduct",
 			Handler:    _CatalogService_GetProduct_Handler,
+		},
+		{
+			MethodName: "UpdateProduct",
+			Handler:    _CatalogService_UpdateProduct_Handler,
+		},
+		{
+			MethodName: "DeleteProduct",
+			Handler:    _CatalogService_DeleteProduct_Handler,
 		},
 		{
 			MethodName: "SetProductCategory",

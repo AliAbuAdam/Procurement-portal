@@ -39,7 +39,7 @@ export default function ComparePage() {
     }
     try {
       const d = await apiFetch<{ products?: Product[] }>(
-        `/api/v1/products?q=${encodeURIComponent(q.trim())}`,
+        `/api/v1/products?include_archived=1&q=${encodeURIComponent(q.trim())}`,
       );
       setResults(d.products ?? []);
     } catch {

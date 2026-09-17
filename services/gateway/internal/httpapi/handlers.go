@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 
 	catalogv1 "github.com/furnica/backend/gen/catalog/v1"
 	importv1 "github.com/furnica/backend/gen/import/v1"
@@ -121,10 +122,89 @@ func supplierTypeFromString(s string) catalogv1.SupplierType {
 // --- products & matching (catalog) ---
 
 func (h *Handler) ListProducts(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
 	resp, err := h.c.Catalog.ListProducts(r.Context(), &catalogv1.ListProductsRequest{
-		Query:      r.URL.Query().Get("q"),
-		CategoryId: r.URL.Query().Get("category"),
-		PageSize:   200,
+		Query:           q.Get("q"),
+		CategoryId:      q.Get("category"),
+		PageSize:        int32(intParam(q.Get("page_size"), 200)),
+		Offset:          int32(intParam(q.Get("offset"), 0)),
+		IncludeArchived: q.Get("include_archived") == "1",
+		Sort:            q.Get("sort"),
+		InStock:         q.Get("in_stock") == "1",
+		PriceMin:        floatParam(q.Get("price_min")),
+		PriceMax:        floatParam(q.Get("price_max")),
+		SupplierId:      q.Get("supplier"),
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// intParam / floatParam — числовые query-параметры; пустое или кривое
+// значение падает в дефолт, а не в 400 (фильтры необязательны).
+func intParam(s string, def int) int {
+	if s == "" {
+		return def
+	}
+	v, err := strconv.Atoi(s)
+	if err != nil || v < 0 {
+		return def
+	}
+	return v
+}
+
+func floatParam(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil || v < 0 {
+		return 0
+	}
+	return v
+}
+
+func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Name        string `json:"name"`
+		Article     string `json:"article"`
+		Description string `json:"description"`
+		Attrs       []struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		} `json:"attrs"`
+		Archived   bool   `json:"archived"`
+		CategoryID string `json:"category_id"`
+	}
+	if err := decodeJSON(r, &body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
+		return
+	}
+	attrs := make([]*catalogv1.ProductAttr, 0, len(body.Attrs))
+	for _, a := range body.Attrs {
+		attrs = append(attrs, &catalogv1.ProductAttr{Name: a.Name, Value: a.Value})
+	}
+	resp, err := h.c.Catalog.UpdateProduct(r.Context(), &catalogv1.UpdateProductRequest{
+		Id:          chi.URLParam(r, "id"),
+		Name:        body.Name,
+		Article:     body.Article,
+		Description: body.Description,
+		Attrs:       attrs,
+		Archived:    body.Archived,
+		CategoryId:  body.CategoryID,
+	})
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.c.Catalog.DeleteProduct(r.Context(), &catalogv1.DeleteProductRequest{
+		Id: chi.URLParam(r, "id"),
 	})
 	if err != nil {
 		writeError(w, err)
