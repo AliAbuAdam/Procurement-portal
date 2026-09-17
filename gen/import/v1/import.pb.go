@@ -265,6 +265,7 @@ type ColumnMapping struct {
 	PriceOptCol   int32                  `protobuf:"varint,6,opt,name=price_opt_col,json=priceOptCol,proto3" json:"price_opt_col,omitempty"`    // оптовая цена
 	PriceBulkCol  int32                  `protobuf:"varint,7,opt,name=price_bulk_col,json=priceBulkCol,proto3" json:"price_bulk_col,omitempty"` // крупный опт
 	CategoryCol   int32                  `protobuf:"varint,8,opt,name=category_col,json=categoryCol,proto3" json:"category_col,omitempty"`      // категория в терминах поставщика
+	PhotoCol      int32                  `protobuf:"varint,9,opt,name=photo_col,json=photoCol,proto3" json:"photo_col,omitempty"`               // ссылка (URL) на фото товара
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -351,6 +352,13 @@ func (x *ColumnMapping) GetPriceBulkCol() int32 {
 func (x *ColumnMapping) GetCategoryCol() int32 {
 	if x != nil {
 		return x.CategoryCol
+	}
+	return 0
+}
+
+func (x *ColumnMapping) GetPhotoCol() int32 {
+	if x != nil {
+		return x.PhotoCol
 	}
 	return 0
 }
@@ -842,6 +850,7 @@ type SupplierOffer struct {
 	StockQty      int64                  `protobuf:"varint,10,opt,name=stock_qty,json=stockQty,proto3" json:"stock_qty,omitempty"`
 	PriceOpt      float64                `protobuf:"fixed64,11,opt,name=price_opt,json=priceOpt,proto3" json:"price_opt,omitempty"`    // оптовая цена (0 = в прайсе не было)
 	PriceBulk     float64                `protobuf:"fixed64,12,opt,name=price_bulk,json=priceBulk,proto3" json:"price_bulk,omitempty"` // крупный опт (0 = в прайсе не было)
+	PhotoUrl      string                 `protobuf:"bytes,13,opt,name=photo_url,json=photoUrl,proto3" json:"photo_url,omitempty"`      // ссылка на фото из прайса ("" — не было)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -958,6 +967,13 @@ func (x *SupplierOffer) GetPriceBulk() float64 {
 		return x.PriceBulk
 	}
 	return 0
+}
+
+func (x *SupplierOffer) GetPhotoUrl() string {
+	if x != nil {
+		return x.PhotoUrl
+	}
+	return ""
 }
 
 type ListOffersRequest struct {
@@ -1084,7 +1100,7 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\x12HealthCheckRequest\"G\n" +
 	"\x13HealthCheckResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
-	"\aservice\x18\x02 \x01(\tR\aservice\"\x95\x02\n" +
+	"\aservice\x18\x02 \x01(\tR\aservice\"\xb2\x02\n" +
 	"\rColumnMapping\x12\x19\n" +
 	"\bname_col\x18\x01 \x01(\x05R\anameCol\x12\x1f\n" +
 	"\varticle_col\x18\x02 \x01(\x05R\n" +
@@ -1094,7 +1110,8 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\fcurrency_col\x18\x05 \x01(\x05R\vcurrencyCol\x12\"\n" +
 	"\rprice_opt_col\x18\x06 \x01(\x05R\vpriceOptCol\x12$\n" +
 	"\x0eprice_bulk_col\x18\a \x01(\x05R\fpriceBulkCol\x12!\n" +
-	"\fcategory_col\x18\b \x01(\x05R\vcategoryCol\"\"\n" +
+	"\fcategory_col\x18\b \x01(\x05R\vcategoryCol\x12\x1b\n" +
+	"\tphoto_col\x18\t \x01(\x05R\bphotoCol\"\"\n" +
 	"\n" +
 	"PreviewRow\x12\x14\n" +
 	"\x05cells\x18\x01 \x03(\tR\x05cells\"\xad\x01\n" +
@@ -1134,7 +1151,7 @@ const file_import_v1_import_proto_rawDesc = "" +
 	"\vsupplier_id\x18\x01 \x01(\tR\n" +
 	"supplierId\"I\n" +
 	"\x13ListBatchesResponse\x122\n" +
-	"\abatches\x18\x01 \x03(\v2\x18.importer.v1.ImportBatchR\abatches\"\xd6\x02\n" +
+	"\abatches\x18\x01 \x03(\v2\x18.importer.v1.ImportBatchR\abatches\"\xf3\x02\n" +
 	"\rSupplierOffer\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bbatch_id\x18\x02 \x01(\tR\abatchId\x12\x1f\n" +
@@ -1151,7 +1168,8 @@ const file_import_v1_import_proto_rawDesc = "" +
 	" \x01(\x03R\bstockQty\x12\x1b\n" +
 	"\tprice_opt\x18\v \x01(\x01R\bpriceOpt\x12\x1d\n" +
 	"\n" +
-	"price_bulk\x18\f \x01(\x01R\tpriceBulk\"c\n" +
+	"price_bulk\x18\f \x01(\x01R\tpriceBulk\x12\x1b\n" +
+	"\tphoto_url\x18\r \x01(\tR\bphotoUrl\"c\n" +
 	"\x11ListOffersRequest\x12\x19\n" +
 	"\bbatch_id\x18\x01 \x01(\tR\abatchId\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x16\n" +

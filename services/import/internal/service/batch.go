@@ -112,6 +112,7 @@ func (s *ImportService) buildOffers(batch *domain.ImportBatch, supplierID string
 			PriceOpt:   parser.ParsePrice(cell(row, m.PriceOpt)),
 			PriceBulk:  parser.ParsePrice(cell(row, m.PriceBulk)),
 			RawCategory: strings.TrimSpace(cell(row, m.Category)),
+			PhotoURL:    photoURL(cell(row, m.Photo)),
 		})
 	}
 	return offers
@@ -155,6 +156,16 @@ func (s *ImportService) ListOffers(ctx context.Context, batchID string, limit, o
 	return s.offers.ListOffers(ctx, batchID, limit, offset)
 }
 
+// photoURL — значение колонки фото: принимаем только абсолютные http(s)-ссылки,
+// всё остальное (текст, «нет», путь к файлу) молча отбрасываем.
+func photoURL(v string) string {
+	v = strings.TrimSpace(v)
+	if strings.HasPrefix(v, "http://") || strings.HasPrefix(v, "https://") {
+		return v
+	}
+	return ""
+}
+
 // cell безопасно берёт значение колонки по индексу (idx<0 или вне диапазона -> "").
 func cell(row []string, idx int) string {
 	if idx < 0 || idx >= len(row) {
@@ -165,12 +176,15 @@ func cell(row []string, idx int) string {
 
 // suggestMapping — эвристика по названиям колонок. Порядок case важен:
 // «крупный опт» проверяем раньше «опт», а «опт» — раньше базовой цены,
-// иначе «Цена опт» уйдёт в базовую цену.
+// иначе «Цена опт» уйдёт в базовую цену; «фото» — раньше названия,
+// иначе «Фото товара» уйдёт в название (там ловится «товар»).
 func suggestMapping(headers []string) domain.ColumnMapping {
-	m := domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1, Category: -1}
+	m := domain.ColumnMapping{Name: -1, Article: -1, Price: -1, Stock: -1, Currency: -1, PriceOpt: -1, PriceBulk: -1, Category: -1, Photo: -1}
 	for i, h := range headers {
 		h = strings.ToLower(strings.TrimSpace(h))
 		switch {
+		case m.Photo < 0 && containsAny(h, "фото", "изображ", "картин", "photo", "image", "img"):
+			m.Photo = i
 		case m.Name < 0 && containsAny(h, "наимен", "назван", "товар", "product", "name"):
 			m.Name = i
 		case m.Article < 0 && containsAny(h, "артикул", "код", "sku", "art", "article"):

@@ -10,6 +10,8 @@ export KRATOS_ADMIN_URL="http://localhost:4434"
 export CATALOG_GRPC_PORT=9091 PRICING_GRPC_PORT=9092 IMPORT_GRPC_PORT=9093
 export CATALOG_GRPC_ADDR=localhost:9091 PRICING_GRPC_ADDR=localhost:9092 IMPORT_GRPC_ADDR=localhost:9093
 export GATEWAY_PORT=8080 WEB_ORIGINS="http://localhost:3000"
+# Дев: разрешаем качать фото с локальных адресов (на проде защита от SSRF включена).
+export IMAGE_FETCH_ALLOW_PRIVATE=1
 
 mkdir -p bin
 echo "building..."

@@ -664,6 +664,7 @@ type clientMapping struct {
 	PriceOptCol  int32 `json:"price_opt_col"`
 	PriceBulkCol int32 `json:"price_bulk_col"`
 	CategoryCol  int32 `json:"category_col"`
+	PhotoCol     int32 `json:"photo_col"`
 }
 
 func (m clientMapping) toProto() *importv1.ColumnMapping {
@@ -676,6 +677,7 @@ func (m clientMapping) toProto() *importv1.ColumnMapping {
 		PriceOptCol:  m.PriceOptCol,
 		PriceBulkCol: m.PriceBulkCol,
 		CategoryCol:  m.CategoryCol,
+		PhotoCol:     m.PhotoCol,
 	}
 }
 
@@ -704,7 +706,7 @@ func (h *Handler) CreateImport(w http.ResponseWriter, r *http.Request) {
 	}
 	// Новые опциональные колонки по умолчанию «не заданы» (-1): старый клиент,
 	// не знающий про них, не должен случайно замапить их на колонку 0.
-	m := clientMapping{PriceOptCol: -1, PriceBulkCol: -1, CategoryCol: -1}
+	m := clientMapping{PriceOptCol: -1, PriceBulkCol: -1, CategoryCol: -1, PhotoCol: -1}
 	if raw := r.FormValue("mapping"); raw != "" {
 		if err := json.Unmarshal([]byte(raw), &m); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid mapping json"})

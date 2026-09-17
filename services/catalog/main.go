@@ -76,7 +76,9 @@ func run() error {
 	matchRepo := repository.NewMatchRepository(txm)
 	imageRepo := repository.NewProductImageRepository(txm)
 	categoryRepo := repository.NewCategoryRepository(txm)
-	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo, categoryRepo, store)
+	// Закачка фото по ссылкам из прайсов (и в будущем — парсинг/API поставщиков).
+	fetcher := service.NewImageFetcherFromEnv()
+	matchingSvc := service.NewMatchingService(txm, productRepo, matchRepo, imageRepo, categoryRepo, store, fetcher)
 
 	categorySvc := service.NewCategoryService(txm, categoryRepo)
 

@@ -45,6 +45,7 @@ type RawOffer struct {
 	Currency    string
 	SupplierID  string
 	RawCategory string // категория из прайса поставщика ("" — не было)
+	PhotoURL    string // ссылка на фото из прайса ("" — не было)
 }
 
 // MatchRepository — сопоставление. Часть запросов читает схему importer

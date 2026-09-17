@@ -55,6 +55,7 @@ message ColumnMapping {
   int32 price_opt_col = 6;  // оптовая цена
   int32 price_bulk_col = 7; // крупный опт
   int32 category_col = 8;   // категория в терминах поставщика
+  int32 photo_col = 9;      // ссылка (URL) на фото товара
 }
 
 message PreviewRow {
@@ -118,6 +119,7 @@ message SupplierOffer {
   int64 stock_qty = 10;
   double price_opt = 11;  // оптовая цена (0 = в прайсе не было)
   double price_bulk = 12; // крупный опт (0 = в прайсе не было)
+  string photo_url = 13;  // ссылка на фото из прайса ("" — не было)
 }
 
 message ListOffersRequest {

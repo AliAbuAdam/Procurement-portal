@@ -52,6 +52,7 @@ interface Mapping {
   price_opt_col: number;
   price_bulk_col: number;
   category_col: number;
+  photo_col: number;
 }
 
 interface Preview {
@@ -72,6 +73,7 @@ interface Offer {
   stock_qty?: number;
   price_opt?: number;
   price_bulk?: number;
+  photo_url?: string;
 }
 
 // В proto нулевой индекс не сериализуется — undefined трактуем как 0.
@@ -86,6 +88,7 @@ const FIELDS: { key: keyof Mapping; label: string; required?: boolean }[] = [
   { key: "stock_col", label: "Наличие / остаток" },
   { key: "currency_col", label: "Валюта" },
   { key: "category_col", label: "Категория поставщика" },
+  { key: "photo_col", label: "Фото (ссылка)" },
 ];
 
 export default function ImportsPage() {
@@ -143,6 +146,7 @@ export default function ImportsPage() {
         price_opt_col: col(s.price_opt_col),
         price_bulk_col: col(s.price_bulk_col),
         category_col: col(s.category_col),
+        photo_col: col(s.photo_col),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка предпросмотра");
@@ -433,7 +437,8 @@ export default function ImportsPage() {
       {offers && (() => {
         const hasOpt = offers.some((o) => (o.price_opt ?? 0) > 0);
         const hasBulk = offers.some((o) => (o.price_bulk ?? 0) > 0);
-        const cols = 6 + (hasOpt ? 1 : 0) + (hasBulk ? 1 : 0);
+        const hasPhoto = offers.some((o) => o.photo_url);
+        const cols = 6 + (hasOpt ? 1 : 0) + (hasBulk ? 1 : 0) + (hasPhoto ? 1 : 0);
         return (
         <div className="flex flex-col gap-2">
           <h2 className="font-medium">Разобранные строки ({offers.length})</h2>
@@ -446,6 +451,7 @@ export default function ImportsPage() {
                 <TableHead>Цена</TableHead>
                 {hasOpt && <TableHead>Опт</TableHead>}
                 {hasBulk && <TableHead>Крупный опт</TableHead>}
+                {hasPhoto && <TableHead>Фото</TableHead>}
                 <TableHead>Наличие</TableHead>
                 <TableHead className="w-0 text-right">Сопоставление</TableHead>
               </TableRow>
@@ -472,6 +478,22 @@ export default function ImportsPage() {
                       {hasBulk && (
                         <TableCell>
                           {(o.price_bulk ?? 0) > 0 ? `${o.price_bulk} ${o.currency}` : "—"}
+                        </TableCell>
+                      )}
+                      {hasPhoto && (
+                        <TableCell>
+                          {o.photo_url ? (
+                            <a
+                              href={o.photo_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              ссылка
+                            </a>
+                          ) : (
+                            "—"
+                          )}
                         </TableCell>
                       )}
                       <TableCell>

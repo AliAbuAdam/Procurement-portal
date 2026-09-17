@@ -4,7 +4,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/furnica/backend/internal/postgres"
 	"github.com/furnica/backend/services/catalog/internal/domain"
@@ -18,10 +20,72 @@ type MatchingService struct {
 	images     domain.ProductImageRepository
 	categories domain.CategoryRepository // для автокатегории по привязкам поставщика
 	store      domain.ImageStore         // S3 для байтов фото (nil — байты в Postgres)
+	fetcher    *ImageFetcher             // закачка фото по ссылкам из прайсов (nil — выключено)
+	photoCh    chan photoTask            // очередь закачек: качаем по одному, не душим сеть и БД
 }
 
-func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository, categories domain.CategoryRepository, store domain.ImageStore) *MatchingService {
-	return &MatchingService{txm: txm, products: products, matches: matches, images: images, categories: categories, store: store}
+// photoTask — «прикрепить карточке фото по ссылке» (если фото ещё нет).
+type photoTask struct {
+	productID string
+	url       string
+}
+
+func NewMatchingService(txm *postgres.TxManager, products domain.ProductRepository, matches domain.MatchRepository, images domain.ProductImageRepository, categories domain.CategoryRepository, store domain.ImageStore, fetcher *ImageFetcher) *MatchingService {
+	s := &MatchingService{txm: txm, products: products, matches: matches, images: images, categories: categories, store: store, fetcher: fetcher}
+	if fetcher != nil {
+		s.photoCh = make(chan photoTask, 1000)
+		go s.photoWorker()
+	}
+	return s
+}
+
+// enqueuePhoto ставит закачку фото в очередь. Никогда не блокирует вызывающий
+// запрос: при переполненной очереди задача просто отбрасывается (фото
+// докачается при следующем прогоне автообработки).
+func (s *MatchingService) enqueuePhoto(productID, rawURL string) {
+	if s.fetcher == nil || productID == "" || strings.TrimSpace(rawURL) == "" {
+		return
+	}
+	select {
+	case s.photoCh <- photoTask{productID: productID, url: strings.TrimSpace(rawURL)}:
+	default:
+		log.Printf("catalog: очередь фото переполнена, ссылка отброшена (product=%s)", productID)
+	}
+}
+
+// photoWorker последовательно разбирает очередь закачек. Ошибки не фатальны:
+// битая ссылка одной строки не должна мешать остальным.
+func (s *MatchingService) photoWorker() {
+	for t := range s.photoCh {
+		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+		if err := s.AttachPhotoFromURL(ctx, t.productID, t.url); err != nil {
+			log.Printf("catalog: фото по ссылке не прикреплено (product=%s, url=%s): %v", t.productID, t.url, err)
+		}
+		cancel()
+	}
+}
+
+// AttachPhotoFromURL скачивает фото по ссылке и прикрепляет карточке — только
+// если у карточки ещё нет ни одного фото (загруженное вручную не трогаем и
+// повторные прогоны не плодят дубли). Единая точка входа для колонки прайса,
+// а в будущем — парсинга сайтов и API поставщиков.
+func (s *MatchingService) AttachPhotoFromURL(ctx context.Context, productID, rawURL string) error {
+	if s.fetcher == nil {
+		return nil
+	}
+	n, err := s.images.CountByProduct(ctx, productID)
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	data, thumb, contentType, err := s.fetcher.Fetch(ctx, rawURL)
+	if err != nil {
+		return err
+	}
+	_, err = s.AddProductImage(ctx, productID, contentType, data, thumb)
+	return err
 }
 
 // imageKeys — ключи объекта фото в S3. Плоская схема под общий префикс
@@ -368,7 +432,17 @@ func (s *MatchingService) ConfirmMatch(ctx context.Context, offerID, productID, 
 	if offerID == "" || productID == "" {
 		return nil, fmt.Errorf("%w: offer_id and product_id are required", domain.ErrValidation)
 	}
-	return s.matches.Upsert(ctx, offerID, productID, matchedBy)
+	m, err := s.matches.Upsert(ctx, offerID, productID, matchedBy)
+	if err != nil {
+		return nil, err
+	}
+	// В строке была ссылка на фото, а у карточки фото нет — докачаем фоном.
+	if s.fetcher != nil {
+		if offer, err := s.matches.GetOffer(ctx, offerID); err == nil {
+			s.enqueuePhoto(productID, offer.PhotoURL)
+		}
+	}
+	return m, nil
 }
 
 // CreateProductFromOffer создаёт карточку из строки прайса и сразу её подтверждает
@@ -381,7 +455,11 @@ func (s *MatchingService) CreateProductFromOffer(ctx context.Context, offerID, n
 	name = strings.TrimSpace(name)
 	article = strings.TrimSpace(article)
 
-	var match *domain.Match
+	var (
+		match        *domain.Match
+		photoURL     string
+		newProductID string
+	)
 	err := s.txm.WithinTx(ctx, func(ctx context.Context) error {
 		offer, err := s.matches.GetOffer(ctx, offerID)
 		if err != nil {
@@ -409,12 +487,15 @@ func (s *MatchingService) CreateProductFromOffer(ctx context.Context, offerID, n
 		if err := s.products.Create(ctx, p); err != nil {
 			return err
 		}
+		photoURL, newProductID = offer.PhotoURL, p.ID
 		match, err = s.matches.Upsert(ctx, offerID, p.ID, matchedBy)
 		return err
 	})
 	if err != nil {
 		return nil, err
 	}
+	// Фото по ссылке из строки — фоном, после коммита.
+	s.enqueuePhoto(newProductID, photoURL)
 	return match, nil
 }
 
@@ -490,6 +571,7 @@ func (s *MatchingService) autoProcessOffer(ctx context.Context, o *domain.RawOff
 			if _, err := s.matches.Upsert(ctx, o.ID, p.ID, matchedBy); err != nil {
 				return "", err
 			}
+			s.enqueuePhoto(p.ID, o.PhotoURL)
 			return "matched", nil
 		}
 	}
@@ -509,6 +591,7 @@ func (s *MatchingService) autoProcessOffer(ctx context.Context, o *domain.RawOff
 		if _, err := s.matches.Upsert(ctx, o.ID, best.ProductID, matchedBy); err != nil {
 			return "", err
 		}
+		s.enqueuePhoto(best.ProductID, o.PhotoURL)
 		return "matched", nil
 	case best == nil || best.Score < createBelowScore:
 		// Явно новый товар: карточка из строки (внутри — автокатегория по

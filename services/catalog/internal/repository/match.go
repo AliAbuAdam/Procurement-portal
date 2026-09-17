@@ -61,12 +61,12 @@ func (r *MatchRepository) Delete(ctx context.Context, offerID string) error {
 // GetOffer читает сырую строку прайса из схемы importer (read-only).
 func (r *MatchRepository) GetOffer(ctx context.Context, offerID string) (*domain.RawOffer, error) {
 	const q = `
-		SELECT id, row_num, raw_name, raw_article, price, currency, supplier_id, raw_category
+		SELECT id, row_num, raw_name, raw_article, price, currency, supplier_id, raw_category, photo_url
 		FROM importer.supplier_offers
 		WHERE id = $1`
 	var o domain.RawOffer
 	err := r.db.Querier(ctx).QueryRow(ctx, q, offerID).
-		Scan(&o.ID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency, &o.SupplierID, &o.RawCategory)
+		Scan(&o.ID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency, &o.SupplierID, &o.RawCategory, &o.PhotoURL)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, domain.ErrOfferNotFound
 	}
@@ -138,7 +138,7 @@ func (r *MatchRepository) Suggest(ctx context.Context, offerIDs []string, limit 
 // ListUnmatched: строки батча без подтверждённого сопоставления + счётчики.
 func (r *MatchRepository) ListUnmatched(ctx context.Context, batchID string, limit int) ([]*domain.RawOffer, int, int, error) {
 	const listQ = `
-		SELECT o.id, o.row_num, o.raw_name, o.raw_article, o.price, o.currency
+		SELECT o.id, o.row_num, o.raw_name, o.raw_article, o.price, o.currency, o.photo_url
 		FROM importer.supplier_offers o
 		LEFT JOIN catalog.offer_matches m ON m.offer_id = o.id
 		WHERE o.batch_id = $1 AND m.offer_id IS NULL
@@ -153,7 +153,7 @@ func (r *MatchRepository) ListUnmatched(ctx context.Context, batchID string, lim
 	var offers []*domain.RawOffer
 	for rows.Next() {
 		var o domain.RawOffer
-		if err := rows.Scan(&o.ID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency); err != nil {
+		if err := rows.Scan(&o.ID, &o.RowNum, &o.RawName, &o.RawArticle, &o.Price, &o.Currency, &o.PhotoURL); err != nil {
 			return nil, 0, 0, fmt.Errorf("scan unmatched: %w", err)
 		}
 		offers = append(offers, &o)
