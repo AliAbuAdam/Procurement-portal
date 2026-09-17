@@ -43,7 +43,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/catalog">
                 <Boxes className="size-5!" />
-                <span className="text-base font-semibold">Furnica</span>
+                <span className="text-base font-semibold">Procurement</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

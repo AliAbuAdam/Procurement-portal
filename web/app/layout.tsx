@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Furnica",
+  title: "Procurement",
   description: "Аналитика закупок мебельной фурнитуры",
 };
 

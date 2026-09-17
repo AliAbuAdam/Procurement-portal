@@ -20,7 +20,7 @@ function titleFor(pathname: string): string {
   const key = Object.keys(TITLES).find(
     (k) => k !== "/" && pathname.startsWith(k),
   );
-  return key ? TITLES[key] : "Furnica";
+  return key ? TITLES[key] : "Procurement";
 }
 
 export function SiteHeader() {

@@ -111,7 +111,7 @@ function LoginForm() {
     <form onSubmit={onSubmit}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Вход в Furnica</h1>
+          <h1 className="text-2xl font-bold">Вход в Procurement</h1>
           <p className="text-muted-foreground text-sm text-balance">
             Введите e-mail и пароль для входа
           </p>
@@ -203,7 +203,7 @@ export default function LoginPage() {
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <Boxes className="size-4" />
             </div>
-            Furnica
+            Procurement
           </span>
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -221,7 +221,7 @@ export default function LoginPage() {
           <div className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-2xl">
             <Boxes className="size-9" />
           </div>
-          <div className="text-3xl font-semibold">Furnica</div>
+          <div className="text-3xl font-semibold">Procurement</div>
           <p className="text-muted-foreground max-w-xs text-center text-sm text-balance">
             Аналитика закупок мебельной фурнитуры: цены, номенклатура, сравнение
             поставщиков.
