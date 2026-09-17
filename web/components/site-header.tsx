@@ -13,6 +13,7 @@ const TITLES: Record<string, string> = {
   "/matching": "Сопоставление",
   "/compare": "Сравнение цен",
   "/users": "Пользователи",
+  "/guide": "Инструкция",
 };
 
 function titleFor(pathname: string): string {

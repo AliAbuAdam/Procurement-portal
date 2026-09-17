@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   BarChart3,
+  BookOpen,
   ChevronsUpDown,
   Layers,
   LayoutDashboard,
@@ -115,6 +116,12 @@ export function NavUser({
                 <Link href="/" onClick={closeMobile}>
                   <LayoutDashboard />
                   Сводные данные
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/guide" onClick={closeMobile}>
+                  <BookOpen />
+                  Инструкция
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
